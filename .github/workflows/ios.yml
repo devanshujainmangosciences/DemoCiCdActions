@@ -3,7 +3,7 @@ name: iOS Build
 on:
   push:
     branches:
-      - 'demo-ci-cd-ios'
+      - 'mobile/testing-ios-ci-cd'
       - 'pre-prod'
     paths:
       - 'vbc-mobile/**'
