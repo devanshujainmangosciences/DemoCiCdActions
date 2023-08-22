@@ -1,0 +1,17 @@
+{
+  "home": "Home",
+  "role": "Role",
+  "roles": "Roles",
+  "name": "Name",
+  "status": "Status",
+  "description": "Description",
+  "defaultRoute": "Default Route",
+  "selectDefaultRoute": "select default route",
+  "resourcePermission": "Resource-Permission",
+  "assignedRoutes": "Assigned Routes",
+  "update": "Update",
+  "add": "Add",
+  "new": "New",
+  "viewRole": "View Role",
+  "invalidRole": " Invalid role name, only smallcase letter and _ is allowed!"
+}

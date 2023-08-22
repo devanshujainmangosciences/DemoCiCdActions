@@ -1,0 +1,98 @@
+.sentry-error-embed-wrapper {
+  @media screen and (max-width: 480px) {
+    .sentry-error-embed {
+      top: 60px;
+      width: 350px;
+    }
+  }
+  @media screen and (max-width: 380px) {
+    .sentry-error-embed {
+      width: 300px;
+    }
+  }
+
+  .sentry-error-embed {
+    padding: 20px;
+    max-height: 490px;
+    * {
+      font-family: $font-family-roboto;
+    }
+    border-radius: 15px;
+    .message-success,
+    .message-error {
+      margin: auto;
+      margin-bottom: 10px;
+    }
+    h2 {
+      text-align: center;
+      font-family: $font-family-roboto;
+      letter-spacing: 0px;
+      font-weight: $font-weight-medium;
+      font-size: $font-size-lg;
+      color: #28252e;
+    }
+
+    header {
+      font-family: $font-family-roboto;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+      border-bottom: none;
+      p {
+        text-align: center;
+        font-family: $font-family-roboto;
+        letter-spacing: 0px;
+        font-weight: normal;
+        font-size: 1.063rem;
+        color: #757476;
+        margin: 0px 0 10px;
+      }
+    }
+    .form-field {
+      margin-bottom: 10px;
+      label {
+        font-size: $font-size-sm;
+        color: #28252e;
+        text-transform: capitalize;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 5px;
+      }
+    }
+    .form-submit {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      .btn {
+        width: 178px;
+        height: 36px;
+        background: transparent
+          linear-gradient(180deg, #09a6e0 0%, #0890c2 100%) 0% 0% no-repeat
+          padding-box;
+        border-radius: 3px;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        font-size: $font-size-sm;
+        color: #ffffff;
+        font-weight: normal;
+        float: none;
+      }
+      .close {
+        width: 115px;
+        height: 36px;
+        font-size: $font-size-sm;
+        font-weight: normal;
+        color: #ffffff;
+        background: #28252e 0% 0% no-repeat padding-box;
+        border-radius: 3px;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        float: none;
+      }
+      .powered-by {
+        display: none;
+      }
+    }
+  }
+}

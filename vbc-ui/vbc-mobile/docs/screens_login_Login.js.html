@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/login/Login.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/login/Login.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Login screen
+ */
+import React, {useState} from 'react';
+import {View, Image, Keyboard} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useDispatch} from 'react-redux';
+import DeviceInfo from 'react-native-device-info';
+import {AuthContext} from 'src/App';
+import {
+  loginApiSuccessAction,
+  getUserPermissionsAction,
+  verifyOtpDataAction,
+} from 'actions';
+import {Button, AppText, TextInput} from 'components';
+import {logo} from 'assets/icons';
+import {AsyncStorageKeys, errorTypes} from 'constants';
+import {
+  loginApiCall,
+  getPermissionsApiCall,
+  getResetPasswordTokenApiCall,
+  verifyOTPApiCall,
+  addDevice,
+} from 'apis';
+import {decodeToken, getFromAsyncStorage, isUserAuthorized} from 'utils';
+import styles from './styles';
+
+const Login = ({navigation: {navigate}}) => {
+  const {t} = useTranslation(['login', 'validationMessages']);
+  const dispatch = useDispatch();
+
+  // context variable
+  const {signIn} = React.useContext(AuthContext);
+
+  // login inputs
+  const [loginInputs, setLoginInputs] = useState({
+    userName: null,
+    password: null,
+  });
+  // login inputs error
+  const [loginInputsError, setLoginInputsError] = useState({
+    userNameError: null,
+    passwordError: null,
+    generalError: null,
+  });
+  // to show/hide loader
+  const [loader, setLoader] = useState(false);
+
+  // handling textInput change for userName &amp; password
+  const handleInputChange = (inputType) => (inputText) => {
+    if (!loader) {
+      // when there is no activity going on already
+      // add text to current input field state key
+      const input = {...loginInputs, [inputType]: inputText};
+      // if there is any error on the current input field, make it null in the input error state key
+      const inputError = {...loginInputsError, [`${inputType}Error`]: null};
+      setLoginInputs(input);
+      setLoginInputsError(inputError);
+    }
+  };
+
+  const handlePressRegisteration = () => {
+    // when there is no activity going on already
+    navigate('Registeration');
+  };
+
+  const handlePressForgotPassword = () => {
+    // when there is no activity going on already
+    navigate('ForgotPassword');
+  };
+
+  /** verify otp call */
+  const callValidateOtpService = async (formFields) => {
+    let apiBody = {
+      otp: formFields?.otp,
+      token: formFields?.token,
+    };
+    const data = await verifyOTPApiCall(apiBody);
+    return data;
+  };
+
+  /** handling events that should be checked on login press
+   * Validation
+   * API Call
+   */
+  const handlePressLogin = async () => {
+    // when there is no activity going on already
+    Keyboard.dismiss();
+    setLoader(true);
+    setLoginInputsError({
+      userNameError: null,
+      passwordError: null,
+      generalError: null,
+    });
+    const {userName: userNameOriginal, password} = loginInputs;
+    const userName = userNameOriginal?.toLowerCase();
+    if (!userName || !password) {
+      const errorInput = {
+        ...loginInputsError,
+        userNameError:
+          !userName &amp;&amp; t('validationMessages:pleaseEnter') + t('userName'),
+        passwordError:
+          !password &amp;&amp; t('validationMessages:pleaseEnter') + t('password'),
+      };
+      setLoader(false);
+      setLoginInputsError(errorInput);
+      return;
+    }
+    const {apiResponse, apiError} = await loginApiCall(loginInputs);
+    if (apiResponse) {
+      const {data} = apiResponse;
+      const {access_token, refresh_token} = data;
+      const decodeTokenResponse = decodeToken(access_token);
+      const {sub: userId} = decodeTokenResponse;
+      if (isUserAuthorized(decodeTokenResponse)) {
+        const {
+          apiResponse: getPermissionsApiResponse,
+          apiError: getPermissionsApiError,
+        } = await getPermissionsApiCall(access_token);
+        if (getPermissionsApiResponse) {
+          const {data: permissionsData} = getPermissionsApiResponse;
+
+          // get device token from async storage and call an api to send this to mango science backend
+          // device token is stored into async storage in index.js file
+          const deviceToken = await getFromAsyncStorage(
+            AsyncStorageKeys.DEVICE_TOKEN
+          );
+          if (deviceToken) {
+            const addDeviceApiData = {
+              active: true,
+              appOs: JSON.parse(deviceToken)?.os,
+              appVersion: DeviceInfo.getVersion(),
+              deviceToken: JSON.parse(deviceToken)?.token,
+              deviceType: JSON.parse(deviceToken)?.os,
+              refreshToken: refresh_token,
+            };
+            const {access_token} = data;
+            // TODO: Handle when add device api throws error
+            await addDevice(addDeviceApiData, access_token);
+          }
+          setLoader(false);
+          dispatch(loginApiSuccessAction(data));
+          dispatch(getUserPermissionsAction(permissionsData));
+          signIn(); // context variable. setting it to navigate to AppStack
+          return;
+        } else if (getPermissionsApiError) {
+          const errorInput = {
+            ...loginInputsError,
+            generalError: getPermissionsApiError.error_description,
+          };
+          setLoader(false);
+          setLoginInputsError(errorInput);
+        }
+      } else {
+        const errorInput = {
+          ...loginInputsError,
+          generalError: t('accessError'),
+        };
+        setLoader(false);
+        setLoginInputsError(errorInput);
+      }
+    } else if (apiError) {
+      const errorInput = {
+        ...loginInputsError,
+        generalError: apiError.error_description,
+      };
+      /** checking if the account is not setup -
+       * calling api to fetch token that can be used in verify OTP screen
+       * and navigating the user to Verify OTP screen
+       */
+      if (apiError.error_description === errorTypes.accountNotSetUp) {
+        const {
+          apiResponse: getTokenResponse,
+          apiError: getTokenError,
+        } = await getResetPasswordTokenApiCall(userName);
+
+        if (getTokenResponse) {
+          const {data: tokenApiData} = getTokenResponse;
+          const {data: token} = tokenApiData;
+          const {
+            apiResponse: otpApiResponse,
+            apiError: OtpApiError,
+          } = await callValidateOtpService({
+            otp: password,
+            token: token,
+          });
+
+          if (OtpApiError) {
+            // verify otp error
+            const errorInput = {
+              ...loginInputsError,
+              generalError: OtpApiError.error_description,
+            };
+            setLoginInputsError(errorInput);
+          } else {
+            // verify otp success
+            dispatch(verifyOtpDataAction(otpApiResponse?.data));
+            navigate('NewPassword', {
+              loginApiBody: {
+                phone: userName,
+              },
+            });
+          }
+        } else {
+          const errorInput = {
+            ...loginInputsError,
+            generalError: getTokenError.error_description,
+          };
+          setLoginInputsError(errorInput);
+        }
+      }
+      setLoader(false);
+      setLoginInputsError(errorInput);
+    }
+  };
+
+  const {userNameError, passwordError, generalError} = loginInputsError;
+  return (
+    &lt;View style={styles.container}>
+      &lt;View style={styles.logoContainer}>
+        &lt;Image style={styles.logo} source={logo} resizeMode={'contain'} />
+      &lt;/View>
+
+      &lt;View style={styles.registerContainer}>
+        &lt;AppText style={styles.registerText}>{t('login')}&lt;/AppText>
+        &lt;TextInput
+          autoCapitalize={'none'}
+          keyboardType={'email-address'}
+          value={loginInputs.userName}
+          placeholder={t('userName')}
+          style={styles.textInputContainer}
+          onChangeText={handleInputChange('userName')}
+          errorMessage={userNameError}
+        />
+        &lt;TextInput
+          autoCapitalize={'none'}
+          value={loginInputs.password}
+          secureTextEntry
+          placeholder={t('password')}
+          style={styles.textInputContainer}
+          onChangeText={handleInputChange('password')}
+          errorMessage={passwordError}
+        />
+
+        &lt;Button
+          disabled={loader}
+          style={styles.forgotPasswordContainer}
+          onPressEvent={handlePressForgotPassword}
+          label={t('forgotPassword')}
+          labelStyle={styles.forgotPasswordText}
+        />
+
+        &lt;Button
+          disabled={loader}
+          style={styles.buttonContainer}
+          onPressEvent={handlePressLogin}
+          isLoading={loader}
+          label={t('continue')}
+        />
+        &lt;View>
+          &lt;AppText style={styles.apiErrorText}>{generalError}&lt;/AppText>
+        &lt;/View>
+
+        &lt;Button
+          disabled={loader}
+          style={styles.newUserContainer}
+          onPressEvent={handlePressRegisteration}
+          label={t('newUser')}
+          labelStyle={styles.accountText}
+        />
+      &lt;/View>
+    &lt;/View>
+  );
+};
+
+export default Login;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

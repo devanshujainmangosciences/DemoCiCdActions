@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Mango Cancer Care</string>
+    <string moduleConfig="true" name="CodePushDeploymentKey">brnFGc-kyEsjDnBT5NtVEJW3pD39quezEXIke</string>
+</resources>

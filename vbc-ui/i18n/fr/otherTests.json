@@ -1,0 +1,12 @@
+{
+  "otherTests": "Other Tests",
+  "date": "Date",
+  "procedure": "Procedure",
+  "testResults": "Test Results",
+  "home": "Home",
+  "noYearNote": "You are not able to see any reports since there is no data or synchronization of data is not complete.",
+  "noRadiologyFound": "No Other test Found",
+  "filterNow": "Filter Now",
+  "noOtherTestReports": "No record of other test found",
+  "noOtherTestNoteFound": "No other test note found"
+}

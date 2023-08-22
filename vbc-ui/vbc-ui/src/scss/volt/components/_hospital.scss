@@ -1,0 +1,11 @@
+.view-hospital {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  .hospital-address {
+    flex-basis: 100%;
+  }
+  .check-item {
+    align-self: flex-end;
+  }
+}

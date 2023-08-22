@@ -1,0 +1,16 @@
+{
+  "dataVariables": "CountryDataVariables",
+  "readListAction": "readCountries",
+  "deleteDataAction": "deleteCountry",
+  "reduxDataListState": "state.template?.masterData?.countries",
+  "reduxPaginationData": "state.template?.masterData?.countries?.pagination",
+  "tableHeadersPath": "tableHeadersCountries",
+  "updateData": "updateCountry",
+  "createData": "createCountry",
+  "showData": "showCountry",
+  "newPath": "NewCountry",
+  "viewPath": "ViewCountry",
+  "updatePath": "UpdateCountry",
+  "listPath": "Countries",
+  "reduxSelectedData": "state.country.selectedCountry"
+}

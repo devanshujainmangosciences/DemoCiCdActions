@@ -1,0 +1,15 @@
+{
+  "home": "Home",
+  "edit": "Edit",
+  "create": "Create",
+  "view": "View",
+  "list": "List",
+  "update": "Update",
+  "new": "New",
+  "profile": "Profile",
+  "patients": "Patients",
+  "settings": "Settings",
+  "finance-profile": "My Profile",
+  "finance-patients": "Patients",
+  "finance-settings": "Settings"
+}

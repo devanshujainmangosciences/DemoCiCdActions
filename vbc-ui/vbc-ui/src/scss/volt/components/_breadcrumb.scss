@@ -1,0 +1,72 @@
+/**
+ * = Breadcrumbs
+ */
+
+.breadcrumb-item {
+  font-size: $font-size-xs;
+  &,
+  a {
+    text-align: left;
+    color: $text-muted;
+    font-weight: $breadcrumb-font-weight;
+    font-size: $font-size-xs;
+    font-family: $font-family-roboto;
+    @include media-breakpoint-up(sm) {
+      font-size: $font-size-sm;
+    }
+  }
+
+  &.active {
+    font-weight: $breadcrumb-active-font-weight;
+    color: #656571;
+  }
+
+  + .breadcrumb-item {
+    &:before {
+      background-repeat: no-repeat;
+      content: url(/src/assets/icons/breadcrumb-icon.svg);
+      font-size: 0.7rem;
+      padding: 3px 12px 0;
+      // font-family: $font-awesome-5;
+      font-weight: 900;
+      color: $breadcrumb-divider-color;
+    }
+  }
+}
+
+.breadcrumb-transparent {
+  background: transparent;
+  padding: 0;
+}
+
+@each $color, $value in $theme-colors {
+  .breadcrumb-#{$color} {
+    background: $value;
+    .breadcrumb-item {
+      &.active {
+        color: $white;
+      }
+    }
+    &.breadcrumb-transparent {
+      background: transparent;
+      .breadcrumb-item {
+        &.active {
+          color: #656571;
+        }
+      }
+    }
+  }
+}
+
+.breadcrumb-text-light {
+  .breadcrumb-item {
+    &,
+    a {
+      color: $breadcrumb-item-light-color;
+    }
+
+    &:before {
+      color: $breadcrumb-divider-light-color;
+    }
+  }
+}

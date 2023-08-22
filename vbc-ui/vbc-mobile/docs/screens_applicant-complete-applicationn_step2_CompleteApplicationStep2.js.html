@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/applicant-complete-applicationn/step2/CompleteApplicationStep2.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/applicant-complete-applicationn/step2/CompleteApplicationStep2.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Applicant Complete Application Step 2 screen
+ */
+import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {Image, View} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  documentsIcon,
+  financialInformationIcon,
+  professionalOtherFIIcon,
+} from 'assets/icons';
+import ConditionalTextInput from 'components/conditionalTextInput/ConditionalTextInput';
+import {Container, AppText, Button, TextInput} from 'components';
+import {occupationOptions, VBCProgramPaymentFramework} from 'constants';
+import {
+  applicantCompleteApplicationStep2ApiCall,
+  fetchRequiredDocumentsApiCall,
+  getMasterDataApiCall,
+} from 'apis/apis';
+import {saveApplicantLoanApplicationAction} from 'actions';
+import {
+  initialFormFieldsState,
+  initialFormFieldsErrorState,
+  transformApiRequest,
+  getRequiredFields,
+  transformApiResponse,
+  financialInformationFields,
+} from './formatter.js';
+import {
+  businessOwnerFields,
+  financialInfoFieldsArray,
+  professionalInfoFieldArray,
+  salariedPrivateFields,
+  selfEmployedFields,
+} from './formFields';
+import styles from './styles';
+import {MASTER_DATA_FINANCE_APPLICANT} from 'constants/appConstants.js';
+
+const CompleteApplicationStep2 = () => {
+  const dispatch = useDispatch();
+  const {t} = useTranslation(['completeLoan', 'validationMessages']);
+  const {masterData, loginData} = useSelector((state) => state.login);
+  const {applicantOverviewData, applicantProgramData} = useSelector(
+    (state) => state.applicant
+  );
+  const {navigate} = useNavigation();
+  const {params} = useRoute();
+
+  const [formFields, setFormFields] = useState(initialFormFieldsState);
+  const [formFieldsError, setFormFieldsError] = useState(
+    initialFormFieldsErrorState
+  );
+  const [loading, setLoading] = useState(false);
+  const [requiredDocuments, setRequiredDocuments] = useState(null);
+  const isRequired =
+    applicantOverviewData?.paymentTypeOpted ===
+    VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE;
+
+  /** Check if our redux store contains data of field -
+   * If yes, save it in our local state
+   */
+  useEffect(() => {
+    if (applicantProgramData) {
+      const transformedBody = transformApiResponse(
+        applicantProgramData,
+        occupationOptions,
+        masterData
+      );
+      setFormFields({...formFields, ...transformedBody});
+    }
+  }, []);
+
+  /**
+   * Checking if selectedOccupation is coming in navigation params.
+   * If yes, set the formField value to this and
+   * fetching required documents
+   */
+  useEffect(() => {
+    fetchRequiredDocuments();
+  }, []);
+
+  /**
+   * Checking if selectedOccupation is coming in navigation params.
+   * If yes, set the formField value to this and
+   * fetching required documents
+   */
+  const fetchRequiredDocuments = async () => {
+    if (params &amp;&amp; params.selectedOccupation) {
+      setFormFields({
+        ...formFields,
+        occupation: params.selectedOccupation.value,
+      });
+      const {apiResponse} = await fetchRequiredDocumentsService(
+        params.selectedOccupation.id
+      );
+      if (apiResponse) {
+        setRequiredDocuments(apiResponse.data?.data);
+      }
+    }
+  };
+
+  /** Fetch required documents -
+   * when field occupation value
+   * is updated.
+   */
+  const fetchRequiredDocumentsOnUpdateOccupation = async () => {
+    setFormFieldsError({...formFieldsError, apiError: null});
+    const {apiResponse} = await fetchRequiredDocumentsService(
+      formFields.occupation
+    );
+    if (apiResponse) {
+      setRequiredDocuments(apiResponse.data?.data);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequiredDocumentsOnUpdateOccupation();
+  }, [formFields.occupation]);
+
+  /** fetching required documents by api according to passed occupation type  */
+  const fetchRequiredDocumentsService = async (occupationId) => {
+    const {access_token} = loginData;
+    const data = await fetchRequiredDocumentsApiCall(
+      access_token,
+      occupationId
+    );
+    return data;
+  };
+
+  // fetch master data for applicant
+  useEffect(() => {
+    fetchMasterDataService();
+  }, []);
+
+  // fetch master data based on required master data fields for applicant
+  const fetchMasterDataService = async () => {
+    const {apiResponse: masterDataApiResponse} = await getMasterDataApiCall(
+      MASTER_DATA_FINANCE_APPLICANT
+    );
+    return masterDataApiResponse;
+  };
+
+  /** callback function of textInput component */
+  const handleChangeText = (type, inputType, convertToInt) => (
+    value,
+    textInputErrorMessage
+  ) => {
+    // if there is any error on the current input field, make it null in the input error state key
+    const inputError = {
+      ...formFieldsError,
+      apiError: null,
+      [`${type}Error`]: textInputErrorMessage,
+    };
+    setFormFieldsError(inputError);
+    let values;
+    if (inputType === 'dropdown') {
+      values = {
+        ...formFields,
+        [type]: type === 'occupation' ? value?.value : value.name,
+      };
+      /** resetting all fields related to occupation when occupation is changed */
+      if (type === 'occupation') {
+        values = {
+          ...values,
+          employerName: null,
+          netMonthlyIncome: null,
+          grossAnnualIncome: null,
+          companyType: null,
+          annualProfit: null,
+          sales: null,
+          residenceType: null,
+          professionName: null,
+          primaryBank: null,
+          salaryBankAccount: null,
+          companyName: null,
+          natureOfBusiness: null,
+          industryType: null,
+          mainBankerOfCompany: null,
+          tenureYears: null,
+          tenureMonths: null,
+          yearsInBusiness: null,
+          monthInBusiness: null,
+          workExperienceYears: null,
+          workExperienceMonths: null,
+          experienceYears: null,
+          experienceMonths: null,
+          anyOtherAsset: null,
+        };
+        setFormFieldsError({
+          ...formFieldsError,
+          employerNameError: null,
+          netMonthlyIncomeError: null,
+          grossAnnualIncomeError: null,
+          companyTypeError: null,
+          annualProfitsError: null,
+          annualProfitError: null,
+          salesError: null,
+          residenceTypeError: null,
+          professionNameError: null,
+          primaryBankError: null,
+          salaryBankAccountError: null,
+          companyNameError: null,
+          natureOfBusinessError: null,
+          industryTypeError: null,
+          mainBankerOfCompanyError: null,
+          tenureYearsError: null,
+          tenureMonthsError: null,
+          yearsInBusinessError: null,
+          monthInBusinessError: null,
+          workExperienceYearsError: null,
+          workExperienceMonthsError: null,
+          experienceYearsError: null,
+          experienceMonthsError: null,
+          anyOtherAssetError: null,
+          anyOtherAssetError: null,
+        });
+      }
+    } else {
+      let textInputValue = value;
+      if (convertToInt) {
+        textInputValue = Number(value);
+      }
+      values = {...formFields, [type]: textInputValue};
+    }
+    setFormFields(values);
+  };
+  /** when user presses save and proceed button */
+  const handlePressSave = async () => {
+    setLoading(true);
+    setFormFieldsError({...formFieldsError, apiError: null});
+    let errorObj = {};
+    let isValidationError = false;
+    /**
+     * Check if there is already an error
+     * present due to text input items
+     */
+    Object.keys(formFieldsError).map((item) => {
+      if (item !== 'apiError' &amp;&amp; formFieldsError[item]) {
+        isValidationError = true;
+      }
+    });
+    /* KEPT DELIBERATELY */
+    /** getting required fields */
+    const requiredFields = getRequiredFields(formFields.occupation);
+    const requiredFieldsByPaymentType =
+      applicantOverviewData?.paymentTypeOpted ===
+      VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE
+        ? [...requiredFields, ...financialInformationFields]
+        : [];
+    requiredFieldsByPaymentType?.map((field) => {
+      const fieldValue = formFields[field];
+      if (!fieldValue) {
+        isValidationError = true;
+        errorObj = {
+          ...errorObj,
+          [`${field}Error`]: t('validationMessages:pleaseEnter') + t(field),
+        };
+      }
+    });
+    // show validation errors
+    if (isValidationError) {
+      setFormFieldsError({...formFieldsError, ...errorObj});
+      setLoading(false);
+      return;
+    }
+    const transformedBody = transformApiRequest(formFields, occupationOptions);
+    const {apiResponse, apiError} = await submitStep2DetailsService(
+      transformedBody
+    );
+    if (apiResponse) {
+      setLoading(false);
+      dispatch(saveApplicantLoanApplicationAction(apiResponse.data?.data));
+      /** payment framework is financial assistance - navigate to documents upload screen */
+      if (
+        applicantOverviewData &amp;&amp;
+        applicantOverviewData.paymentTypeOpted ===
+          VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE
+      ) {
+        navigate('ApplicantCompleteApplicationDocumentsUpload');
+      } else {
+        navigate('ApplicantCompleteApplicationStep3');
+      }
+    } else if (apiError) {
+      setLoading(false);
+      setFormFieldsError({
+        ...formFieldsError,
+        apiError: apiError.localizedMessage,
+      });
+    }
+  };
+
+  // validates month to be less then 11
+  const validateMonth = (month) => {
+    return month &lt;= 11;
+  };
+
+  /** rendering required documents */
+  const renderRequiredDocuments = () => {
+    if (requiredDocuments) {
+      return Object.keys(requiredDocuments).map((item, index) => {
+        return (
+          &lt;AppText style={styles.requiredDocumentsItemText} key={index}>
+            {item}
+          &lt;/AppText>
+        );
+      });
+    }
+  };
+
+  /** calling step 2 api to submit details */
+  const submitStep2DetailsService = async (body) => {
+    const {access_token} = loginData;
+    const response = await applicantCompleteApplicationStep2ApiCall(
+      access_token,
+      body
+    );
+    return response;
+  };
+
+  // fetches dropdown items based on field type
+  const handleGetDropdownItems = (fieldType) => {
+    switch (fieldType) {
+      case 'professionName': {
+        return masterData?.professions;
+      }
+      case 'primaryBank': {
+        return masterData?.banks;
+      }
+      case 'residenceType': {
+        return masterData?.residenceTypes;
+      }
+      case 'employerName': {
+        return masterData?.employers;
+      }
+      case 'salaryBankAccount': {
+        return masterData?.banks;
+      }
+      case 'companyType': {
+        return masterData?.companyTypes;
+      }
+      case 'natureOfBusiness': {
+        return masterData?.natureOfBusinesses;
+      }
+      case 'industryType': {
+        return masterData?.industryTypes;
+      }
+      case 'natureOfBusiness': {
+        return masterData?.natureOfBusinesses;
+      }
+      case 'mainBankerOfCompany': {
+        return masterData?.banks;
+      }
+      case 'occupation': {
+        return occupationOptions;
+      }
+      default: {
+        return [];
+      }
+    }
+  };
+
+  // returns user selected dropdown value
+  const handleGetDropdownValue = (item) => {
+    return formFields[item.dropdownValue];
+  };
+
+  // conditionally render form based on type of field
+  const renderForm = (item) => {
+    if (item.yearInputs) {
+      return (
+        &lt;View>
+          {item.valueKey === 'experience' ? (
+            isRequired ? (
+              &lt;AppText style={styles.placeholder}>
+                {t('experience') + ' *'}
+              &lt;/AppText>
+            ) : (
+              &lt;AppText style={styles.placeholder}>{t('experience')}&lt;/AppText>
+            )
+          ) : (
+            &lt;AppText style={styles.placeholder}>
+              {t(item.valueKey) + ' *'}
+            &lt;/AppText>
+          )}
+          &lt;View style={styles.formFieldsInRowContainer}>
+            {item.yearInputs.map((yearInputsItem) => {
+              return (
+                &lt;TextInput
+                  required={isRequired}
+                  value={formFields[yearInputsItem.valueKey]}
+                  placeholder={t(yearInputsItem.placeholder)}
+                  style={styles.smallTextInputContainer}
+                  onChangeText={handleChangeText(yearInputsItem.valueKey)}
+                  validationFunction={yearInputsItem.validationFunction}
+                  validationErrorMessage={yearInputsItem.validationErrorMessage}
+                  errorMessage={formFieldsError[yearInputsItem.errorMessageKey]}
+                  keyboardType={yearInputsItem.keyboardType}
+                  maxLength={yearInputsItem.maxLength}
+                />
+              );
+            })}
+          &lt;/View>
+        &lt;/View>
+      );
+    } else {
+      return (
+        &lt;ConditionalTextInput
+          item={item}
+          handleChangeText={handleChangeText}
+          handleGetDropdownItems={handleGetDropdownItems}
+          handleGetDropdownValue={handleGetDropdownValue}
+          value={formFields[item.valueKey]}
+          errorMessage={formFieldsError[item.errorMessageKey]}
+          placeholder={t(item.placeholder)}
+          required={isRequired}
+        />
+      );
+    }
+  };
+
+  const renderAdditionalFormFieldsForSelfImployed = () => {
+    return &lt;View>{selfEmployedFields.map((item) => renderForm(item))}&lt;/View>;
+  };
+
+  const renderAdditionalFormFieldsForSalariedPrivate = () => {
+    return &lt;View>{salariedPrivateFields.map((item) => renderForm(item))}&lt;/View>;
+  };
+
+  const renderAdditionalFormFieldsForBusinessOwner = () => {
+    return &lt;View>{businessOwnerFields.map((item) => renderForm(item))}&lt;/View>;
+  };
+
+  const renderAdditionalFormFields = () => {
+    let occupation = formFields.occupation;
+    switch (occupation) {
+      case 'SELF_EMPLOYED': {
+        return renderAdditionalFormFieldsForSelfImployed();
+      }
+      case 'SALARIED_PRIVATE': {
+        return renderAdditionalFormFieldsForSalariedPrivate();
+      }
+      case 'SALARIED_PUBLIC': {
+        return renderAdditionalFormFieldsForSalariedPrivate();
+      }
+      case 'BUSINESS_OWNER': {
+        return renderAdditionalFormFieldsForBusinessOwner();
+      }
+      default: {
+        return renderAdditionalFormFieldsForSelfImployed();
+      }
+    }
+  };
+
+  return (
+    &lt;KeyboardAwareScrollView
+      showsVerticalScrollIndicator={false}
+      style={styles.scrollView}
+      contentContainerStyle={styles.containerStyleView}>
+      &lt;Container style={styles.containerContainer} isBackgroundPlain>
+        &lt;View style={styles.headingContainer}>
+          &lt;Image
+            source={financialInformationIcon}
+            resizeMode={'contain'}
+            style={styles.headingIcon}
+          />
+          &lt;AppText style={styles.heading}>{t('financialInformation')}&lt;/AppText>
+        &lt;/View>
+        {financialInfoFieldsArray.map((item) => renderForm(item))}
+      &lt;/Container>
+
+      &lt;Container style={styles.containerContainerSecond} isBackgroundPlain>
+        &lt;View style={styles.headingContainer}>
+          &lt;Image
+            source={professionalOtherFIIcon}
+            resizeMode={'contain'}
+            style={styles.headingIcon}
+          />
+          &lt;AppText style={styles.heading}>
+            {t('professionalandotherfinancialinformation')}
+          &lt;/AppText>
+        &lt;/View>
+        {professionalInfoFieldArray.map((item) => renderForm(item))}
+        {renderAdditionalFormFields()}
+      &lt;/Container>
+
+      {requiredDocuments &amp;&amp;
+        applicantOverviewData &amp;&amp;
+        applicantOverviewData.paymentTypeOpted ===
+          VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE &amp;&amp; (
+          &lt;Container style={styles.containerContainer}>
+            &lt;View style={styles.headingContainer}>
+              &lt;Image
+                source={documentsIcon}
+                resizeMode={'contain'}
+                style={styles.headingIcon}
+              />
+              &lt;AppText style={styles.heading}>{t('requiredDocuments')}&lt;/AppText>
+            &lt;/View>
+            {renderRequiredDocuments()}
+          &lt;/Container>
+        )}
+
+      &lt;Button
+        style={styles.buttonContainer}
+        onPressEvent={handlePressSave}
+        label={t('saveAndProceed')}
+        isLoading={loading}
+      />
+
+      &lt;View style={styles.errorContainer}>
+        &lt;AppText style={styles.apiErrorText}>
+          {formFieldsError.apiError}
+        &lt;/AppText>
+      &lt;/View>
+    &lt;/KeyboardAwareScrollView>
+  );
+};
+
+export default CompleteApplicationStep2;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

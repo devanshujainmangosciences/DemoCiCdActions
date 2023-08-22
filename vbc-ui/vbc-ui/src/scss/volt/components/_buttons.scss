@@ -1,0 +1,284 @@
+/*
+* = Buttons
+*/
+
+button:disabled {
+}
+
+.btn {
+  font-size: $font-size-sm;
+  &.btn-circle {
+    border-radius: $circle-radius;
+  }
+
+  &.btn-md {
+    padding: 0.65rem 1.25rem;
+  }
+
+  &.btn-xs {
+    padding: 0.175rem 0.45rem;
+    font-size: 0.7rem;
+  }
+  &.btn-xxs {
+    padding: 0.1rem 0.5rem;
+    font-size: 0.5rem;
+  }
+}
+
+.btn:hover {
+  color: white;
+  // background-color:#f2871d ;
+  border-color: none;
+}
+.btn:disabled,
+.btn.disabled,
+fieldset:disabled .btn {
+  color: white;
+  pointer-events: none;
+  // background-color: #f2871d;
+  opacity: 0.4;
+  box-shadow: none;
+}
+.patient-button {
+  background-color: $patient;
+  border: none;
+  font-size: $font-size-sm;
+  font-family: $font-family-roboto;
+  font-weight: 500;
+  letter-spacing: 0.48px;
+  &:active {
+    border: none;
+    outline: none !important;
+  }
+  &:hover {
+    background-color: $patient;
+  }
+}
+
+.add-form {
+  span {
+    font-size: 14px;
+    font-weight: normal;
+    padding-left: 10px;
+  }
+}
+.btn-icon-only {
+  width: 2.575rem;
+  height: 2.575rem;
+  padding: 0;
+  @include display-flex();
+  @include justify-content(center);
+  @include align-items(center);
+
+  &.btn-xs {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  &.btn-sm {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+//
+// Block button
+//
+
+.btn-block {
+  display: block;
+  width: 100%;
+
+  // Vertically space out multiple block buttons
+  + .btn-block {
+    margin-top: $btn-block-spacing-y;
+  }
+}
+
+.copy-code-button {
+  position: absolute;
+  top: 22px;
+  right: 20px;
+  background-color: transparent;
+  color: $gray-600;
+  border: 0;
+  box-shadow: none;
+
+  &:hover {
+    background-color: $primary;
+    color: $white;
+    border: 0;
+    box-shadow: none;
+  }
+}
+.role-check {
+  width: auto;
+  padding-right: 25px;
+  border: 0.0625rem solid $gray-500;
+  border-radius: 5px;
+  margin-left: 10px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  height: 30px;
+  svg {
+    cursor: pointer;
+    position: absolute;
+    right: 5px;
+    color: #66799e;
+  }
+}
+.role-check.view {
+  padding-right: 10px;
+  justify-content: center;
+}
+.copy-code-text {
+  position: absolute;
+  top: 24px;
+  right: 90px;
+}
+.bg-white-hover {
+  &:hover {
+    background-color: $white;
+  }
+}
+.update-profile {
+  margin-top: 14px;
+  width: 186px;
+  height: 34px;
+  background: transparent linear-gradient(180deg, $white 0%, #f0f0f0 100%) 0% 0%
+    no-repeat padding-box;
+  border: 1px solid #c2c2c2;
+  border-radius: 17px;
+}
+.update-language {
+  width: 186px;
+  height: 34px;
+  background: transparent linear-gradient(180deg, $white 0%, #f0f0f0 100%) 0% 0%
+    no-repeat padding-box;
+  border: 1px solid #c2c2c2;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+.btn-patient-theme {
+  min-width: 60px;
+  height: 38px;
+  padding: 0 20px;
+  background: $patient 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  font-size: $font-size-sm;
+  outline: none;
+  border: none;
+  color: $white;
+}
+
+.btn-patient-theme:disabled,
+.btn-patient-theme.disabled,
+fieldset:disabled .btn-patient-theme {
+  color: white;
+  pointer-events: none;
+  opacity: 0.4;
+  box-shadow: none;
+}
+.btn-patient-theme-small {
+  @extend .btn-patient-theme;
+  height: 34px;
+}
+.btn-patient-theme-input-30 {
+  @extend .btn-patient-theme;
+  height: 30px;
+}
+.btn-patient-theme-grid {
+  @extend .btn-patient-theme;
+  height: 30px;
+}
+.btn-patient-theme-disabled {
+  @extend .btn-patient-theme;
+  height: 30px;
+  background-color: #ebebe4;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  grid-gap: 20px;
+}
+
+.btn-patient-color {
+  background: $patient 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+.btn-admin-color {
+  background: $admin 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+.btn-doctor-color {
+  background: $doctor 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+.btn-patient-color:hover {
+  background: $patient 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+.btn-admin-color:hover {
+  background: $admin 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+.btn-doctor-color:hover {
+  background: $doctor 0% 0% no-repeat padding-box;
+  color: $white;
+  border-color: white;
+}
+
+.btn-confirm-patient {
+  cursor: pointer;
+  min-width: 80px;
+  height: 38px;
+  padding: 0 20px;
+  background: $patient 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  outline: none;
+  border: none;
+  color: $white;
+  display: flex;
+  align-items: center;
+}
+.btn-confirm-patient-disabled {
+  @extend .btn-confirm-patient;
+  opacity: 0.5;
+}
+.btn-cancle-patient {
+  cursor: pointer;
+  min-width: 80px;
+  height: 38px;
+  padding: 0 20px;
+  background: $text-muted 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  outline: none;
+  border: none;
+  color: $white;
+  display: flex;
+  align-items: center;
+}
+.caregiver-btn {
+  height: 40px;
+  padding: 0px 18px;
+  background: $white 0% 0% no-repeat padding-box;
+  border: 1px solid $light-gray;
+  border-radius: 3px;
+  &:hover {
+    color: black;
+  }
+}
+
+.reupload-document {
+  padding-left: 11px;
+  padding-right: 11px;
+}

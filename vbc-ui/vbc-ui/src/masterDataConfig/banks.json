@@ -1,0 +1,17 @@
+{
+  "dataVariables": "BankDataVariables",
+  "readListAction": "readBanks",
+  "deleteDataAction": "deleteBank",
+  "reduxDataListState": "state.template?.masterData?.banks",
+  "reduxPaginationData": "state.template?.masterData?.banks?.pagination",
+  "tableHeadersPath": "tableHeadersBanks",
+  "filterConfig": "banksFilters",
+  "updateData": "updateBank",
+  "createData": "createBank",
+  "showData": "showBank",
+  "newPath": "NewBank",
+  "viewPath": "ViewBank",
+  "updatePath": "UpdateBank",
+  "listPath": "Banks",
+  "reduxSelectedData": "state.state.selectedBank"
+}

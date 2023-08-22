@@ -1,0 +1,10 @@
+{
+  "radiationTherapy": "Radiation Therapy",
+  "radiationTechnique": "Radiation Technique",
+  "date": "Date",
+  "home": "Home",
+  "treatment": "Treatment",
+  "noYearNote": "You are not able to see any reports since there is no data or synchronization of data is not complete.",
+  "noRadiationTherapyFound": "No radiation Therapy Found",
+  "noRadiationTherapyReports": "Information not available"
+}

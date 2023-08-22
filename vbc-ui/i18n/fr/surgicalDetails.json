@@ -1,0 +1,16 @@
+{
+  "home": "Home",
+  "clinicalDetails": "Clinical Details",
+  "surgicalDetails": "Surgical Details",
+  "surgeryDetails": "Surgery Details",
+  "loading": "Loading...",
+  "surgeryDepartment": "Surgery Department",
+  "primarySurgeonName": "Primary Surgeon Name",
+  "procedureName": "Procedure Name",
+  "procedureCategory": "Procedure Category",
+  "surgeryDate": "Surgery Date",
+  "surgery": "Surgery",
+  "treatment": "Treatment",
+  "noYearNote": "You are not able to see any reports since there is no data or synchronization of data is not complete.",
+  "noSurgeryReports": "No record of surgery found"
+}

@@ -1,0 +1,17 @@
+{
+  "welcome": "Welcome",
+  "lastVisit": "Last Visit:",
+  "cycleDetails": "Cycle Details",
+  "organisation": "Organisation",
+  "role": "Role:",
+  "help": "Help",
+  "notifications": "Notifications",
+  "viewAll": "View all",
+  "loadNextFive": "Load Next",
+  "loadPreviousFive": "Load Previous",
+  "you-dont-have-any-notification": "No Notifications yet!",
+  "you-dont-have-any-notification-mobile": "There are no new notification for you at the moment.",
+  "logout": "Logout",
+  "search": "Search",
+  "loadMore": "Load More"
+}

@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/StartLoanApplication/children/FinancialInformation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/StartLoanApplication/children/FinancialInformation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This Component renders a Form for user to enter his/her financial information required for
+ * loan application
+ * &lt;FinancialInformation
+ *  handleClick(Func) => This function is used to take the user to next or prev step of loan application process
+ * />
+ */
+import React, {useState, useEffect} from 'react';
+import {Form, Col, Row} from '@themesberg/react-bootstrap';
+import {useTranslation} from 'react-i18next';
+import {OCCUPATION_ID, OCCUPATION_KEY, OCCUPATION} from '../../../constants';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  BankAccountDetailsIcon,
+  ProfessionalFinancialIcon,
+  RequriedDocumentIcon,
+} from 'assets/icons';
+import PropTypes from 'prop-types';
+import {
+  getLoanApplicationDetails,
+  requiredDocuments,
+  startLoanApplicationSteps,
+} from 'actions';
+import {durationMonthsOptions} from 'config';
+import {checkMasterValue} from 'services/utility';
+
+const FinancialInformation = ({
+  handleClick,
+  requiredDocument,
+  occupation,
+  setOccupation,
+  isFinancialAssistance,
+  handleStepJump,
+}) => {
+  const dispatch = useDispatch();
+  const {t} = useTranslation(['completeLoan']);
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankBranch, setBankBranch] = useState('');
+  const [bankIFSCCode, setBankIFSCCode] = useState('');
+
+  const [employerName, setEmployerName] = useState('');
+  const [netMonthlyIncome, setNetMonthlyIncome] = useState('');
+  const [grossAnnualIncome, setGrossAnnualIncome] = useState('');
+  const [companyType, setCompanyType] = useState('');
+  const [annualProfits, setAnnualProfits] = useState('');
+  const [sales, setSales] = useState('');
+  const [residenceType, setResidenceType] = useState('');
+  const [professionName, setProfessionName] = useState('');
+  const [mainOrPrimaryBank, setMainOrPrimaryBank] = useState('');
+  const [salaryBankAccount, setSalaryBankAccount] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [natureOfBusiness, setNatureOfBusiness] = useState('');
+  const [industryType, setIndustryType] = useState('');
+  const [mainBankerOfCompany, setMainBankerOfCompany] = useState('');
+
+  const [tenureYears, setTenureYears] = useState('');
+  const [tenureMonths, setTenureMonths] = useState('');
+
+  const [yearsInBusiness, setYearsInBusiness] = useState('');
+  const [monthInBusiness, setMonthInBusiness] = useState('');
+
+  const [workExperienceYears, setWorkExperienceYears] = useState('');
+  const [workExperienceMonths, setWorkExperienceMonths] = useState('');
+
+  const [experienceYears, setExperienceYears] = useState('');
+  const [experienceMonths, setExperienceMonths] = useState('');
+  const [otherData, setOtherData] = useState(null);
+  const [isOtherSelected, setisOtherSelected] = useState(null);
+
+  const [
+    anyOtherSelfOwnedResidenceOrLiquidAsset,
+    setAnyOtherSelfOwnedResidenceOrLiquidAsset,
+  ] = useState('');
+
+  // const selectedOccupation = localStorage.getItem('occupationType');
+
+  const financialInfo = useSelector(
+    (state) => state.loanApplication.loanDetail
+  );
+  const masterData = useSelector((state) => state.template.masterData);
+
+  /**
+   * Dispatch getFinancialInformation action with true as param if financial info has no value
+   */
+  useEffect(() => {
+    if (!financialInfo) {
+      dispatch(getLoanApplicationDetails());
+    }
+  }, [dispatch, financialInfo]);
+
+  /**
+   * This callback is used to set corresponding financial detail to its state if it is present
+   * in the localStorage
+   */
+  useEffect(() => {
+    if (financialInfo.financeDetails) {
+      setBankAccountNumber(financialInfo.financeDetails.bankAccountNumber);
+      setBankBranch(financialInfo.financeDetails.bankBranch);
+      setBankIFSCCode(financialInfo.financeDetails.bankIfscCode);
+      setBankName(financialInfo.financeDetails.bankName);
+      if (occupation) {
+        if (occupation === financialInfo.financeDetails.occupation) {
+          setOccupation(financialInfo.financeDetails.occupation);
+        } else {
+          setOccupation(occupation);
+        }
+      } else {
+        setOccupation(financialInfo.occupation);
+      }
+      setProfessionName(financialInfo.financeDetails.professionName);
+      if (financialInfo.financeDetails.experience) {
+        setExperienceYears(
+          parseInt(financialInfo.financeDetails.experience / 12)
+        );
+        setExperienceMonths(financialInfo.financeDetails.experience % 12);
+      }
+      setGrossAnnualIncome(financialInfo.financeDetails.grossAnnualIncome);
+      setMainOrPrimaryBank(financialInfo.financeDetails.primaryBank);
+      setResidenceType(financialInfo.financeDetails.residenceType);
+      setEmployerName(financialInfo.financeDetails.employerName);
+      setNetMonthlyIncome(financialInfo.financeDetails.netMonthlyIncome);
+      setSalaryBankAccount(financialInfo.financeDetails.salaryBankAccount);
+      if (financialInfo.financeDetails.tenureAtCompany) {
+        setTenureYears(
+          parseInt(financialInfo.financeDetails.tenureAtCompany / 12)
+        );
+        setTenureMonths(financialInfo.financeDetails.tenureAtCompany % 12);
+      }
+      if (financialInfo.financeDetails.totalWorkExperience) {
+        setWorkExperienceYears(
+          parseInt(financialInfo.financeDetails.totalWorkExperience / 12)
+        );
+        setWorkExperienceMonths(
+          financialInfo.financeDetails.totalWorkExperience % 12
+        );
+      }
+      setAnyOtherSelfOwnedResidenceOrLiquidAsset(
+        financialInfo.financeDetails.anyOtherAsset
+      );
+      setCompanyType(financialInfo.financeDetails.companyType);
+      setCompanyName(financialInfo.financeDetails.companyName);
+      setNatureOfBusiness(financialInfo.financeDetails.natureOfBusiness);
+      setIndustryType(financialInfo.financeDetails.industryType);
+      if (financialInfo.financeDetails.yearsInBusiness) {
+        setYearsInBusiness(
+          parseInt(financialInfo.financeDetails.yearsInBusiness / 12)
+        );
+        setMonthInBusiness(financialInfo.financeDetails.yearsInBusiness % 12);
+      }
+      setSales(financialInfo.financeDetails.sales);
+      setAnnualProfits(financialInfo.financeDetails.annualProfit);
+      setMainBankerOfCompany(financialInfo.financeDetails.mainBankerOfCompany);
+    }
+  }, [financialInfo, dispatch]);
+
+  const clearAll = (occupation) => {
+    if (occupation === OCCUPATION.SELF_EMPLOYED) {
+      setWorkExperienceYears('');
+      setWorkExperienceMonths('');
+      setTenureYears('');
+      setTenureMonths('');
+      setEmployerName('');
+      setNetMonthlyIncome('');
+      setSalaryBankAccount('');
+      setAnyOtherSelfOwnedResidenceOrLiquidAsset('');
+      setCompanyType('');
+      setCompanyName('');
+      setNatureOfBusiness('');
+      setIndustryType('');
+      setSales('');
+      setAnnualProfits('');
+      setMainBankerOfCompany('');
+      setYearsInBusiness('');
+      setMonthInBusiness('');
+    }
+    if (
+      occupation === OCCUPATION.SALARIED_PRIVATE ||
+      occupation === OCCUPATION.SALARIED_PUBLIC
+    ) {
+      setProfessionName('');
+      setExperienceYears('');
+      setExperienceMonths('');
+      setGrossAnnualIncome('');
+      setMainOrPrimaryBank('');
+      setCompanyType('');
+      setCompanyName('');
+      setNatureOfBusiness('');
+      setIndustryType('');
+      setSales('');
+      setAnnualProfits('');
+      setMainBankerOfCompany('');
+      setYearsInBusiness('');
+      setMonthInBusiness('');
+    }
+    if (occupation === OCCUPATION.BUSINESS_OWNER) {
+      setWorkExperienceYears('');
+      setWorkExperienceMonths('');
+      setTenureYears('');
+      setTenureMonths('');
+      setEmployerName('');
+      setNetMonthlyIncome('');
+      setSalaryBankAccount('');
+      setAnyOtherSelfOwnedResidenceOrLiquidAsset('');
+      setProfessionName('');
+      setExperienceYears('');
+      setExperienceMonths('');
+      setGrossAnnualIncome('');
+      setMainOrPrimaryBank('');
+    }
+  };
+  const handleChangeOccupation = (occupation) => {
+    setOccupation(occupation);
+    dispatch(requiredDocuments(OCCUPATION_ID[occupation]));
+    clearAll(financialInfo?.financeDetails?.occupation);
+  };
+  /**
+   * This Function is used to store data in localStorage the data
+   * based on occupationType which has selected in the first step
+   * and takes the user to next step
+   * @param {any} e
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      bankAccountNumber: bankAccountNumber,
+      bankName: bankName,
+      bankBranch: bankBranch,
+      bankIfscCode: bankIFSCCode,
+      residenceType: residenceType,
+      occupation: occupation,
+    };
+    if (occupation === OCCUPATION.SELF_EMPLOYED) {
+      data['professionName'] = isOtherSelected?.professionName
+        ? otherData?.professionName
+        : professionName;
+      data['experience'] =
+        parseInt(experienceYears) * 12 + parseInt(experienceMonths);
+      data['grossAnnualIncome'] = parseInt(grossAnnualIncome);
+      data['primaryBank'] = mainOrPrimaryBank;
+    }
+    if (
+      occupation === OCCUPATION.SALARIED_PRIVATE ||
+      occupation === OCCUPATION.SALARIED_PUBLIC
+    ) {
+      data['employerName'] = isOtherSelected?.employerName
+        ? otherData?.employerName
+        : employerName;
+      data['netMonthlyIncome'] = parseFloat(netMonthlyIncome);
+      data['salaryBankAccount'] = salaryBankAccount;
+      data['tenureAtCompany'] =
+        parseInt(tenureYears) * 12 + parseInt(tenureMonths);
+      data['totalWorkExperience'] =
+        parseInt(workExperienceYears) * 12 + parseInt(workExperienceMonths);
+      data['anyOtherAsset'] = anyOtherSelfOwnedResidenceOrLiquidAsset;
+    }
+    if (occupation === OCCUPATION.BUSINESS_OWNER) {
+      data['companyType'] = companyType;
+      data['companyName'] = companyName;
+      data['natureOfBusiness'] = natureOfBusiness;
+      data['industryType'] = isOtherSelected?.industryType
+        ? otherData?.industryType
+        : industryType;
+      data['yearsInBusiness'] =
+        parseInt(yearsInBusiness) * 12 + parseInt(monthInBusiness);
+      data['sales'] = parseInt(sales);
+      data['annualProfit'] = parseFloat(annualProfits);
+      data['mainBankerOfCompany'] = mainBankerOfCompany;
+    }
+    dispatch(startLoanApplicationSteps(data, 2));
+  };
+  const handleClickBack = () => {
+    // console.log('isFinancialAssistance=>', isFinancialAssistance);
+    if (isFinancialAssistance) {
+      handleClick('prev');
+    } else {
+      handleStepJump(1);
+    }
+  };
+
+  useEffect(() => {
+    if (financialInfo?.financeDetails) {
+      const financialData = financialInfo?.financeDetails;
+      // console.log('FINANCIAL DATA=>', financialData);
+      // console.log('masterData=>', masterData);
+
+      const employerName = checkMasterValue(
+        financialData?.employerName,
+        masterData?.employers
+      );
+      const professionName = checkMasterValue(
+        financialData?.professionName,
+        masterData?.professions
+      );
+      const industryType = checkMasterValue(
+        financialData?.industryType,
+        masterData?.industryTypes
+      );
+
+      const isEmployerOtherData = employerName
+        ? masterData?.employers.find(({name}) => name === employerName)
+        : true;
+      const isOccupationOtherData = professionName
+        ? masterData?.professions.find(({name}) => name === professionName)
+        : true;
+      const isIndustryOtherData = industryType
+        ? masterData?.industryTypes.find(({name}) => name === industryType)
+        : true;
+
+      const isotherDataSelected = {
+        employerName: isEmployerOtherData ? false : true,
+        professionName: isOccupationOtherData ? false : true,
+        industryType: isIndustryOtherData ? false : true,
+      };
+
+      const otherData = {
+        employerName: isotherDataSelected.employerName ? employerName : '',
+        professionName: isotherDataSelected.professionName
+          ? professionName
+          : '',
+        industryType: isotherDataSelected.industryType ? industryType : '',
+      };
+
+      if (!isEmployerOtherData) setEmployerName('Other');
+      if (!isOccupationOtherData) setProfessionName('Other');
+      if (!isIndustryOtherData) setIndustryType('Other');
+
+      setisOtherSelected(isotherDataSelected);
+      setOtherData(otherData);
+    }
+  }, [financialInfo]);
+
+  const handleOtherChange = (e) => {
+    const value = e.target.value;
+    const name = e.target.name;
+    if (value === 'Other')
+      setisOtherSelected({
+        ...isOtherSelected,
+        [name]: true,
+      });
+    else
+      setisOtherSelected({
+        ...isOtherSelected,
+        [name]: false,
+      });
+  };
+
+  const onOtherDataChange = (e) => {
+    setOtherData({...otherData, [e.target.name]: e.target.value});
+  };
+
+  // console.log('OTHER DATA=>', otherData);
+  // console.log('isOtherSelected=>', isOtherSelected);
+
+  /**
+   * Renders the form fields based the occupation type string passed
+   * @param {String} occupation
+   *
+   */
+  const OccupationBasedForm = (occupation) => {
+    if (occupation === 'SELF_EMPLOYED') {
+      return (
+        &lt;React.Fragment>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('professionName')}:
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={professionName}
+                name="professionName"
+                onChange={(e) => {
+                  setProfessionName(e.target.value);
+                  handleOtherChange(e);
+                }}
+                required={isFinancialAssistance}
+                as="select">
+                &lt;option value="">Select One&lt;/option>
+                {masterData?.professions.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+                &lt;option value="Other">Other&lt;/option>
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+          {isOtherSelected?.professionName &amp;&amp; (
+            &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+              &lt;Form.Group>
+                &lt;Form.Label>
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}
+                  {t('enterProfession')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={otherData?.professionName}
+                  name="professionName"
+                  onChange={onOtherDataChange}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+            &lt;/Col>
+          )}
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Row className="p-0">
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('experience')}:
+              &lt;/Form.Label>
+            &lt;/Row>
+            &lt;Row className="row-cols-lg-2 profession-info-row p-0">
+              &lt;>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={experienceYears}
+                      onChange={(e) => setExperienceYears(e.target.value)}
+                      type="text"
+                      placeholder="Years"
+                      required
+                    />
+                  &lt;/Form.Group>
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={experienceMonths}
+                      onChange={(e) => setExperienceMonths(e.target.value)}
+                      as="select"
+                      required={isFinancialAssistance}>
+                      &lt;option value="">Select Months&lt;/option>
+                      {durationMonthsOptions.map((option) => (
+                        &lt;option key={option.id} value={option.value}>
+                          {option.label}
+                        &lt;/option>
+                      ))}
+                    &lt;/Form.Control>
+                  &lt;/Form.Group>
+                &lt;/Col>
+              &lt;/>
+            &lt;/Row>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('grossAnnualIncome')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={grossAnnualIncome}
+                onChange={(e) => setGrossAnnualIncome(e.target.value)}
+                required={isFinancialAssistance}
+                type="number"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('mainOrPrimaryBank')}:
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={mainOrPrimaryBank}
+                onChange={(e) => setMainOrPrimaryBank(e.target.value)}
+                required={isFinancialAssistance}
+                as="select">
+                &lt;option value="">Select One&lt;/option>
+                {masterData?.banks.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+        &lt;/React.Fragment>
+      );
+    }
+    if (occupation === 'SALARIED_PRIVATE' || occupation === 'SALARIED_PUBLIC') {
+      return (
+        &lt;React.Fragment>
+          {' '}
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('employerName')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={employerName}
+                name="employerName"
+                required={isFinancialAssistance}
+                onChange={(e) => {
+                  setEmployerName(e.target.value);
+                  handleOtherChange(e);
+                }}
+                as="select">
+                &lt;option hidden value="">
+                  {t('selectOne')}
+                &lt;/option>{' '}
+                {masterData?.employers.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+                &lt;option value="Other">Other&lt;/option>
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+          {isOtherSelected?.employerName &amp;&amp; (
+            &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+              &lt;Form.Group>
+                &lt;Form.Label>
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}
+                  {t('enterEmployerName')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={otherData?.employerName}
+                  name="employerName"
+                  onChange={onOtherDataChange}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+            &lt;/Col>
+          )}
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('netMonthlyIncome')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={netMonthlyIncome}
+                required={isFinancialAssistance}
+                onChange={(e) => setNetMonthlyIncome(e.target.value)}
+                type="number"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('salaryACwithBank')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={salaryBankAccount}
+                required={isFinancialAssistance}
+                onChange={(e) => setSalaryBankAccount(e.target.value)}
+                as="select">
+                &lt;option hidden value="">
+                  {t('selectOne')}
+                &lt;/option>{' '}
+                {masterData?.banks.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Row className="p-0">
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('tenureAtCompany')}:
+              &lt;/Form.Label>
+            &lt;/Row>
+            &lt;Row className="row-cols-lg-2 profession-info-row p-0">
+              &lt;>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={tenureYears}
+                      onChange={(e) => setTenureYears(e.target.value)}
+                      type="text"
+                      placeholder="Years"
+                      required
+                    />
+                  &lt;/Form.Group>
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={tenureMonths}
+                      onChange={(e) => setTenureMonths(e.target.value)}
+                      as="select"
+                      required={isFinancialAssistance}>
+                      &lt;option value="">Select Months&lt;/option>
+                      {durationMonthsOptions.map((option) => (
+                        &lt;option key={option.id} value={option.value}>
+                          {option.label}
+                        &lt;/option>
+                      ))}
+                    &lt;/Form.Control>
+                  &lt;/Form.Group>
+                &lt;/Col>
+              &lt;/>
+            &lt;/Row>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Row className="p-0">
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('totalWorkExperience')} :
+              &lt;/Form.Label>
+            &lt;/Row>
+            &lt;Row className="row-cols-lg-2 profession-info-row p-0">
+              &lt;>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={workExperienceYears}
+                      onChange={(e) => setWorkExperienceYears(e.target.value)}
+                      type="text"
+                      placeholder="Years"
+                      required
+                    />
+                  &lt;/Form.Group>
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={workExperienceMonths}
+                      onChange={(e) => setWorkExperienceMonths(e.target.value)}
+                      as="select"
+                      required={isFinancialAssistance}>
+                      &lt;option value="">Select Months&lt;/option>
+                      {durationMonthsOptions.map((option) => (
+                        &lt;option key={option.id} value={option.value}>
+                          {option.label}
+                        &lt;/option>
+                      ))}
+                    &lt;/Form.Control>
+                  &lt;/Form.Group>
+                &lt;/Col>
+              &lt;/>
+            &lt;/Row>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-12 col-lg-7 col-xl-5 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('anyOtherSelfOwnedResidenceOrLiquidAssets')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={anyOtherSelfOwnedResidenceOrLiquidAsset}
+                required={isFinancialAssistance}
+                onChange={(e) =>
+                  setAnyOtherSelfOwnedResidenceOrLiquidAsset(e.target.value)
+                }
+                type="text"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+        &lt;/React.Fragment>
+      );
+    }
+    if (occupation === 'BUSINESS_OWNER') {
+      return (
+        &lt;React.Fragment>
+          {' '}
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('companyType')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={companyType}
+                required={isFinancialAssistance}
+                onChange={(e) => setCompanyType(e.target.value)}
+                as="select">
+                &lt;option hidden value="">
+                  {t('selectOne')}
+                &lt;/option>{' '}
+                {masterData?.companyTypes.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('companyName')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={companyName}
+                required={isFinancialAssistance}
+                onChange={(e) => setCompanyName(e.target.value)}
+                type="text"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Form.Group as={Col} className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Label>
+              {' '}
+              {isFinancialAssistance &amp;&amp; (
+                &lt;span className="patient-color">*&lt;/span>
+              )}{' '}
+              {t('natureOfBusiness')} :
+            &lt;/Form.Label>
+            &lt;Form.Control
+              value={natureOfBusiness}
+              required={isFinancialAssistance}
+              onChange={(e) => setNatureOfBusiness(e.target.value)}
+              as="select">
+              &lt;option hidden value="">
+                {t('selectOne')}
+              &lt;/option>{' '}
+              {masterData?.natureOfBusinesses.map(({id, name}) => (
+                &lt;option key={id} value={name}>
+                  {name}
+                &lt;/option>
+              ))}
+            &lt;/Form.Control>
+          &lt;/Form.Group>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('industryType')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={industryType}
+                name="industryType"
+                required={isFinancialAssistance}
+                onChange={(e) => {
+                  setIndustryType(e.target.value);
+                  handleOtherChange(e);
+                }}
+                as="select">
+                &lt;option hidden value="">
+                  {t('selectOne')}
+                &lt;/option>{' '}
+                {masterData?.industryTypes.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+                &lt;option value="Other">Other&lt;/option>
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+          {isOtherSelected?.industryType &amp;&amp; (
+            &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+              &lt;Form.Group>
+                &lt;Form.Label>
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}
+                  {t('enterIndustryType')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={otherData?.industryType}
+                  name="industryType"
+                  onChange={onOtherDataChange}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+            &lt;/Col>
+          )}
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Row className="p-0">
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('applicantFinancialInformation:yearsInBusiness')}:
+              &lt;/Form.Label>
+            &lt;/Row>
+            &lt;Row className="row-cols-lg-2 profession-info-row p-0">
+              &lt;>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={yearsInBusiness}
+                      onChange={(e) => setYearsInBusiness(e.target.value)}
+                      type="text"
+                      placeholder="Years"
+                      required
+                    />
+                  &lt;/Form.Group>
+                &lt;/Col>
+                &lt;Col>
+                  &lt;Form.Group>
+                    &lt;Form.Control
+                      value={monthInBusiness}
+                      onChange={(e) => setMonthInBusiness(e.target.value)}
+                      as="select"
+                      required={isFinancialAssistance}>
+                      &lt;option value="">Select Months&lt;/option>
+                      {durationMonthsOptions.map((option) => (
+                        &lt;option key={option.id} value={option.value}>
+                          {option.label}
+                        &lt;/option>
+                      ))}
+                    &lt;/Form.Control>
+                  &lt;/Form.Group>
+                &lt;/Col>
+              &lt;/>
+            &lt;/Row>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('sales')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={sales}
+                required={isFinancialAssistance}
+                onChange={(e) => setSales(e.target.value)}
+                type="number"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}{' '}
+                {t('annualProfits')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={annualProfits}
+                required={isFinancialAssistance}
+                onChange={(e) => setAnnualProfits(e.target.value)}
+                type="number"
+              />
+            &lt;/Form.Group>
+          &lt;/Col>
+          &lt;Col className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+            &lt;Form.Group>
+              &lt;Form.Label>
+                {' '}
+                {isFinancialAssistance &amp;&amp; (
+                  &lt;span className="patient-color">*&lt;/span>
+                )}
+                {t('mainBankerOfCompany')} :
+              &lt;/Form.Label>
+              &lt;Form.Control
+                value={mainBankerOfCompany}
+                onChange={(e) => setMainBankerOfCompany(e.target.value)}
+                as="select"
+                required={isFinancialAssistance}>
+                &lt;option value="">Select One&lt;/option>
+                {masterData?.banks.map(({id, name}) => (
+                  &lt;option key={id} value={name}>
+                    {name}
+                  &lt;/option>
+                ))}
+              &lt;/Form.Control>
+            &lt;/Form.Group>
+          &lt;/Col>
+        &lt;/React.Fragment>
+      );
+    }
+  };
+
+  return (
+    &lt;div>
+      &lt;div className=" start-financial-loan pb-5 ">
+        &lt;Form onSubmit={handleSubmit}>
+          &lt;div className="item  p-4">
+            &lt;div className="d-flex flex-row align-items-center title mb-2">
+              &lt;BankAccountDetailsIcon fill="#28252e" width="20" height="20" />
+              &lt;h4 className="ms-2 mb-0">{t('bankAccountDetails')}&lt;/h4>
+            &lt;/div>
+            &lt;Row className="row-cols-sm-2 row-cols-md-3 row-cols-lg-3">
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {' '}
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}
+                  {t('bankAccountNumber')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={bankAccountNumber}
+                  onChange={(e) => setBankAccountNumber(e.target.value)}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {' '}
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}{' '}
+                  {t('bankName')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  required={isFinancialAssistance}
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                />
+              &lt;/Form.Group>
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {' '}
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}{' '}
+                  {t('bankBranch')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={bankBranch}
+                  onChange={(e) => setBankBranch(e.target.value)}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {' '}
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}{' '}
+                  {t('bankIFSCCode')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={bankIFSCCode}
+                  onChange={(e) => setBankIFSCCode(e.target.value)}
+                  required={isFinancialAssistance}
+                  type="text"
+                />
+              &lt;/Form.Group>
+            &lt;/Row>
+          &lt;/div>
+          &lt;div className="item mt-4 p-4">
+            &lt;div className="d-flex flex-row align-items-center title mb-2">
+              &lt;ProfessionalFinancialIcon
+                fill="#28252e"
+                width="20"
+                height="20"
+              />
+              &lt;h4 className="ms-2 mb-0">
+                {t('professionalandotherfinancialinformation')}
+              &lt;/h4>
+            &lt;/div>
+            &lt;Row className="row-cols-sm-2 row-cols-md-3 row-cols-lg-3">
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-6 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {' '}
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}{' '}
+                  {t('occupation')} :
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={occupation}
+                  onChange={(e) => handleChangeOccupation(e.target.value)}
+                  required={isFinancialAssistance}
+                  as="select">
+                  &lt;option hidden value="">
+                    {t('selectOne')}
+                  &lt;/option>{' '}
+                  {masterData?.occupations.map(({id, name}) => (
+                    &lt;option key={id} value={OCCUPATION_KEY[name]}>
+                      {name}
+                    &lt;/option>
+                  ))}
+                &lt;/Form.Control>
+              &lt;/Form.Group>
+              {OccupationBasedForm(occupation)}
+              &lt;Form.Group
+                as={Col}
+                className="col-sm-12 col-md-12 col-lg-4 mb-2 ">
+                &lt;Form.Label>
+                  {isFinancialAssistance &amp;&amp; (
+                    &lt;span className="patient-color">*&lt;/span>
+                  )}
+                  {t('residenceType')}:
+                &lt;/Form.Label>
+                &lt;Form.Control
+                  value={residenceType}
+                  onChange={(e) => setResidenceType(e.target.value)}
+                  required={isFinancialAssistance}
+                  as="select">
+                  &lt;option value="">Select One&lt;/option>
+                  {masterData?.residenceTypes.map(({id, name}) => (
+                    &lt;option key={id} value={name}>
+                      {name}
+                    &lt;/option>
+                  ))}
+                &lt;/Form.Control>
+              &lt;/Form.Group>
+            &lt;/Row>
+          &lt;/div>
+          {isFinancialAssistance &amp;&amp; (
+            &lt;div className="item mt-4 p-4">
+              &lt;div className="d-flex flex-row align-items-center title mb-2">
+                &lt;RequriedDocumentIcon fill="#28252e" width="20" height="20" />
+                &lt;h4 className="ms-2 mb-0">{t('requiredDocuments')}&lt;/h4>
+              &lt;/div>
+              &lt;Row>
+                {requiredDocument &amp;&amp;
+                  Object.keys(requiredDocument).map((doc, i) => (
+                    &lt;div key={i}>
+                      &lt;p>{doc}&lt;/p>
+                    &lt;/div>
+                  ))}
+              &lt;/Row>
+            &lt;/div>
+          )}
+          &lt;div className="d-flex flex-row mt-4">
+            &lt;button
+              onClick={() => handleClickBack()}
+              type="button"
+              className="btn-patient-theme bg-dark me-2">
+              {t('back')}
+            &lt;/button>
+            &lt;button type="submit" className="btn-patient-theme w-auto px-4">
+              {t('saveAndProceed')}
+            &lt;/button>
+          &lt;/div>
+        &lt;/Form>
+      &lt;/div>
+    &lt;/div>
+  );
+};
+FinancialInformation.propTypes = {
+  handleClick: PropTypes.func,
+  requiredDocument: PropTypes.object,
+};
+export default FinancialInformation;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addationSelect">addationSelect</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#SidebarDrugIcon">SidebarDrugIcon</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri Nov 04 2022 12:59:13 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

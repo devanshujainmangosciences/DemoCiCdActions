@@ -1,0 +1,16 @@
+{
+  "removeIp": "Remove IP",
+  "updateIp": "Update IP",
+  "viewIp": "View IP",
+  "createIp": "Create IP Config",
+  "areYouSure": "Are you sure you want to remove this IP Config?",
+  "remove": "Remove",
+  "action": "Action",
+  "hospitalId": "Hospital Name",
+  "allowedIp": "Allowed IP",
+  "list": "List",
+  "hospitalIpConfigList": "Hospital IP Config List",
+  "hospitalIpConfig": "Hospital IP Config",
+  "addNewHospitalIP": "Add New IP",
+  "home": "Home"
+}

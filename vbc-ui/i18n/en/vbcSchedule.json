@@ -1,0 +1,11 @@
+{
+  "home": "Home",
+  "vbcProgram": "PBP Program",
+  "vbcSchedule": "PBP Schedule",
+  "note": "The PBP schedule indicates the rebate you will receive if your treatment was discontinued after a specified cycle due to clinical reasons. Please note that your treating oncologist will be solely responsible for making any decision regarding treatment success/failure, and this decision shall be considered final.",
+  "noteForEmptyData": "The PBP Schedule will be available once the appointment for your first cycle is fixed by the doctor.",
+  "cycle": "Cycle",
+  "marketPrice": "Market price of medication",
+  "rebate": "Rebate",
+  "cumulativeAmount": "Cumulative Amount"
+}

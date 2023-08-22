@@ -1,0 +1,9 @@
+{
+  "home": "Home",
+  "financialDetails": "Financial Details",
+  "loanDetails": "Loan Details",
+  "emiDetails": "EMI Details",
+  "loanCancellationRequest": "Loan Cancellation Request",
+  "downloadStatement": "Download Statement",
+  "makePayment": "Make Payment"
+}

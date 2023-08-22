@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/applicants/Applicants.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/applicants/Applicants.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Screen component for Applicants
+ */
+import React, {useState, useRef, useEffect} from 'react';
+import {View, Image} from 'react-native';
+import {useSelector, useDispatch} from 'react-redux';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {AuthContext} from 'src/App';
+import {addApplicantsIcon} from 'assets/icons';
+import {VBCProgramPaymentFramework} from 'constants';
+import {storeApplicantOverviewDataAction} from 'actions/applicant';
+
+import {Container, AppText, Button, LoaderOverlay} from 'components';
+import {vbcProgramAddApplicantAction} from 'actions';
+import {genderTypes} from 'constants';
+import Applicant from 'screens/vbc-program/add-applicant/Applicant';
+import {requiredFields} from 'screens/vbc-program/add-applicant/formatter';
+import {
+  addApplicantApiCall,
+  deleteApplicantApiCall,
+  fetchApplicantsDataApiCall,
+  submitToMangoExecutiveApiCall,
+} from 'apis';
+import {initialFormFields, initialFormFieldsError} from './formatter';
+import {applicantInfoFieldsArray} from './formFields';
+import ConditionalTextInput from 'components/conditionalTextInput/ConditionalTextInput';
+import styles from './styles';
+
+const Applicants = () => {
+  const dispatch = useDispatch();
+  const {navigate} = useNavigation();
+  const {vbcProgramStep1, vbcProgramUserCurrentStep} = useSelector(
+    (state) => state.vbcProgram
+  );
+  const {applicantOverviewData} = useSelector((state) => state.applicant);
+  const {loginData, masterData} = useSelector((state) => state.login);
+  const [allowAddApplicant, setAllowAddApplicant] = useState(true); // whether to show or hide save/cancel button
+  const {toggleConfirmationModal, isConfirmed} = React.useContext(AuthContext);
+  const [deleteApplicantId, setDeleteApplicantId] = useState('');
+  const [isSubmitToMangoDisabled, setIsSubmitToMangoDisabled] = useState(true);
+
+  const scrollViewRef = useRef(); // ref of main scroll view
+  const {t} = useTranslation([
+    'loanApplication',
+    'validationMessages',
+    'confirmationModal',
+    'applicants',
+  ]);
+
+  const [formFields, setFormFields] = useState(initialFormFields);
+  const [showAddApplicantForm, setShowAddApplicantForm] = useState(false);
+  const [
+    errorSubmitToMangoExecutive,
+    setErrorSubmitToMangoExecutive,
+  ] = useState('');
+  const [formFieldsError, setFormFieldsError] = useState(
+    initialFormFieldsError
+  );
+  const [loading, setLoading] = useState(false);
+
+  const {content, enrollmentStatus} = applicantOverviewData
+    ? applicantOverviewData
+    : {};
+
+  // To be called when user clicked on the confirm button of the confirmation modal
+  useEffect(() => {
+    if (isConfirmed) {
+      handleDeleteApplicant();
+    }
+  }, [isConfirmed]);
+
+  /**
+   * Checking whether we need to enable add applicants or not,
+   * depending upon applicants length
+   */
+  useEffect(() => {
+    if (
+      (vbcProgramStep1 ===
+        VBCProgramPaymentFramework.LOAN_AGAINST_CAREGIVER_FD &amp;&amp;
+        content &amp;&amp;
+        content.length === 1) ||
+      (content &amp;&amp; content.length === 5)
+    ) {
+      setAllowAddApplicant(false);
+      setShowAddApplicantForm(false);
+    } else {
+      setAllowAddApplicant(true);
+    }
+  }, [content, vbcProgramStep1]);
+
+  const handleNavigateToApplication = () => {
+    const isVbcProgramStarted = vbcProgramUserCurrentStep === 4;
+    if (isVbcProgramStarted) {
+      navigate('VbcProgramStep4');
+    } else {
+      navigate('VbcProgramTerms');
+    }
+  };
+
+  // decide to show add new applicant button based on enrollment status or not
+  useEffect(() => {
+    if (applicantOverviewData) {
+      if (
+        applicantOverviewData?.enrollmentStatus ===
+          'Loan application yet to be submitted' ||
+        applicantOverviewData.enrollmentStatus === 'Rejected'
+      ) {
+        setIsSubmitToMangoDisabled(false);
+      }
+      if (
+        applicantOverviewData.enrollmentStatus ===
+          'credit assessment under process' ||
+        applicantOverviewData.enrollmentStatus === 'Approved'
+      ) {
+        setIsSubmitToMangoDisabled(true);
+      }
+    }
+  }, [applicantOverviewData]);
+
+  /** fetching applicants data from api call
+   * and store it in global state
+   */
+  const fetchApplicantsDataService = async () => {
+    setLoading(true);
+    const {access_token} = loginData;
+    const {apiResponse} = await fetchApplicantsDataApiCall(access_token);
+    if (apiResponse) {
+      dispatch(storeApplicantOverviewDataAction(apiResponse.data));
+    }
+    setLoading(false);
+  };
+
+  // submit to mango executive api call
+  const submitToMangoExecutive = async () => {
+    setLoading(true);
+    const {access_token} = loginData;
+    const {apiResponse, apiError} = await submitToMangoExecutiveApiCall(
+      access_token
+    );
+    if (apiResponse) {
+      navigate('VbcProgram');
+    } else if (apiError) {
+      setErrorSubmitToMangoExecutive(
+        apiError.localizedMessage || t('validationMessages:somethingWentWrong')
+      );
+    }
+    setLoading(false);
+  };
+
+  /** calling api function to get overview data */
+  useEffect(() => {
+    fetchApplicantsDataService();
+  }, [loginData]);
+
+  const handleChangeText = (type, inputType) => (
+    value,
+    textInputErrorMessage
+  ) => {
+    const inputError = {
+      ...formFieldsError,
+      [`${type}Error`]: textInputErrorMessage,
+    };
+    setFormFieldsError(inputError);
+    let values;
+    if (inputType === 'dropdown') {
+      values = {
+        ...formFields,
+        [type]: value?.name,
+        // [type + 'Name']: value?.name,
+      };
+    } else {
+      values = {...formFields, [type]: value};
+    }
+    setFormFields(values);
+  };
+
+  /**
+   * when user presses save button for
+   * adding applicant,
+   * check validations,
+   * call add applicant api,
+   * dispatch action with updated list of applicants.
+   */
+  const handlePressSave = async () => {
+    setLoading(true);
+    setFormFieldsError({...formFieldsError, apiError: null});
+    let errorObj = {};
+    let isValidationError = false;
+
+    /**
+     * Check if there is already an error
+     * present due to text input items.
+     * If there are no errors -
+     * call api to add applicants,
+     * and dispatch action with the upated list
+     * of applicants.
+     */
+    Object.keys(formFieldsError).map((item) => {
+      if (item !== 'apiError' &amp;&amp; formFieldsError[item]) {
+        isValidationError = true;
+      }
+    });
+
+    requiredFields.map((field) => {
+      const fieldValue = formFields[field];
+      if (!fieldValue) {
+        isValidationError = true;
+        errorObj = {
+          ...errorObj,
+          [`${field}Error`]: t('validationMessages:pleaseEnter') + t(field),
+        };
+      }
+    });
+    // show validation errors
+    if (isValidationError) {
+      setFormFieldsError({...formFieldsError, ...errorObj});
+      setLoading(false);
+      return;
+    }
+    const {apiResponse, apiError} = await addApplicantService(formFields);
+    if (apiResponse) {
+      dispatch(
+        vbcProgramAddApplicantAction([...content, apiResponse.data?.data])
+      );
+      fetchApplicantsDataService();
+      setFormFields(initialFormFields);
+      setLoading(false);
+      scrollViewRef.current.scrollToEnd();
+    } else if (apiError) {
+      setLoading(false);
+      setFormFieldsError({
+        ...initialFormFieldsError,
+        apiError: apiError.localizedMessage,
+      });
+    }
+  };
+
+  /** add applicant api call */
+  const addApplicantService = async (body) => {
+    const {access_token} = loginData;
+    // const transformedBody = transfromAddApplicantRequest(body);
+    const response = await addApplicantApiCall(body, access_token);
+    return response;
+  };
+
+  /* when user presses cancel button while adding applicant */
+  const handlePressCancel = () => {
+    setShowAddApplicantForm(false);
+    setFormFields(initialFormFields);
+    setFormFieldsError(initialFormFieldsError);
+  };
+
+  // called when user confirms to delete the applicant, it delets the selected applicant
+  const handleDeleteApplicant = async () => {
+    const {access_token} = loginData;
+    const {apiResponse} = await deleteApplicantApiCall(
+      deleteApplicantId,
+      access_token
+    );
+    if (apiResponse) {
+      fetchApplicantsDataService();
+
+      const newApplicantsList = content.filter(
+        (item) => item.id != deleteApplicantId
+      );
+      dispatch(vbcProgramAddApplicantAction(newApplicantsList));
+    }
+  };
+
+  const handleShowAddApplicantForm = () => {
+    setShowAddApplicantForm(true);
+  };
+
+  /**
+   * Callback.
+   * when user presses delete button
+   * on applicant listing -
+   * we call remove applicant api to remove applicant
+   * and dispatch action with the updated applicants list.
+   */
+  const handlePressApplicantDelete = async (applicantId) => {
+    setDeleteApplicantId(applicantId);
+    toggleConfirmationModal(t('confirmationModal:confirmDeleteApplicant'));
+  };
+
+  // fetches dropdown items based on field type
+  const handleGetDropdownItems = (fieldType) => {
+    switch (fieldType) {
+      case 'gender': {
+        return genderTypes;
+      }
+      case 'relationToPatient': {
+        return masterData?.relationships;
+      }
+      default: {
+        return [];
+      }
+    }
+  };
+
+  // returns user selected dropdown value
+  const handleGetDropdownValue = (item) => {
+    return formFields[item.dropdownValue];
+  };
+
+  // conditionally render form based on type of field
+  const renderForm = (item) => {
+    return (
+      &lt;ConditionalTextInput
+        item={item}
+        handleChangeText={handleChangeText}
+        handleGetDropdownItems={handleGetDropdownItems}
+        handleGetDropdownValue={handleGetDropdownValue}
+        value={formFields[item.valueKey]}
+        errorMessage={formFieldsError[item.errorMessageKey]}
+        placeholder={t(item.placeholder)}
+        required={item.required}
+      />
+    );
+  };
+
+  const isVbcProgramStarted = vbcProgramUserCurrentStep === 4;
+  const showAddCancelButton = !content || (content &amp;&amp; content.length &lt; 5);
+  const showCompleteApplicationButton =
+    vbcProgramStep1 !== VBCProgramPaymentFramework.SELF_PAY &amp;&amp;
+    vbcProgramStep1 !== VBCProgramPaymentFramework.LOAN_AGAINST_OWN_FD;
+  return (
+    &lt;KeyboardAwareScrollView
+      showsVerticalScrollIndicator={false}
+      ref={scrollViewRef}
+      style={styles.scrollContainer}>
+      &lt;View style={styles.container}>
+        {isVbcProgramStarted &amp;&amp;
+        (vbcProgramStep1 ===
+          VBCProgramPaymentFramework.LOAN_AGAINST_CAREGIVER_FD ||
+          vbcProgramStep1 ==
+            VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE) ? (
+          &lt;>
+            &lt;Container
+              isBackgroundPlain={true}
+              style={styles.containerContainer}>
+              &lt;View style={styles.containerHeadingContainer}>
+                &lt;Image
+                  source={addApplicantsIcon}
+                  resizeMode={'contain'}
+                  style={styles.headingIcon}
+                />
+                &lt;AppText style={styles.containerHeading}>
+                  {t('addApplicant')}
+                &lt;/AppText>
+              &lt;/View>
+              {showAddApplicantForm ? (
+                &lt;>
+                  {applicantInfoFieldsArray.map((item) => renderForm(item))}
+                  &lt;AppText style={styles.note}>
+                    {t('addApplicantNoteFor1And5Members')}
+                  &lt;/AppText>
+                  {showAddCancelButton &amp;&amp; (
+                    &lt;View style={styles.buttonContainer}>
+                      &lt;Button
+                        onPressEvent={handlePressCancel}
+                        style={styles.cancelButton}
+                        label={t('cancel')}
+                      />
+                      &lt;Button
+                        onPressEvent={handlePressSave}
+                        style={styles.saveButton}
+                        label={t('save')}
+                      />
+                    &lt;/View>
+                  )}
+                  &lt;View>
+                    &lt;AppText style={styles.apiErrorText}>
+                      {formFieldsError.apiError}
+                    &lt;/AppText>
+                  &lt;/View>
+                &lt;/>
+              ) : (
+                &lt;>
+                  {!isSubmitToMangoDisabled &amp;&amp; (
+                    &lt;Button
+                      disabled={!allowAddApplicant}
+                      style={styles.saveAndProceedButtonContainer}
+                      onPressEvent={handleShowAddApplicantForm}
+                      label={t('addNewApplicant')}
+                    />
+                  )}
+                  {!isSubmitToMangoDisabled &amp;&amp; (
+                    &lt;Button
+                      disabled={isSubmitToMangoDisabled}
+                      style={styles.saveAndProceedButtonContainer}
+                      onPressEvent={submitToMangoExecutive}
+                      label={t('submitApplication')}
+                    />
+                  )}
+
+                  &lt;View style={styles.statusContainer}>
+                    &lt;AppText style={styles.statusText}>
+                      {`${t('status')}: ${enrollmentStatus}`}
+                    &lt;/AppText>
+                  &lt;/View>
+                  &lt;View>
+                    &lt;AppText style={styles.apiErrorText}>
+                      {errorSubmitToMangoExecutive}
+                    &lt;/AppText>
+                  &lt;/View>
+                &lt;/>
+              )}
+            &lt;/Container>
+            {content &amp;&amp; content.length > 0 &amp;&amp; (
+              &lt;View style={styles.applicantContainer}>
+                &lt;Applicant
+                  hideDeleteButton={isSubmitToMangoDisabled}
+                  applicantData={content}
+                  onApplicantDeletePress={handlePressApplicantDelete}
+                />
+              &lt;/View>
+            )}
+          &lt;/>
+        ) : (
+          &lt;View>
+            &lt;Container
+              style={styles.containerContainer}
+              isBackgroundPlain={true}>
+              &lt;AppText style={[styles.note, {marginTop: 0}]}>
+                {t('applicants:notEnrolledMessage')}
+              &lt;/AppText>
+            &lt;/Container>
+            {showCompleteApplicationButton &amp;&amp; (
+              &lt;Button
+                style={styles.completeApplicationButtonContainer}
+                onPressEvent={handleNavigateToApplication}
+                label={t('completeApplication')}
+              />
+            )}
+          &lt;/View>
+        )}
+      &lt;/View>
+      {loading &amp;&amp; &lt;LoaderOverlay isVisible={loading} />}
+    &lt;/KeyboardAwareScrollView>
+  );
+};
+
+export default Applicants;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

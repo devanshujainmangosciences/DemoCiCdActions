@@ -1,0 +1,101 @@
+/**
+ * = Backgrounds
+*/
+
+@each $color, $value in $theme-colors {
+  @include bg-gradient-variant('.bg-gradient-#{$color}', $value);
+}
+
+// Backgrounds Overlay
+@each $color, $value in $theme-colors {
+  .overlay-#{$color} {
+    &:before {
+      position: absolute;
+      content: '';
+      background: $value;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      opacity: 0.8;
+      z-index: 0;
+    }
+  }
+}
+.section-image {
+  @include background-image(no-repeat, cover);
+}
+
+.bg-secondary-alt {
+  background-color: lighten($secondary, 15%);
+}
+
+.form-bg-image {
+  background-repeat: no-repeat !important;
+  background-position: top center !important;
+}
+
+.bg-loader {
+  background-color: #00000030;
+}
+.fill-soft {
+  fill: $soft;
+}
+
+/*Theme Text colors*/
+
+.text-applicant {
+  color: $patient;
+  &:active {
+    color: $patient;
+  }
+}
+
+/*Theme background colors*/
+
+.text-admin {
+  color: $admin !important;
+}
+.text-patient {
+  color: $patient !important;
+}
+.text-pharma {
+  color: $pharmer !important;
+  &:active {
+    color: $pharmer;
+  }
+}
+.text-doctor {
+  color: $doctor !important;
+  &:active {
+    color: $doctor;
+  }
+}
+
+.text-info-grey {
+  color: $gray-700;
+  font-size: $font-size-sm;
+  font-family: $font-family-roboto;
+}
+.bg-admin {
+  background: $admin !important;
+  box-shadow: none !important;
+}
+.bg-patient {
+  background: $patient !important;
+}
+.bg-pharma {
+  background: $pharmer !important;
+}
+.bg-doctor {
+  background-color: $doctor !important;
+}
+.bg-mango_executive {
+  background-color: $doctor !important;
+}
+.fill-soft {
+  fill: $soft;
+}
+.bg-admin-dark {
+  background: $admin-dark !important;
+}

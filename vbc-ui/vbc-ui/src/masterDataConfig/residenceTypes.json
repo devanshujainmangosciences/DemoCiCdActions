@@ -1,0 +1,17 @@
+{
+  "dataVariables": "ResidenceTypesDataVariables",
+  "readListAction": "readCities",
+  "deleteDataAction": "deleteCity",
+  "reduxDataListState": "state.template?.residenceTypes?.cities",
+  "reduxPaginationData": "state.template?.masterData?.residenceTypes?.pagination",
+  "tableHeadersPath": "tableHeadersResidenceTypes",
+  "filterConfig": "cityFilters",
+  "updateData": "updateCity",
+  "createData": "createCity",
+  "showData": "showCity",
+  "newPath": "NewCity",
+  "viewPath": "ViewCity",
+  "updatePath": "UpdateCity",
+  "listPath": "Cities",
+  "reduxSelectedData": "state.state.selectedCity"
+}

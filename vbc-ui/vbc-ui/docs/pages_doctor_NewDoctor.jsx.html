@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/doctor/NewDoctor.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/doctor/NewDoctor.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This Component renders a Form to Create a new Doctor or Update a existing Doctor.
+ * This Component gets showDoctor, doctor, readHospitals, hospitalsList
+ * states from Redux store as props and  match, history, is mapped to props
+ * which is used to navigate and get url details.
+ * This component reads the doctor id if it is present in url and retrieve the doctor
+ * details with doctor id and allow the user to edit
+ */
+import React, {useState, useEffect, Suspense} from 'react';
+import {Col, Row, Form} from '@themesberg/react-bootstrap';
+import {useAppDispatch} from '@/redux/redux-hooks';
+import {connect} from 'react-redux';
+import {Routes} from '@/routes';
+import PropTypes from 'prop-types';
+import {
+  createDoctor,
+  showDoctor,
+  updateDoctor,
+  readDoctors,
+  createBulkDoctor,
+} from '@/actions/doctorActions';
+import {readHospitals} from '../../actions/hospitalActions';
+import {setToast} from '@/actions/appActions';
+
+import {actionTypes} from '@/constants/actionTypes';
+import {
+  emailValidator,
+  mobileValidator,
+  validDateString,
+  captalizeEveryWordOfSentence,
+} from '@/services/utility';
+import GoBack from '@/components/GoBack';
+import RoutePage from '@/components/RoutePage';
+import {Can} from '@/components';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import {actionType, ALERT_MESSAGE} from '../../constants';
+import {tableHeadersDoctorHandsonTable} from '@/config';
+import CustomReactSelect from '@/components/CustomReactSelect';
+import {GENDER} from '@/data/genericData';
+import SuspenseFallbackLoader from '@/components/SuspenseFallbackLoader';
+const ReactSpreadSheetComponent = React.lazy(() =>
+  import('@/components/ReactSpreadSheetComponent')
+);
+
+const {SET_CREATE_DOCTOR, SET_UPDATE_DOCTOR, SET_READ_DOCTOR} = actionTypes;
+
+const NewDoctor = (props) => {
+  const {showDoctor, doctor, readHospitals, hospitalsList} = props;
+  const history = useNavigate();
+  const location = useLocation();
+  const urlParams = useParams();
+  const dispatch = useAppDispatch();
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
+  const [designation, setDesignation] = useState('');
+  const [speciality, setSpeciality] = useState('');
+  const [emailWarning, setEmailWarning] = useState('');
+  const [passwordWarning, setpasswordWarning] = useState('');
+  const [dobWarning, setDobWarning] = useState('');
+  const [mciRegNo, setMciRegNo] = useState('');
+  // const [hospitalId, setHospitalIds] = useState(null);
+  const [hospitalsSelected, setHospitalsSelected] = useState([]);
+  const [isHandsonCreateTable, setIsHandsonCreateTable] = useState(false);
+  const [errorInRows, seterrorInRows] = useState([]);
+  const [errorMessageState, seterrorMessageState] = useState(null);
+  const [isView, setisView] = useState(false);
+  const [handsonTableData, sethandsonTableData] = useState([]);
+
+  const doctor_id = urlParams.id;
+  const stateRecieved = location.state;
+
+  // console.log('HOSPITAL SELECTED=>', hospitalsSelected);
+  // console.log('HOSPITAL IDS=>', hospitalId);
+
+  /**
+   * This Callback will set doctor details to corresponding
+   * states if doctor and doctor id is not null else it will
+   * set all states empty
+   */
+  useEffect(() => {
+    if (stateRecieved &amp;&amp; stateRecieved === actionType.VIEW) setisView(true);
+    else if (stateRecieved &amp;&amp; stateRecieved === actionType.MULTIPLE_CREATE)
+      setIsHandsonCreateTable(true);
+    if (doctor &amp;&amp; doctor_id &amp;&amp; hospitalsList) {
+      // console.log('DOCTOR=>', doctor);
+      // setHospitalIds(doctor?.hospitalIds ? doctor.hospitalIds : null);
+      setFirstName(doctor?.firstName ? doctor.firstName : '');
+      setMiddleName(doctor.middleName ? doctor.middleName : '');
+      setLastName(doctor.lastName ? doctor.lastName : '');
+      setGender(doctor.gender ? doctor.gender : '');
+      setMobile(doctor.mobile ? doctor.mobile : '');
+      setEmail(doctor.email ? doctor.email : '');
+      setDesignation(doctor.designation ? doctor.designation : '');
+      setMciRegNo(doctor.mciRegNo ? doctor.mciRegNo : '');
+      setSpeciality(doctor.speciality ? doctor.speciality : '');
+      setBirthDate(doctor.birthDate ? doctor.birthDate : '');
+      const hospitalUnits =
+        doctor?.hospitalUnits &amp;&amp; doctor.hospitalUnits.length > 0
+          ? doctor?.hospitalUnits.join(',')
+          : '';
+      const hospitalData = getHospitalData(hospitalsList).filter((item) =>
+        hospitalUnits.includes(item.label)
+      );
+      setHospitalsSelected(hospitalData);
+    } else {
+      // setHospitalIds([]);
+      setFirstName('');
+      setMiddleName('');
+      setLastName('');
+      setMobile('');
+      setEmail('');
+      setGender('');
+      setDesignation('');
+      setMciRegNo('');
+    }
+  }, [doctor, doctor_id, stateRecieved, hospitalsList]);
+
+  /**
+   * This Callback acts like ComponentDidMount and ComponentDidUpdate which is used to dispatch
+   * showDoctor Action if Doctor id is present to get
+   * doctors array
+   */
+  useEffect(() => {
+    if (doctor_id) {
+      showDoctor(doctor_id);
+    }
+  }, [doctor_id, showDoctor]);
+
+  /**
+   * This Callback acts like ComponentDidMount and ComponentDidUpdate which is used to dispatch
+   * readHospitals Action if hospitalsList is not null to get
+   * hospitalsList array
+   */
+  useEffect(() => {
+    readHospitals(0, 99999);
+  }, []);
+
+  /**
+   * Validates the Email string and set warning if
+   * regex test fails
+   * @param {String} value
+   */
+  const emailValidatorFunction = (value) => {
+    setEmail(value);
+
+    if (!emailValidator(value)) {
+      setEmailWarning(false);
+    } else {
+      setEmailWarning(true);
+    }
+  };
+
+  /**
+   * Validates the Mobile Number and set warning if
+   * regex test fails
+   * @param {String} value
+   */
+  const mobileValidatorFunction = (value) => {
+    setMobile(value);
+    if (!mobileValidator(value)) {
+      setpasswordWarning(false);
+    } else {
+      setpasswordWarning(true);
+    }
+  };
+  /**
+   * Validates the Date of Birth and set warning if
+   * regex test fails
+   * @param {String} value
+   */
+  const dobValidator = (value) => {
+    setBirthDate(value);
+    var myDate = new Date(value);
+    var today = new Date();
+    if (myDate > today) {
+      setDobWarning(true);
+      return;
+    }
+    setDobWarning(false);
+  };
+
+  /**
+   * Function to create the array list for hospital
+   * @param {Array} hospitalList
+   * @returns {Array}
+   */
+  const getHospitalData = (hospitalList) => {
+    if (hospitalList &amp;&amp; hospitalList.length > 0) {
+      const requiredValues = hospitalList.map((hospital) => {
+        return {
+          id: hospital?.id,
+          label: hospital?.hospitalName,
+          value: hospital?.id,
+        };
+      });
+      return requiredValues;
+    } else
+      return [
+        {
+          id: 1,
+          label: 'No Data!',
+          value: '',
+        },
+      ];
+  };
+
+  /**
+   * To save the data changedsf
+   * @param {Array} data
+   */
+  const onSaveChanges = (data) => {
+    const reqFields = [
+      'firstName',
+      'hospitalIds',
+      'designation',
+      'speciality',
+      'mciRegNo',
+      'email',
+    ];
+    sethandsonTableData(data);
+    if (data &amp;&amp; data.length > 0) {
+      const errorRows = [];
+      data.map((item, index) => {
+        const email = item.email;
+        const mobile = item.mobile;
+        // const emailAndPhone = email + mobile;
+
+        // if (
+        //   emailAndPhone === 'undefined' ||
+        //   !emailAndPhone ||
+        //   emailAndPhone === 0 ||
+        //   emailAndPhone === 'null' ||
+        //   !emailAndPhone.trim()
+        // ) {
+        //   const reqError = {field: 'emailOrPhone', fieldNumber: 10, row: index};
+        //   errorRows.push(reqError);
+        // }
+        if (email &amp;&amp; email.trim() !== '' &amp;&amp; emailValidator(email)) {
+          const reqError = {field: 'Valid Email', fieldNumber: 10, row: index};
+          errorRows.push(reqError);
+        }
+        if (mobile &amp;&amp; mobile.trim() !== '' &amp;&amp; mobileValidator(mobile)) {
+          const reqError = {field: 'Valid mobile', fieldNumber: 10, row: index};
+          errorRows.push(reqError);
+        }
+        if (!GENDER.includes(item.gender)) {
+          const reqError = {
+            field: 'gender(MALE/FEMALE) text',
+            fieldNumber: 10,
+            row: index,
+          };
+          errorRows.push(reqError);
+        }
+
+        reqFields.map((field) => {
+          if (!item[field] || item[field].trim() === '') {
+            const errorObj = {
+              row: index,
+              field: field,
+              fieldNumber: tableHeadersDoctorHandsonTable.find(
+                (item) => item.keyValue === field
+              )?.key,
+            };
+            errorRows.push(errorObj);
+          }
+        });
+      });
+      seterrorInRows(errorRows);
+      if (errorRows.length === 0) {
+        const modifiedData = data.map((item) => {
+          const hospNames = item.hospitalIds.split(',');
+          const birthDate = item?.birthDate;
+          const reqHospId = [];
+          hospNames &amp;&amp;
+            hospNames.map((hospName) => {
+              const hospId = hospitalsList.find(
+                (item) => item.hospitalName === hospName
+              );
+              if (hospId) reqHospId.push(hospId.id);
+            });
+          return {
+            ...item,
+            firstName: captalizeEveryWordOfSentence(item.firstName),
+            middleName: captalizeEveryWordOfSentence(item.middleName),
+            lastName: captalizeEveryWordOfSentence(item.lastName),
+            designation: captalizeEveryWordOfSentence(item.designation),
+            speciality: captalizeEveryWordOfSentence(item.speciality),
+            mobile: item?.mobile ? item.mobile.trim() : null,
+            email: item?.email &amp;&amp; item.email.trim(),
+            birthDate: validDateString(birthDate, true)
+              ? validDateString(birthDate, true)
+              : '',
+            hospitalIds: reqHospId,
+          };
+        });
+        const onApiCallback = (errorData) => {
+          // console.log('ERROR DATA=>', errorData);
+          if (errorData.length === 0) {
+            history(Routes.Doctors.path);
+            readDoctors();
+          } else addErrorFromBackendValidation(errorData, data);
+        };
+        // console.log('CREATE DOCTORS=>', modifiedData);
+        dispatch(createBulkDoctor(modifiedData, onApiCallback));
+      } else {
+        dispatch(setToast(ALERT_MESSAGE.ERROR_IN_SHEET, true, 'warning'));
+      }
+    } else {
+      dispatch(setToast(ALERT_MESSAGE.ADD_DATA, true, 'warning'));
+    }
+  };
+
+  useEffect(() => {
+    if (errorInRows &amp;&amp; errorInRows.length > 0) {
+      addErrorFromUIValidation(errorInRows, handsonTableData);
+    }
+  }, [errorInRows]);
+  /**
+   * Add error in Message column when error is coming from backend
+   * @param {Array} errorData
+   * @param {Array} data
+   */
+  const addErrorFromBackendValidation = (errorData, data) => {
+    let errorMessage = {};
+    const reqHandonData = data.map((item, index) => {
+      const errorByEmail = errorData.find(
+        (error) => error.email === item.email
+      );
+      if (errorByEmail) {
+        errorMessage[index] = errorByEmail.message;
+        return {
+          ...item,
+          errorMessage: errorByEmail.message,
+        };
+      } else return {...item};
+    });
+    seterrorMessageState(errorMessage);
+    sethandsonTableData(reqHandonData);
+  };
+  /**
+   * Add error in message when front end validation fails
+   * @param {Array} errorInRows
+   * @param {Array} handsonTableData
+   */
+  const addErrorFromUIValidation = (errorInRows, handsonTableData) => {
+    if (errorInRows &amp;&amp; errorInRows.length > 0) {
+      let errorMessage = {};
+      errorInRows.map((error) => {
+        const rowRequired = error.row;
+        errorMessage[rowRequired] = `${
+          errorMessage[rowRequired] ? errorMessage[rowRequired] + ',' : ''
+        }${error.field} is required`;
+        // console.log('ERROR=>', error);
+        // console.log('handsonTableData=>', handsonTableData);
+        // const children = tbody.childNodes[error.row];
+        // const item = children.childNodes[error.fieldNumber];
+        // const message = children.lastChild;
+        // item.classList.add('cell-error-handonsTable');
+        // console.log('Item=>', item);
+        // console.log('message=>', message);
+      });
+      // console.log('ERROR MESSAGE=>', errorMessage);
+      const reqHandonData = handsonTableData.map((item, index) => {
+        if (errorMessage[index])
+          return {
+            ...item,
+            errorMessage: `${errorMessage[index]} is required`,
+          };
+        else return {...item, errorMessage: ''};
+      });
+      // console.log('REQ HANDSON TABLE=>', reqHandonData);
+      // console.log('ERRORS=>', errorMessage);
+      seterrorMessageState(errorMessage);
+      sethandsonTableData(reqHandonData);
+    } else {
+      // console.log('REMOVE ERROR FROM DOM');
+    }
+  };
+  /**
+   *On Multip select data change
+   * @param {Array} data
+   *
+   */
+  const onMultiselectHospitalChange = (data) => {
+    setHospitalsSelected(data);
+  };
+
+  /**
+   * Submits the user entered details to the api,
+   * if Doctor id is null it will create doctor or this will update
+   * the existing doctor with doctor id
+   * @param {any} e
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email &amp;&amp; !mobile) {
+      dispatch(
+        setToast(ALERT_MESSAGE.ENTER_EITHER_EMAIL_MOBILE, true, 'warning')
+      );
+      return;
+    }
+    const data = {
+      firstName: captalizeEveryWordOfSentence(firstName),
+      middleName: captalizeEveryWordOfSentence(middleName),
+      lastName: captalizeEveryWordOfSentence(lastName),
+      mobile: mobile ? mobile : null,
+      email: email,
+      designation: captalizeEveryWordOfSentence(designation),
+      mciRegNo: mciRegNo,
+      gender: gender,
+      birthDate: birthDate,
+      speciality: captalizeEveryWordOfSentence(speciality),
+    };
+    if (hospitalsSelected &amp;&amp; hospitalsSelected.length > 0) {
+      const reqHospIds = hospitalsSelected.map((hosp) => hosp.id);
+      data['hospitalIds'] = reqHospIds;
+    } else {
+      dispatch(
+        setToast(ALERT_MESSAGE.SELECT_ATLEAST_ONE_HOSP, true, 'warning')
+      );
+      return;
+    }
+    if (!emailWarning &amp;&amp; !passwordWarning &amp;&amp; !dobWarning) {
+      if (doctor_id) {
+        const onSuccess = (response) => {
+          if (response.message) {
+            dispatch(setToast(response.message, true, 'success'));
+          }
+          history(Routes.Doctors.path);
+          readDoctors();
+          return {
+            type: SET_UPDATE_DOCTOR,
+            payload: response.data,
+          };
+        };
+        props.updateDoctor(doctor_id, data, onSuccess);
+      } else {
+        const onSuccess = (response) => {
+          if (response.message) {
+            dispatch(setToast(response.message, true, 'success'));
+          }
+          dispatch({type: SET_READ_DOCTOR, payload: {content: null}});
+          history(Routes.Doctors.path);
+          readDoctors();
+          return {
+            type: SET_CREATE_DOCTOR,
+            payload: response.data,
+          };
+        };
+        props.createDoctor(data, onSuccess);
+      }
+    }
+  };
+
+  // console.log('CEEROR IN ROWS=>', errorInRows);
+  // console.log('handonTableData=>', handsonTableData);
+  return (
+    &lt;>
+      &lt;div className="page-container p-4 mt-4 myprofile-container">
+        &lt;h3>
+          {doctor_id &amp;&amp; isView
+            ? 'View Doctor'
+            : doctor_id
+            ? 'Update Doctor'
+            : isHandsonCreateTable
+            ? 'Create Doctors'
+            : 'Create Doctor'}
+        &lt;/h3>
+        {isHandsonCreateTable ? (
+          &lt;div className="mt-3">
+            &lt;div>
+              Paste the data of excel sheet below and click on save button(make
+              sure to copy the rows in same order)
+            &lt;/div>
+            &lt;div className="mt-3">
+              &lt;Suspense fallback={&lt;SuspenseFallbackLoader />}>
+                &lt;ReactSpreadSheetComponent
+                  tableHeadersData={tableHeadersDoctorHandsonTable}
+                  errorMessages={errorMessageState}
+                  onSaveChanges={onSaveChanges}
+                />
+              &lt;/Suspense>
+            &lt;/div>
+          &lt;/div>
+        ) : (
+          &lt;Form onSubmit={handleSubmit}>
+            &lt;Row className="row-cols-sm-3 row-cols-md-4 row-cols-lg-4 -3">
+              &lt;Col className="p-2 ps-0">
+                &lt;Form.Group controlId="firstName">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>First Name
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    readOnly={isView}
+                    type="firstName"
+                    placeholder="Enter First Name"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="middleName">
+                  &lt;Form.Label>Middle Name&lt;/Form.Label>
+                  &lt;Form.Control
+                    value={middleName}
+                    onChange={(e) => setMiddleName(e.target.value)}
+                    readOnly={isView}
+                    type="text"
+                    placeholder="Enter Middle Name"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="lastName">
+                  &lt;Form.Label>Last Name&lt;/Form.Label>
+                  &lt;Form.Control
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    readOnly={isView}
+                    type="text"
+                    placeholder="Enter Last Name"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="contactPersonMobile">
+                  &lt;Form.Label>Mobile&lt;/Form.Label>
+                  &lt;Form.Control
+                    isInvalid={passwordWarning}
+                    readOnly={isView}
+                    value={mobile}
+                    onChange={(e) => mobileValidatorFunction(e.target.value)}
+                    type="text"
+                    placeholder="Enter Mobile"
+                  />
+                  {passwordWarning &amp;&amp; (
+                    &lt;Form.Control.Feedback type="invalid">
+                      Please enter a valid mobile number
+                    &lt;/Form.Control.Feedback>
+                  )}
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="contactPersonEmail">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>Email
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    isInvalid={emailWarning}
+                    required={true}
+                    value={email}
+                    readOnly={isView}
+                    onChange={(e) => emailValidatorFunction(e.target.value)}
+                    type="email"
+                    placeholder="Enter Email"
+                  />
+                  {emailWarning &amp;&amp; (
+                    &lt;Form.Control.Feedback type="invalid">
+                      Please enter a valid email address
+                    &lt;/Form.Control.Feedback>
+                  )}
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="dateOfBirth">
+                  &lt;Form.Label>Enter Birth Date&lt;/Form.Label>
+                  &lt;Form.Control
+                    isInvalid={dobWarning}
+                    className="Dob"
+                    readOnly={isView}
+                    value={birthDate}
+                    onChange={(e) => dobValidator(e.target.value)}
+                    type="date"
+                  />
+                  {dobWarning &amp;&amp; (
+                    &lt;Form.Control.Feedback type="invalid">
+                      Date of Birth should not be greater than today&amp;apos;s date
+                    &lt;/Form.Control.Feedback>
+                  )}
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="gender">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>Select Gender
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    required
+                    readOnly={isView}
+                    as="select">
+                    &lt;option value="" hidden>
+                      Gender
+                    &lt;/option>
+                    &lt;option value="MALE">Male&lt;/option>
+                    &lt;option value="FEMALE">Female&lt;/option>
+                    {/* &lt;option value="THEY">others&lt;/option> */}
+                  &lt;/Form.Control>
+                &lt;/Form.Group>
+              &lt;/Col>
+
+              &lt;Col className="p-2 ps-0 " l>
+                &lt;Form.Group controlId="designation">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>Designation
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    value={designation}
+                    onChange={(e) => setDesignation(e.target.value)}
+                    required
+                    readOnly={isView}
+                    type="text"
+                    placeholder="Enter Designation"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="speciality">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>Speciality
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    value={speciality}
+                    onChange={(e) => setSpeciality(e.target.value)}
+                    required
+                    readOnly={isView}
+                    type="text"
+                    placeholder="Enter Speciality"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+
+              &lt;Col className="p-2 ps-0 ">
+                &lt;Form.Group controlId="mciRegNo">
+                  &lt;Form.Label>
+                    {' '}
+                    &lt;span className="patient-color">*&lt;/span>Mci Reg No
+                  &lt;/Form.Label>
+                  &lt;Form.Control
+                    value={mciRegNo}
+                    onChange={(e) => setMciRegNo(e.target.value)}
+                    required
+                    readOnly={isView}
+                    type="text"
+                    placeholder="Enter Mci Reg No"
+                  />
+                &lt;/Form.Group>
+              &lt;/Col>
+              &lt;div className="p-2 ps-0 ">
+                &lt;Form.Label>
+                  &lt;span className="patient-color">*&lt;/span>Hospital
+                &lt;/Form.Label>
+                &lt;CustomReactSelect
+                  isDisabled={isView}
+                  onInputChange={onMultiselectHospitalChange}
+                  optionData={getHospitalData(hospitalsList)}
+                  defaultData={hospitalsSelected}
+                  backgroundColor="#09a6e0"
+                  classes="remove-seperator-span-padding modified-settings input-form-settings "
+                />
+              &lt;/div>
+            &lt;/Row>
+
+            &lt;div className="d-flex gap-2 mt-2">
+              &lt;GoBack>
+                &lt;button
+                  className="btn-patient-theme-small bg-dark px-4"
+                  type="button">
+                  Back
+                &lt;/button>
+              &lt;/GoBack>
+
+              {isView ? (
+                &lt;Can
+                  performingAction={{
+                    component: 'doctor-listing',
+                    action: 'can view editDetails',
+                  }}>
+                  &lt;RoutePage url={Routes.UpdateDoctor.path} id={doctor_id}>
+                    &lt;button
+                      className="btn-patient-theme-small bg-dark px-4"
+                      type="button"
+                      onClick={() => setisView(false)}>
+                      Edit
+                    &lt;/button>
+                  &lt;/RoutePage>
+                &lt;/Can>
+              ) : (
+                &lt;button
+                  className="btn-patient-theme-small bg-dark px-4"
+                  type="submit">
+                  {doctor_id ? 'Update' : 'Add'}
+                &lt;/button>
+              )}
+            &lt;/div>
+          &lt;/Form>
+        )}
+      &lt;/div>
+    &lt;/>
+  );
+};
+
+const mapStateToProps = (state) => ({
+  doctorsList: state.doctors.doctorsList,
+  doctor: state.doctors.selectedDoctor,
+  hospitalsList: state.hospitals.hospitalsList,
+});
+
+const mapDispatchToProps = {
+  createDoctor,
+  showDoctor,
+  updateDoctor,
+  readHospitals,
+};
+NewDoctor.propTypes = {
+  doctorsList: PropTypes.array,
+  createDoctor: PropTypes.func,
+  showDoctor: PropTypes.func,
+  updateDoctor: PropTypes.func,
+  readHospitals: PropTypes.func,
+  doctor: PropTypes.object,
+  hospitalsList: PropTypes.array,
+};
+export default connect(mapStateToProps, mapDispatchToProps)(NewDoctor);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#acknowledgeRebatePaid">acknowledgeRebatePaid</a></li><li><a href="global.html#acknowledgeSubventionPaid">acknowledgeSubventionPaid</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#captalizeEveryWordOfSentence">captalizeEveryWordOfSentence</a></li><li><a href="global.html#checkifReportsDataInSync">checkifReportsDataInSync</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkifValueExists">checkifValueExists</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#checkValue">checkValue</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertMedicationName">convertMedicationName</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createHospitalIpConfig">createHospitalIpConfig</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createMobileVersion">createMobileVersion</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteHospitalIpConfig">deleteHospitalIpConfig</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#disableMobileVersion">disableMobileVersion</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getAllApprovalRegPatients">getAllApprovalRegPatients</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getApprovalRegPatients">getApprovalRegPatients</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDocumentName">getDocumentName</a></li><li><a href="global.html#getDocumentType">getDocumentType</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getMonthsDataSorted">getMonthsDataSorted</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getReportSyncFlag">getReportSyncFlag</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#handleRegRequest">handleRegRequest</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#isValueNull">isValueNull</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LabelValue">LabelValue</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readAndroidMobileVersionsList">readAndroidMobileVersionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitalIpConfigList">readHospitalIpConfigList</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readIosMobileVersionsList">readIosMobileVersionsList</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readMobileVersionsList">readMobileVersionsList</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#selectMonthWithData">selectMonthWithData</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryReduxEnhancer">sentryReduxEnhancer</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setNewToken">setNewToken</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setSelectedRole">setSelectedRole</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setupStore">setupStore</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showHospitalIpConfig">showHospitalIpConfig</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#sortObjectKeysByName">sortObjectKeysByName</a></li><li><a href="global.html#splitCamelCaseString">splitCamelCaseString</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateHospitalIpConfig">updateHospitalIpConfig</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMobileVersion">updateMobileVersion</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#updateVersionMapping">updateVersionMapping</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyOtp">verifyOtp</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri May 19 2023 18:39:27 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

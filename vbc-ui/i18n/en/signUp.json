@@ -1,0 +1,21 @@
+{
+  "register": "Register",
+  "name": "Name",
+  "emailOrmobile": "Email/Mobile",
+  "validEmailOrmobile": "Please enter a valid email address or mobile number",
+  "haveAnAccount": "Have an Account?",
+  "loginhere": "Login Here",
+  "next": "Next",
+  "mobile": "Mobile",
+  "email": "Email",
+  "haveAnAccountLoginHere": "Have an Account? Login here",
+  "loginHere": "Login Here",
+  "continue": "Continue",
+  "forgot-password": "Forgot Your Password?",
+  "backToLogin": "Back to login",
+  "requestDeclined": "Your request was declined.",
+  "declineCheckForAssistnce": "For assistance, please get in touch with the Mango Executive.",
+  "waitingForApproval": "Your registration approval is under process.",
+  "pleaseContact": "Please contact the Mango Customers",
+  "relationshipManager": "Relationship Manager for assistance."
+}

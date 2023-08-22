@@ -1,0 +1,39 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "extends": ["eslint:recommended", "plugin:react/recommended"],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    },
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "unused-imports", "testing-library", "jest-dom"],
+  "rules": {
+    "no-undef": "off",
+    "no-debugger": "off",
+    "no-useless-escape": "off",
+    "no-restricted-globals": "off",
+    "no-unused-vars": "off",
+    "import/no-anonymous-default-export": "off",
+    "array-callback-return": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "react/prop-types": ["off"],
+    "react/react-in-jsx-scope": ["off"],
+    "unused-imports/no-unused-imports": "off",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  }
+}

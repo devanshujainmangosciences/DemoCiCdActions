@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/edit-profile/EditProfile.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/edit-profile/EditProfile.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Edit profile screen component.
+ * Handles both new profile &amp; edit profile.
+ */
+import React, {useEffect, useState} from 'react';
+import {View, Image, Pressable} from 'react-native';
+import {useSelector} from 'react-redux';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Icon} from 'native-base';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+
+import DeviceInfo from 'react-native-device-info';
+import {useTranslation} from 'react-i18next';
+import {
+  registrationCompleteProfileApiCall,
+  fetchHospitalsApiCall,
+  fetchDrugsApiCall,
+  fetchDoctorsApiCall,
+  getRegistrationCompleteProfileApiCall,
+  getUserInfoApiCall,
+  fetchCityListApiCall,
+  getMasterDataApiCall,
+} from 'apis';
+import {Button, AppText, Loader, Container} from 'components';
+import {
+  personalDetailsIcon,
+  hospitalDetailsIcon,
+  addressDetailsIcon,
+  financialInformationIcon,
+} from 'assets/icons';
+import {genderTypes, AsyncStorageKeys} from 'constants';
+import {
+  decodeToken,
+  getDateInDMYHyphenFormat,
+  getDateInYMDFormat,
+  getFromAsyncStorage,
+  getUserRole,
+  storeInAsyncStorage,
+} from 'utils';
+import ConditionalTextInput from 'components/conditionalTextInput/ConditionalTextInput';
+import {
+  addressFields,
+  formatterForCompleteProfile,
+  formatterForGetCompleteProfile,
+  getRequiredFields,
+  initialFormFieldsErrorState,
+  initialFormFieldsState,
+} from './formatter';
+import {
+  addressInfoFieldsArray,
+  financialInfoFieldsArray,
+  medicationInfoFieldsArray,
+  personalInfoFieldsArray,
+} from './formFields';
+import styles from './styles';
+import {MASTER_DATA_COMPLETE_PROFILE} from 'constants';
+import {Theme} from '../../constants';
+
+const EditProfile = ({
+  navigation: {navigate, reset},
+  route: {
+    params: {fromScreen},
+  },
+}) => {
+  const globalState = useSelector((state) => state.login);
+  const {loginData, masterData, userPermissions} = globalState;
+  const [formFields, setFormFields] = useState(initialFormFieldsState);
+  const [formFieldsError, setFormFieldsError] = useState(
+    initialFormFieldsErrorState
+  );
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fullPageLoading, setFullPageLoading] = useState(true); // to show loader at full page
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [userRegisteredFrom, setUserRegisteredFrom] = useState(null); // to store from which field i.e. mobile/email - user has registered from
+  const [samePresentAddress, setSamePresentAddress] = useState(false);
+  const [hospitals, setHospitals] = useState(null);
+  const [drugs, setDrugs] = useState(null);
+  const [doctors, setDoctors] = useState(null);
+  const [permanentCities, setPermanentCities] = useState(null);
+  const [presentCities, setPresentCities] = useState(null);
+  const [confirmation, setConfirmation] = useState(false); // storing user's confirmation
+
+  const {t} = useTranslation(['completeProfile', 'validationMessages']);
+
+  /**
+   * fetch user profile details
+   */
+  useEffect(() => {
+    if (loginData &amp;&amp; masterData) {
+      // fetching user data
+      fetchRegistrationCompleteProfileUserData();
+    }
+  }, [loginData, masterData]);
+
+  useEffect(() => {
+    fetchMasterDataService();
+  }, []);
+
+  // called when user ckecks on same permanent address
+  useEffect(() => {
+    if (samePresentAddress) {
+      copyPresentAddressToPermanentAddress();
+    }
+  }, [samePresentAddress]);
+
+  /**
+   * once user selects hospital -
+   * then we call api to fetch doctors -
+   * based upon selected hospitals.
+   */
+  useEffect(() => {
+    fetchDoctorsOnHospitalSelect();
+  }, [formFields.hospitalId, loginData]);
+
+  /**
+   * once user selects present state -
+   * then we call api to fetch cities -
+   * based upon selected present state.
+   */
+  useEffect(() => {
+    if (loginData) {
+      fetchPresentCityService();
+    }
+  }, [formFields.presentState]);
+
+  /**
+   * once user selects permanent state -
+   * then we call api to fetch cities -
+   * based upon selected permanent state.
+   */
+  useEffect(() => {
+    if (loginData) {
+      fetchPermanentCityService();
+    }
+  }, [formFields.permanentState]);
+
+  /**
+   * Once EditProfile screen is mounted -
+   * we call apis to fetch
+   * hospitals/drugs &amp; typeOfCancer
+   */
+  useEffect(() => {
+    if (loginData) {
+      const {access_token} = loginData;
+      fetchHospitals(access_token);
+      fetchDrugName(access_token);
+    }
+  }, [loginData]);
+
+  /**
+   * call api to fetch doctors -
+   * based upon selected hospitals.
+   */
+  const fetchDoctorsOnHospitalSelect = async () => {
+    if (loginData) {
+      const {access_token} = loginData;
+
+      if (formFields.hospitalId) {
+        const {apiResponse} = await fetchDoctorsApiCall(
+          formFields.hospitalId,
+          access_token
+        );
+        if (apiResponse) {
+          const doctors = apiResponse.data?.data.map((item) => {
+            return {name: item.name, id: item.id};
+          });
+          setDoctors(doctors);
+        }
+      }
+    }
+  };
+
+  const fetchUserInfo = async () => {
+    const {access_token} = loginData;
+    const {sub: userId} = decodeToken(access_token);
+    const {apiResponse} = await getUserInfoApiCall(userId, access_token);
+    if (apiResponse) {
+      const {email, mobile} = apiResponse?.data?.data;
+      if (email &amp;&amp; mobile) {
+        //user registered from both email and mobile
+      } else if (email) {
+        setUserRegisteredFrom('email');
+      } else if (mobile) {
+        setUserRegisteredFrom('mobile');
+      }
+      return {email, mobile};
+    }
+  };
+
+  //  calls when user clicks on same address checkbox and in the start when component mounts
+  const copyPresentAddressToPermanentAddress = () => {
+    const {
+      presentAddress,
+      presentCity,
+      presentCountry,
+      presentPinCode,
+      presentState,
+      presentStateName,
+    } = formFields;
+    const newFormFields = {
+      ...formFields,
+      permanentAddress: presentAddress,
+      permanentCity: presentCity,
+      permanentPinCode: presentPinCode,
+      permanentState: presentState,
+      permanentStateName: presentStateName,
+      permanentCountry: presentCountry,
+    };
+    const inputErrorObj = {...formFieldsError};
+    addressFields.map((item) => {
+      if (newFormFields[item] != null || newFormFields[item] != '') {
+        inputErrorObj[`${item}Error`] = null;
+      }
+    });
+    setFormFieldsError(inputErrorObj);
+    setFormFields(newFormFields);
+  };
+
+  /* To copy values from present address to permanentaddress when user is in edit mode,
+  edit any present valuesand same values check box is true */
+  useEffect(() => {
+    if (samePresentAddress) {
+      copyPresentAddressToPermanentAddress();
+    }
+  }, [
+    samePresentAddress,
+    formFields.presentAddress,
+    formFields.presentCity,
+    formFields.presentCountry,
+    formFields.presentState,
+    formFields.presentPinCode,
+  ]);
+
+  // fetch master data based on if we jave states in master data as My Profile has dependency on states
+  const fetchMasterDataService = async () => {
+    const {apiResponse: masterDataApiResponse} = await getMasterDataApiCall(
+      MASTER_DATA_COMPLETE_PROFILE
+    );
+    return masterDataApiResponse;
+  };
+
+  useEffect(() => {
+    if (masterData?.states) {
+      fetchRegistrationCompleteProfileUserData();
+    }
+  }, [masterData?.states]);
+
+  /**
+   * fetching user profile details by calling api
+   * and then formatting the response of the api
+   * with the component states
+   */
+  const fetchRegistrationCompleteProfileUserData = async () => {
+    const {access_token} = loginData;
+    const {apiResponse} = await getRegistrationCompleteProfileApiCall(
+      access_token,
+      isApplicant
+    );
+    const {email, mobile} = await fetchUserInfo();
+    let values = formFields;
+    if (apiResponse) {
+      // fetching email/mobile
+      const formattedData = formatterForGetCompleteProfile(
+        apiResponse.data?.data,
+        masterData
+      );
+      setIsEditMode(true);
+      if (email &amp;&amp; mobile) {
+        values = {...formattedData, email, mobile};
+      } else if (email) {
+        values = {...formattedData, email};
+      } else if (mobile) {
+        values = {...formattedData, mobile};
+      }
+    } else {
+      if (email &amp;&amp; mobile) {
+        values = {...formFields, email, mobile};
+      } else if (email) {
+        values = {...formFields, email};
+      } else if (mobile) {
+        values = {...formFields, mobile};
+      }
+    }
+    /** fetching firstname from async storage -
+     * and storing that in our local state -
+     * if firstname is already not present
+     */
+    if (!values.firstName) {
+      const firstName = await getFromAsyncStorage(AsyncStorageKeys.NAME);
+      const parsedFirstName = JSON.parse(firstName);
+      values = {...values, firstName: parsedFirstName};
+    }
+    setFormFields(values);
+    setFullPageLoading(false);
+  };
+
+  /**
+   * fetch hospitals
+   */
+  const fetchHospitals = async (access_token) => {
+    const {apiResponse} = await fetchHospitalsApiCall(access_token);
+    if (apiResponse) {
+      const hospitals = apiResponse.data?.data.map((item) => {
+        return {name: item.hospitalName, id: item.id};
+      });
+      setHospitals(hospitals);
+    }
+  };
+
+  /**
+   * fetch drugs
+   */
+  const fetchDrugName = async (access_token) => {
+    const {apiResponse} = await fetchDrugsApiCall(access_token);
+    if (apiResponse) {
+      const drugs = apiResponse.data?.data
+        ?.filter((drug) => drug.visible === true)
+        ?.map((item) => {
+          return {
+            name: `${item.brandName}-${item.drugGenericName}`,
+            id: item.id,
+          };
+        });
+      setDrugs(drugs);
+    }
+  };
+
+  const fetchPresentCityService = async () => {
+    if (loginData) {
+      const {access_token} = loginData;
+      if (formFields.presentState) {
+        const {apiResponse} = await fetchCityListApiCall(
+          formFields.presentState,
+          access_token
+        );
+        if (apiResponse) {
+          const cities = apiResponse.data?.data.map((item) => {
+            return {name: item.name, id: item.id};
+          });
+          setPresentCities(cities);
+        }
+      }
+    }
+  };
+
+  const fetchPermanentCityService = async () => {
+    if (loginData) {
+      const {access_token} = loginData;
+      if (formFields.permanentState) {
+        const {apiResponse} = await fetchCityListApiCall(
+          formFields.permanentState,
+          access_token
+        );
+        if (apiResponse) {
+          const cities = apiResponse.data?.data.map((item) => {
+            return {name: item.name, id: item.id};
+          });
+          setPermanentCities(cities);
+        }
+      }
+    }
+  };
+
+  /**
+   * toggle when user presses confirmation checkbox
+   */
+  const handlePressTerms = () => {
+    setConfirmation(!confirmation);
+  };
+
+  /** navigating to terms of use */
+  const handlePressTermsAndConditions = () => {
+    navigate('TermsOfUse');
+  };
+
+  /**
+   * to get user input text/dropdown-items values
+   * We are taking second parameter of first functions
+   * as whether the fields is dropdown or not.
+   * If yes, we have to arrange the selected value as 'id' &amp; 'value'
+   * to showcase the value in input field &amp;
+   * to send id to apis.
+   */
+  const handleChangeText =
+    (type, inputType) => (value, textInputErrorMessage) => {
+      // if there is any error on the current input field, make it null in the input error state key
+      const inputError = {
+        ...formFieldsError,
+        [`${type}Error`]: textInputErrorMessage,
+      };
+      setFormFieldsError(inputError);
+      let values = {...formFields};
+      /**
+       * whenever hospital is changed,
+       * making sure to reset doctors field as well.
+       */
+      if (type === 'hospitalId') {
+        values = {...values, doctorId: null, doctorIdName: null};
+        if (formFields['hospitalId'] !== value.id) {
+          setDoctors(null);
+        }
+      } else if (type === 'presentState') {
+        values = {...values, presentCity: null};
+
+        if (formFields['presentState'] !== value.id) {
+          setPresentCities(null);
+        }
+      } else if (type === 'permanentState') {
+        values = {
+          ...values,
+          permanentCity: null,
+        };
+        if (formFields['permanentState'] !== value.id) {
+          setPermanentCities(null);
+        }
+      }
+
+      if (inputType === 'dropdown') {
+        if (
+          type === 'drugId' ||
+          type === 'hospitalId' ||
+          type === 'doctorId' ||
+          type === 'presentState' ||
+          type === 'permanentState'
+        ) {
+          values = {
+            ...values,
+            [type]: value?.id,
+            [type + 'Name']: value?.name,
+          };
+        } else {
+          values = {
+            ...values,
+            [type]: value?.name,
+          };
+        }
+      } else if (inputType === 'calendar') {
+        values = {
+          ...values,
+          [type]: value,
+          [type + 'Name']: getDateInYMDFormat(value),
+        };
+      } else {
+        values = {...values, [type]: value};
+        if (type === 'panNumber') {
+          storeInAsyncStorage(
+            AsyncStorageKeys.PAN_NUMBER,
+            JSON.stringify(value)
+          );
+        }
+      }
+      setFormFields(values);
+    };
+
+  /**
+   * handling user press -
+   * when user clicks on present address same as permanent address
+   */
+  const handlePressSamePresentAddress = () => {
+    setSamePresentAddress(!samePresentAddress);
+  };
+
+  /** registration edit profile api call */
+  const callRegistrationEditProfileService = async (formFields) => {
+    const {access_token} = loginData;
+    const formattedData = formatterForCompleteProfile(formFields);
+    const data = await registrationCompleteProfileApiCall(
+      formattedData,
+      access_token,
+      isEditMode, // this is to know whether this is for edit profile
+      isApplicant
+    );
+    return data;
+  };
+
+  /** when user presses on submit button */
+  const handlePressNext = async () => {
+    setLoading(true);
+    let updatedFormFieldsError = {...formFieldsError};
+    if (formFields['permanentStateName'] &amp;&amp; formFields['presentStateName']) {
+      updatedFormFieldsError = {
+        ...formFieldsError,
+        ['permanentStateNameError']: null,
+        ['presentStateNameError']: null,
+      };
+    }
+    setFormFieldsError({...updatedFormFieldsError, ['apiError']: null});
+    let errorObj = {};
+    if (
+      (fromScreen === 'Registration' &amp;&amp; confirmation) ||
+      fromScreen === 'MyProfile'
+    ) {
+      let isValidationError = false;
+
+      /**
+       * Check if there is already an error
+       * present due to text input items
+       */
+      Object.keys(updatedFormFieldsError).map((item) => {
+        if (item !== 'apiError' &amp;&amp; updatedFormFieldsError[item]) {
+          isValidationError = true;
+        }
+      });
+
+      if (updatedFormFieldsError['emailError'] &amp;&amp; !formFields['mobile']) {
+        isValidationError = true;
+      }
+
+      if (updatedFormFieldsError['mobileError'] &amp;&amp; !formFields['email']) {
+        isValidationError = true;
+      }
+
+      /** getting required fields */
+      const requiredFields = getRequiredFields(isApplicant);
+      // user has confirmed with terms &amp; conditions
+      requiredFields.map((field) => {
+        const fieldValue = formFields[field];
+        if (!fieldValue) {
+          isValidationError = true;
+          errorObj = {
+            ...errorObj,
+            [`${field}Error`]: t('validationMessages:pleaseEnter') + t(field),
+          };
+        }
+      });
+      // show validation errors
+      if (isValidationError) {
+        setFormFieldsError({...updatedFormFieldsError, ...errorObj});
+        setLoading(false);
+        return;
+      }
+      if (formFields.email || formFields.mobile) {
+        // if no validation error - call api
+        const {apiResponse, apiError} =
+          await callRegistrationEditProfileService(formFields);
+        if (apiResponse) {
+          setSuccessMessage(
+            apiResponse.localizedMessage || t('succesfullyUpdated')
+          );
+          setLoading(false);
+          setTimeout(() => {
+            /**
+             * clearing all previous screens from the stack
+             * once user successfully start the
+             * PBP program
+             * in case of vbc program screen
+             * otherwise navigating to Others screen
+             */
+            try {
+              isEditMode &amp;&amp; !isApplicant
+                ? // ? navigate('OthersScreen')
+                  navigate('Others', {screen: 'OthersScreen'})
+                : reset({
+                    index: 1,
+                    routes: [
+                      {
+                        name: isApplicant
+                          ? 'ApplicantBottomTabNavigator'
+                          : 'BottomTabNavigator',
+                      },
+                    ],
+                  });
+            } catch (err) {
+              //catch the error here
+            }
+          }, 2000);
+        } else {
+          setFormFieldsError({
+            ...initialFormFieldsErrorState,
+            apiError: apiError?.localizedMessage || t('failed'),
+          });
+          setLoading(false);
+        }
+      } else {
+        setFormFieldsError({
+          ...updatedFormFieldsError,
+          apiError: t('validationMessages:emailOrMobile'),
+        });
+        setLoading(false);
+      }
+    } else {
+      // user has not confirmed with terms &amp; conditions, show error to user
+      setFormFieldsError({
+        ...updatedFormFieldsError,
+        apiError: t('validationMessages:confirmation'),
+      });
+      setLoading(false);
+    }
+  };
+
+  const loggedInUserRole = getUserRole(userPermissions?.data);
+  const isApplicant = loggedInUserRole === 'applicant';
+  const samePresentAddressIcon = samePresentAddress ? 'check-square' : 'square';
+  const userConfirmationIcon = confirmation ? 'check-square' : 'square';
+  const isTreatmentStarted = userPermissions?.data?.user?.totalCycles
+    ? true
+    : false;
+
+  // fetches dropdown items based on field type
+  const handleGetDropdownItems = (fieldType) => {
+    switch (fieldType) {
+      case 'gender': {
+        return genderTypes;
+      }
+      case 'presentCountry':
+      case 'permanentCountry': {
+        return masterData?.countries;
+      }
+      case 'presentStateName':
+      case 'permanentStateName': {
+        return masterData?.states;
+      }
+      case 'presentCity': {
+        return presentCities;
+      }
+      case 'permanentCity': {
+        return permanentCities;
+      }
+      case 'typeOfCancerId': {
+        return masterData?.cancerTypes;
+      }
+      case 'drugIdName': {
+        return drugs;
+      }
+      case 'hospitalIdName': {
+        return hospitals;
+      }
+      case 'doctorIdName': {
+        return doctors;
+      }
+      default: {
+        return [];
+      }
+    }
+  };
+
+  // handles filling dropdownValue prop for text input with type dropdown
+  const handleGetDropdownValue = (item) => {
+    if (item.valueKey === 'birthDate') {
+      return formFields.birthDateName
+        ? getDateInDMYHyphenFormat(formFields.birthDateName)
+        : null;
+    } else {
+      return formFields[item.dropdownValue];
+    }
+  };
+
+  // make fields disable based on certain conditions and field type
+  const handleGetDisabledFields = (fieldType) => {
+    switch (fieldType) {
+      case 'username': {
+        return true;
+      }
+      case 'mobile': {
+        return fromScreen === 'Registration' &amp;&amp; userRegisteredFrom === 'mobile';
+      }
+      case 'email': {
+        return fromScreen === 'Registration' &amp;&amp; userRegisteredFrom === 'email';
+      }
+      case 'presentCity': {
+        return !formFields.presentState || !presentCities;
+      }
+      case 'permanentCity': {
+        return !formFields.permanentState || !permanentCities;
+      }
+      case 'drugIdName': {
+        return isTreatmentStarted;
+      }
+      case 'hospitalIdName': {
+        return isTreatmentStarted;
+      }
+      case 'doctorIdName': {
+        return isTreatmentStarted || !formFields.hospitalId;
+      }
+      default: {
+        return false;
+      }
+    }
+  };
+
+  // handles show loader on a input field when api hits to populate data
+  const handleShowLoaderInInput = (fieldType) => {
+    switch (fieldType) {
+      case 'presentCity': {
+        return formFields.presentState &amp;&amp; !presentCities;
+      }
+      case 'permanentCity': {
+        return formFields.permanentState &amp;&amp; !permanentCities;
+      }
+      case 'typeOfCancerId': {
+        return !drugs;
+      }
+      case 'drugIdName': {
+        return !drugs;
+      }
+      case 'hospitalIdName': {
+        return !hospitals;
+      }
+      case 'doctorIdName': {
+        return !doctors;
+      }
+      default: {
+        return false;
+      }
+    }
+  };
+
+  // conditionally render form based on type of field
+  const renderForm = (item) => {
+    if (
+      isApplicant &amp;&amp;
+      (item.valueKey === 'typeOfCancerId' ||
+        item.valueKey === 'drugIdName' ||
+        item.valueKey === 'hospitalIdName' ||
+        item.valueKey === 'doctorIdName' ||
+        item.valueKey === 'mrn')
+    ) {
+      return null;
+    } else if (
+      samePresentAddress &amp;&amp;
+      (item.valueKey === 'permanentAddress' ||
+        item.valueKey === 'permanentCountry' ||
+        item.valueKey === 'permanentStateName' ||
+        item.valueKey === 'permanentCity' ||
+        item.valueKey === 'permanentPinCode')
+    ) {
+      return null;
+    } else if (item.valueKey === 'username' &amp;&amp; fromScreen === 'Registration') {
+      return null;
+    } else if (item.inputType === 'radio') {
+      return (
+        &lt;Pressable
+          style={styles.samePresentAddressContainer}
+          onPress={handlePressSamePresentAddress}>
+          &lt;Icon
+            name={samePresentAddressIcon}
+            as={FontAwesome5}
+            color={Theme.lightTextColor}
+          />
+          &lt;AppText style={styles.samePresentAddress}>
+            {t('samePresentAddress')}
+          &lt;/AppText>
+        &lt;/Pressable>
+      );
+    } else {
+      return (
+        &lt;ConditionalTextInput
+          item={item}
+          handleGetDisabledFields={handleGetDisabledFields}
+          handleChangeText={handleChangeText}
+          handleShowLoaderInInput={handleShowLoaderInInput}
+          handleGetDropdownItems={handleGetDropdownItems}
+          handleGetDropdownValue={handleGetDropdownValue}
+          value={formFields[item.valueKey]}
+          errorMessage={formFieldsError[item.errorMessageKey]}
+          placeholder={t(item.placeholder)}
+          required={item.required}
+        />
+      );
+    }
+  };
+
+  return fullPageLoading ? (
+    &lt;View style={styles.loaderContainer}>
+      &lt;Loader />
+    &lt;/View>
+  ) : (
+    &lt;KeyboardAwareScrollView
+      showsVerticalScrollIndicator={false}
+      enableOnAndroid={false}
+      style={styles.scrollContainer}>
+      &lt;View style={styles.container}>
+        {!isEditMode &amp;&amp; (
+          &lt;AppText style={styles.registerText}>
+            {t('pleaseCompleteYourProfile')}
+          &lt;/AppText>
+        )}
+        &lt;Container isBackgroundPlain style={styles.sectionContainer}>
+          &lt;View style={styles.sectionIconContainer}>
+            &lt;Image
+              source={personalDetailsIcon}
+              style={styles.sectionIcon}
+              resizeMode={'contain'}
+            />
+            &lt;AppText style={styles.sectionHeading}>
+              {t('personalDetails')}
+            &lt;/AppText>
+          &lt;/View>
+          {personalInfoFieldsArray.map((item) => renderForm(item))}
+        &lt;/Container>
+        &lt;Container
+          isBackgroundPlain
+          style={
+            samePresentAddress
+              ? styles.addressSectionContainerSmall
+              : styles.addressSectionContainer
+          }>
+          &lt;View style={styles.sectionIconContainer}>
+            &lt;Image
+              source={addressDetailsIcon}
+              style={styles.sectionIcon}
+              resizeMode={'contain'}
+            />
+            &lt;AppText style={styles.sectionHeading}>
+              {t('addressInformation')}
+            &lt;/AppText>
+          &lt;/View>
+          {addressInfoFieldsArray.map((item) => renderForm(item))}
+        &lt;/Container>
+        {!isApplicant &amp;&amp; (
+          &lt;Container
+            isBackgroundPlain
+            style={styles.medicationSectionContainer}>
+            &lt;View style={styles.medicationDetailContainer}>
+              &lt;Image
+                source={hospitalDetailsIcon}
+                style={styles.sectionIcon}
+                resizeMode={'contain'}
+              />
+              &lt;AppText style={styles.sectionHeading}>
+                {t('medicationDetails')}
+              &lt;/AppText>
+            &lt;/View>
+            {medicationInfoFieldsArray.map((item) => renderForm(item))}
+          &lt;/Container>
+        )}
+        &lt;Container isBackgroundPlain style={styles.financialContainer}>
+          &lt;View style={styles.sectionIconContainer}>
+            &lt;Image
+              source={financialInformationIcon}
+              style={styles.sectionIcon}
+              resizeMode={'contain'}
+            />
+            &lt;AppText style={styles.sectionHeading}>
+              {t('financialInformation')}
+            &lt;/AppText>
+          &lt;/View>
+          {financialInfoFieldsArray.map((item) => renderForm(item))}
+        &lt;/Container>
+        {fromScreen === 'Registration' &amp;&amp; (
+          &lt;View style={styles.bottomInfoContainer}>
+            &lt;AppText
+              onPress={handlePressTermsAndConditions}
+              style={styles.termsText}>
+              {t('terms&amp;Conditions')}
+            &lt;/AppText>
+            &lt;Pressable
+              style={styles.confirmationContainer}
+              onPress={handlePressTerms}>
+              &lt;Icon
+                name={userConfirmationIcon}
+                as={FontAwesome5}
+                style={styles.checkBoxIcon}
+              />
+              &lt;AppText style={styles.confirmText}>{t('confirmText')}&lt;/AppText>
+            &lt;/Pressable>
+          &lt;/View>
+        )}
+        &lt;Button
+          style={styles.buttonContainer}
+          onPressEvent={handlePressNext}
+          isLoading={loading}
+          label={t(fromScreen === 'Registration' ? 'continue' : 'Save')}
+        />
+        &lt;View>
+          {successMessage ? (
+            &lt;AppText style={styles.successText}>{successMessage}&lt;/AppText>
+          ) : (
+            &lt;AppText style={styles.apiErrorText}>
+              {formFieldsError.apiError}
+            &lt;/AppText>
+          )}
+        &lt;/View>
+      &lt;/View>
+    &lt;/KeyboardAwareScrollView>
+  );
+};
+
+export default EditProfile;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

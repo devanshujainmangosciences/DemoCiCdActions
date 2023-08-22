@@ -1,0 +1,17 @@
+{
+  "home": "Home",
+  "lenders": "Lenders",
+  "list": "List",
+  "lenderList": "Lender List",
+  "addNewLender": "Add New Lender",
+  "show": "Show",
+  "bulkAction": "Bulk Action",
+  "active": "ACTIVE",
+  "inactive": "INACTIVE",
+  "apply": "Apply",
+  "previous": "Previous",
+  "next": "Next",
+  "showing": "Showing",
+  "outOf": "out of",
+  "entries": "entries"
+}

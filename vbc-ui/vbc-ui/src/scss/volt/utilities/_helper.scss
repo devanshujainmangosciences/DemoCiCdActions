@@ -1,0 +1,278 @@
+/**
+* = Helper classes
+*/
+
+// Overflows
+.overflow-visible {
+  overflow: visible !important;
+}
+
+// Opacity classes
+@for $nr from 0 to 10 {
+  .opacity-#{$nr} {
+    opacity: #{calc($nr / 10)} !important;
+  }
+}
+
+// Fill opacity classes
+@for $nr from 0 to 10 {
+  .fill-opacity-#{$nr} {
+    fill-opacity: #{calc($nr / 10)} !important;
+  }
+}
+
+// Z indexes
+@for $nr from 0 to 10 {
+  .z-#{$nr} {
+    position: relative;
+    z-index: #{$nr} !important;
+  }
+}
+
+.w-auto {
+  width: auto !important;
+}
+.min-width-220 {
+  min-width: 225px !important;
+}
+
+// Border widths
+.bw-md {
+  border-width: $border-width-md !important;
+}
+.bw-lg {
+  border-width: $border-width-lg !important;
+}
+.bw-xl {
+  border-width: $border-width-xl !important;
+}
+
+.border-top-left-radius-0 {
+  border-top-left-radius: 0 !important;
+}
+
+.border-top-right-radius-0 {
+  border-top-end-radius: 0 !important;
+}
+
+.border-bottom-left-radius-0 {
+  border-bottom-start-radius: 0 !important;
+}
+
+.border-bottom-right-radius-0 {
+  border-bottom-end-radius: 0 !important;
+}
+
+.rounded-xl {
+  border-radius: $border-radius-xl !important;
+}
+
+.hand {
+  cursor: pointer;
+}
+.mt-450 {
+  margin-top: 45px !important;
+}
+.border-light-gray {
+  border: 1px solid $light-gray;
+}
+.input-primary {
+  height: 32px;
+  width: 100%;
+  background: $white 0% 0% no-repeat padding-box;
+  border: 1px solid $gray-550;
+  border-radius: 3px;
+  &:focus-visible {
+    outline: none;
+  }
+  @include media-breakpoint-up(sm) {
+    width: 320px;
+  }
+}
+.text-primary {
+  font: normal normal normal 16px/19px Roboto;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+
+.patient-theme-color-button {
+  background: #f78f27 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  opacity: 1;
+  color: white;
+  border: white;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.flex-wrap-wrap {
+  flex-wrap: wrap;
+}
+
+//Background colors classes
+
+.bg-patient {
+  background: $patient;
+}
+.bg-admin {
+  background: $admin;
+}
+.bg-doctor {
+  background: $doctor;
+}
+.bg-mango_executive {
+  background-color: $doctor !important;
+}
+
+.bg-super-light-orange {
+  background: #ffeedd;
+}
+.bg-light-orange {
+  background: #ffd5ab;
+}
+
+//Flex Classes
+
+.flex-10 {
+  display: flex;
+  gap: 10px;
+}
+
+.flex-basic-80 {
+  flex-basis: 80%;
+}
+
+//Custom bootstrap Columns
+.col-lg-2-5 {
+  flex: 0 0 auto;
+  width: 19.666667%;
+}
+
+.sub-head {
+  font-weight: 800;
+  color: $pure-black;
+}
+.sub-head-head {
+  font-weight: 500;
+  color: $pure-black;
+}
+
+// Colored Bullet
+#style-bullet {
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: circle;
+    display: block;
+    align-items: center;
+    justify-content: center;
+  }
+  .bullets {
+    div {
+      width: 5px;
+      height: 5px;
+      background: #f78f27 0 0 no-repeat padding-box;
+      border-radius: 50%;
+      margin-bottom: 2px;
+    }
+    svg {
+      font-size: 10px;
+    }
+  }
+}
+// Colored Bullet
+#style-header-bullet {
+  ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: circle;
+    display: block;
+    align-items: center;
+    justify-content: center;
+  }
+  .bullets {
+    div {
+      width: 6px;
+      height: 7px;
+      background: #f8f8f8 0% 0% no-repeat padding-box;
+      border: 1px solid black;
+      border-radius: 50%;
+    }
+    svg {
+      font-size: 10px;
+    }
+  }
+}
+//Item modified
+#item-modified {
+  border-right: none;
+}
+
+//Remove White space from text
+.white-space-nowrap {
+  white-space: nowrap;
+}
+
+.responsive-wrap {
+  white-space: none;
+  @include media-breakpoint-up(sm) {
+    white-space: nowrap;
+  }
+}
+
+//Height in Pixels
+.h-25px {
+  height: 25px;
+}
+
+//Position Center
+.item-position-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+//Custom margines
+.mt-2-rem {
+  margin-top: 2rem;
+}
+.ms-1-7 {
+  margin-left: 1.7rem;
+}
+
+.cut-text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.select-box {
+  select {
+    background: #ffffff 0% 0% no-repeat padding-box;
+    box-shadow: inset 0 1px 2px rgb(46 54 80 / 8%);
+    border: 1px solid #c8c5cb;
+    border-radius: 3px;
+    height: 34px;
+    font-size: 0.875rem;
+  }
+}
+
+.display-sub-header-wrap{
+  display: flex;
+  justify-content: left !important;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.truncate-text-200{
+  width: 200px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

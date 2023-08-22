@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "522804382535",
+    "project_id": "vbc-dev-bf5a3",
+    "storage_bucket": "vbc-dev-bf5a3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522804382535:android:2971b12c6fa138e9a31a62",
+        "android_client_info": {
+          "package_name": "com.mangosciences.vbc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522804382535-90lgqqcbm0topr47etkb17s8mkuuk0kc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9LmI4RQ2DFuF89gqNO7zezpoh_xUrQvQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "522804382535-90lgqqcbm0topr47etkb17s8mkuuk0kc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "522804382535-m56j0qrf55heqha4a732k0k7tb553of8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mangosciences.vbc"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

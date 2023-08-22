@@ -1,0 +1,48 @@
+.patient-help {
+  .contact-us {
+    background: #ffffff 0% 0% no-repeat padding-box;
+    box-shadow: 0px 4px 8px #00000008;
+    border-radius: 8px;
+    margin-top: 1rem;
+    padding: 2rem;
+    margin-bottom: 1rem;
+    font-size: $font-size-sm;
+    input,
+    textarea {
+      color: $text-muted;
+    }
+    a {
+      color: #08a5df;
+    }
+    a:hover {
+      color: #0c739c;
+    }
+  }
+  color: $text-muted;
+}
+
+.ques-body {
+  background: #f8f8f8 0% 0% no-repeat padding-box;
+  opacity: 1;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: $font-size-sm;
+  align-items: center;
+  @include media-breakpoint-down(sm) {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  // flex-wrap: wrap;
+  // button {
+  //   width: 30px;
+  //   height: 30px;
+  // }
+}
+
+.answer-body {
+  background: #fcfcfc 0% 0% no-repeat padding-box;
+  border: 1px solid #f8f8f8;
+  text-align: justify;
+  font-size: $font-size-sm;
+}

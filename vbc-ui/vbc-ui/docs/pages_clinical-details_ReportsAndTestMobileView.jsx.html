@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/clinical-details/ReportsAndTestMobileView.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/clinical-details/ReportsAndTestMobileView.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ This Module will only be triggered for mobile Browser.
+ To show the data of radiology and other reports and test
+ */
+import React, {useEffect, useState} from 'react';
+import CustomToggle from './children/CustomToggle';
+import {Accordion, Col, Form, Row} from '@themesberg/react-bootstrap';
+import {
+  checkValue,
+  convertMedicationName,
+  convertDateToUTC,
+  getMonthsDataSorted,
+  sortObjectKeysByName,
+} from '@/services/utility';
+import uniqWith from 'lodash/uniqWith';
+import isEqual from 'lodash/isEqual';
+import {DateFormat} from '../../constants';
+import format from 'date-fns/format';
+
+const ReportsAndTestMobileView = ({
+  type,
+  yearData,
+  reportsData,
+  monthData,
+  onYearChange,
+  activeMonth,
+  activeYear,
+  onFilter,
+  categories,
+  onProcedureChange,
+  getLabResultData,
+}) => {
+  //   console.log('PROPS=>', type, yearData, reportsData, monthData);
+  const [isAccordion, setisAccordion] = useState(false);
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  const [monthsDataList, setmonthsDataList] = useState({});
+  const [yearDataList, setYearDataList] = useState({});
+  const [label, setlabel] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonth, setselectedMonth] = useState('');
+  const [viewRecordsToggle, setviewRecordsToggle] = useState(false);
+  const [reportsDataList, setreportsDataList] = useState([]);
+
+  /** The below code is a React useEffect hook that is triggered when the yearData or monthData state
+variables are updated. It sets the state variables yearDataList, selectedYear, monthsDataList,
+selectedMonth, and reportsDataList based on the values of yearData, monthData, and
+activeYear/activeMonth (which are  props passed down from a parent component). */
+  useEffect(() => {
+    if (yearData) {
+      setYearDataList(yearData);
+      setSelectedYear(activeYear);
+      // const recievedMonths = yearData[Object.keys(yearData)[0]]?.months;
+      // console.log('monthData in useEffect=>', monthData);
+      setmonthsDataList(monthData);
+      setselectedMonth(activeMonth);
+      setreportsDataList(reportsData);
+    }
+  }, [yearData, monthData]);
+
+  /**  The below code is using the `useEffect` hook in a React component to update the state variables
+`selectedYear` and `selectedMonth` whenever the `activeMonth` or `activeYear` props change. This is
+achieved by passing an array of dependencies `[activeMonth, activeYear]` as the second argument to
+the `useEffect` hook. When any of the dependencies change, the function inside the `useEffect` hook
+is called, which updates the state variables `selectedYear` and `selectedMonth` to match the new
+values of `activeYear` and `activeMonth`. */
+  useEffect(() => {
+    setSelectedYear(activeYear);
+    setselectedMonth(activeMonth);
+  }, [activeMonth, activeYear]);
+
+  /** The below code is using the `useEffect` hook in a React component to update the state of
+ `reportsDataList` with the value of `reportsData` whenever `reportsData` changes. This is achieved
+ by passing `[reportsData]` as the second argument to `useEffect`, which tells React to re-run the
+ effect whenever `reportsData` changes. */
+  useEffect(() => {
+    setreportsDataList(reportsData);
+  }, [reportsData]);
+
+  /** The below code is using the `useState` hook in a React component to set the label and isAccordion
+state variables based on the value of the `type` prop. It is using a switch statement to check the
+value of `type` and setting the label and isAccordion variables accordingly. The code is also using
+a callback function as the initial state value for the `useState` hook, which will only be executed
+once when the component is mounted. */
+  useState(() => {
+    if (type) {
+      switch (type) {
+        case 'radiologyReports':
+          setlabel('Radiology');
+          setisAccordion(true);
+          break;
+        case 'labReports':
+          setlabel('Lab Reports');
+          setisAccordion(true);
+          break;
+        case 'medications':
+          setlabel('Medications');
+          setisAccordion(false);
+          break;
+        case 'clinicalNotes':
+          setlabel('Clinical Notes');
+          setisAccordion(true);
+          break;
+        case 'otherTests':
+          setlabel('Other Tests');
+          setisAccordion(true);
+          break;
+        case 'surgicalDetails':
+          setlabel('Surgery Details');
+          setisAccordion(false);
+          break;
+        case 'radiationTherapy':
+          setlabel('Radiation Therapy');
+          setisAccordion(false);
+          break;
+        case 'otherTreatment':
+          setlabel('Other Treatment');
+          setisAccordion(false);
+          break;
+        default:
+          break;
+      }
+    }
+  }, [type]);
+
+  // console.log('SELECTED MONTH=>', selectedMonth);
+  // console.log('SELECTED YEAR=>', selectedYear);
+  // console.log('YEAR LIST=>', yearDataList);
+  // console.log('MONNTH=>', monthsDataList);
+  // console.log('monthData=>', monthData);
+  // console.log('Year Data=>', yearData);
+  // console.log('reportsData=>', reportsData);
+  // console.log('CATEGORIES=>', categories);
+
+  /** The function `radiologyReports` that returns a React component. The
+component renders an Accordion element that displays radiology reports. The report data is passed as
+a parameter to the function. The component displays the date and procedure of the report in the
+header of the Accordion. When the Accordion is expanded, it displays the radiology report note. The
+component also includes a toggle button to expand and collapse the Accordion. 
+*@param {Object} report
+*@param {Number} index
+*/
+  const radiologyReports = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+            {/* {format(new Date(report.orderDate), DateFormat.DD_MM_YYYY_SLASH)} */}
+            {convertDateToUTC(report.orderDate, DateFormat.DD_MM_YYYY_SLASH)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Procedure:&lt;/strong>
+            {checkValue(report?.radiologyProcedure)}
+          &lt;/div>
+        &lt;/div>
+        &lt;div className="accordation-button">
+          {isAccordion &amp;&amp; (
+            &lt;CustomToggle
+              callback={() => setIsAccordionOpen(!isAccordionOpen)}
+              eventKey={index.toString()}
+            />
+          )}
+        &lt;/div>
+      &lt;/div>
+      &lt;Accordion.Collapse
+        eventKey={index.toString()}
+        className="border-0 accordion-table">
+        &lt;Col className="m-2 p-2 border-bottom border-light-grey">
+          &lt;Row className="m-0 border-bottom border-light-grey">
+            {/* &lt;h6>PROCEDURE:&lt;/h6> */}
+            &lt;p>
+              {checkValue(
+                report?.radiologyReportNote,
+                true,
+                import.meta.env.VITE_NO_RADIOLOGY_NOTE,
+                'No radiology report found'
+              )}
+            &lt;/p>
+            &lt;Col lg={8}>&lt;/Col>
+          &lt;/Row>
+        &lt;/Col>
+      &lt;/Accordion.Collapse>
+    &lt;/Accordion>
+  );
+  /** The  functional component  `clinicalReports` that returns an
+  Accordion component with collapsible content. The component takes in two props, `report` and
+  `index`, and uses them to display information about a clinical report. The information displayed
+  includes the date of the report, the type of note, and the note content. The component also
+  includes a button to toggle the visibility of the note content. 
+  *@param {Object} report
+  *@param {Number} index
+  */
+  const clinicalReports = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+
+            {convertDateToUTC(report.noteDate, DateFormat.DD_MM_YYYY_SLASH)}
+            {/* {format(new Date(report?.noteDate), DateFormat.DD_MM_YYYY_SLASH)} */}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Note Type:&lt;/strong>
+            {checkValue(report?.noteType)}
+          &lt;/div>
+        &lt;/div>
+        &lt;div className="accordation-button">
+          {isAccordion &amp;&amp; (
+            &lt;CustomToggle
+              callback={() => setIsAccordionOpen(!isAccordionOpen)}
+              eventKey={index.toString()}
+            />
+          )}
+        &lt;/div>
+      &lt;/div>
+      &lt;Accordion.Collapse
+        eventKey={index.toString()}
+        className="border-0 accordion-table">
+        &lt;Col className="m-2 p-2 border-bottom border-light-grey">
+          &lt;Row className="m-0 border-bottom border-light-grey">
+            {/* &lt;h6>PROCEDURE:&lt;/h6> */}
+            &lt;p>
+              {checkValue(
+                report?.noteContent,
+                true,
+                import.meta.env.VITE_NO_CLINICAL_NOTE,
+                'No clinical note found'
+              )}
+            &lt;/p>
+            &lt;Col lg={8}>&lt;/Col>
+          &lt;/Row>
+        &lt;/Col>
+      &lt;/Accordion.Collapse>
+    &lt;/Accordion>
+  );
+  /** The `otherTestsReport` that takes in two
+  parameters: `report` and `index`. It returns an `Accordion` component with a header section that
+  displays the date and procedure name from the `report` object. The header also includes a button
+  that toggles the display of a collapsible section containing the procedure note content from the
+  `report` object. The `checkValue` function is used to ensure that the displayed values are not
+  null or undefined. The `convertDateToUTC` function is used to format the date in UTC format. 
+  *@param {Object} report
+  *@param {Number} index
+  */
+
+  const otherTestsReport = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+            {/* {format(
+              new Date(report?.procedureDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )} */}
+            {convertDateToUTC(
+              report.procedureDate,
+              DateFormat.DD_MM_YYYY_SLASH
+            )}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Procedure:&lt;/strong>
+            {checkValue(report?.vbcProcedureName)}
+          &lt;/div>
+        &lt;/div>
+        &lt;div className="accordation-button">
+          {isAccordion &amp;&amp; (
+            &lt;CustomToggle
+              callback={() => setIsAccordionOpen(!isAccordionOpen)}
+              eventKey={index.toString()}
+            />
+          )}
+        &lt;/div>
+      &lt;/div>
+      &lt;Accordion.Collapse
+        eventKey={index.toString()}
+        className="border-0 accordion-table">
+        &lt;Col className="m-2 p-2 border-bottom border-light-grey">
+          &lt;Row className="m-0 border-bottom border-light-grey">
+            {/* &lt;h6>PROCEDURE:&lt;/h6> */}
+            &lt;p>
+              {checkValue(
+                report?.procedureNoteContent,
+                true,
+                import.meta.env.VITE_NO_OTHER_TEST_NOTE,
+                'No other test report found'
+              )}
+            &lt;/p>
+            &lt;Col lg={8}>&lt;/Col>
+          &lt;/Row>
+        &lt;/Col>
+      &lt;/Accordion.Collapse>
+    &lt;/Accordion>
+  );
+  /**
+   * This function generates a report for surgical details using React and displays the date and
+   * procedure name in an accordion format.
+   * @param {Object} report
+   * @param {Number} index
+   */
+  const surgicalDetailsReport = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+
+            {/* {format(new Date(report?.surgeryDate), DateFormat.DD_MM_YYYY_SLASH)} */}
+            {convertDateToUTC(report.surgeryDate, DateFormat.DD_MM_YYYY_SLASH)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Procedure:&lt;/strong>
+            {checkValue(report?.procedureName)}
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/Accordion>
+  );
+  /**
+   * This is a JavaScript React function that generates a report for radiation therapy and displays it
+   * in an accordion format.
+   *@param {Object} report
+   *@param {Number} index
+   */
+  const radiationTherapyReport = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+
+            {/* {format(new Date(report?.startDate), DateFormat.DD_MM_YYYY_SLASH)} */}
+            {format(new Date(report?.startDate), DateFormat.DD_MM_YYYY_SLASH)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Radiation Therapy:&lt;/strong>
+            {checkValue(report?.technique)}
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/Accordion>
+  );
+  /** The  `otherTreatmentReport` that takes two parameters:
+`report` and `index`. The function returns a JSX element that renders an Accordion component with
+some content inside. The content includes the date and procedure name from the `report` object,
+formatted using the `format` function and displayed using the `checkValue` function. The
+`import.meta.env.VITE_NO_OTHER_TREATMENT_NOTE` value is used as a fallback message if the procedure
+name is not available. 
+*@param {Object} report
+*@param {Number} index
+*/
+  const otherTreatmentReport = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={index}
+        className="d-flex justify-content-between mt-3 p-2 mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Date:&lt;/strong>
+
+            {/* {format(
+              new Date(report?.procedureDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )} */}
+            {format(
+              new Date(report?.procedureDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Procedure:&lt;/strong>
+            {checkValue(
+              report?.vbcProcedureName,
+              true,
+              import.meta.env.VITE_NO_OTHER_TREATMENT_NOTE,
+              'No other treatment report found'
+            )}
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/Accordion>
+  );
+  /** The above code is defining a function called `labReports` that takes in two parameters: `report` and
+`index`. The function returns an `Accordion` component with collapsible sections that display
+information about a lab report. The information displayed includes the test collection date, test
+result date, and test name. If the `isAccordion` variable is true, a custom toggle button is
+displayed to expand and collapse the section. The function also calls another function called
+`renderTestParameters` to display additional information about the lab report in a table format. 
+  *@param {Object} report
+  *@param {Number} index
+*/
+  const labReports = (report, index) => (
+    &lt;Accordion>
+      &lt;div
+        key={report?.labOrderId}
+        className="d-flex justify-content-between mt-3 p-2  mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong>Test Collection Date:&lt;/strong>
+
+            {/* {format(
+              new Date(report?.testCollectionDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )} */}
+            {format(
+              new Date(report?.testCollectionDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Test Result Date:&lt;/strong>
+            {/* 
+            {format(
+              new Date(report?.testResultsDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )} */}
+            {format(
+              new Date(report?.testResultsDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Test:&lt;/strong>
+            {checkValue(report?.testName)}
+          &lt;/div>
+        &lt;/div>
+        &lt;div className="accordation-button">
+          {isAccordion &amp;&amp; (
+            &lt;CustomToggle
+              callback={() => setIsAccordionOpen(!isAccordionOpen)}
+              eventKey={index.toString()}
+            />
+          )}
+        &lt;/div>
+      &lt;/div>
+      &lt;Accordion.Collapse
+        eventKey={index.toString()}
+        className="border-0 accordion-table">
+        &lt;Col className="m-2 p-2 border-bottom border-light-grey">
+          &lt;Row className="m-0 border-bottom border-light-grey">
+            {renderTestParameters(report?.testParameters)}
+          &lt;/Row>
+        &lt;/Col>
+      &lt;/Accordion.Collapse>
+    &lt;/Accordion>
+  );
+  /**
+   * The function displays medication reports in an accordion format with information such as date, brand
+   * name, generic name, and strength.
+   *@param {Object} report
+   *@param {Number} index
+   */
+  const medicationReports = (report) => (
+    &lt;Accordion>
+      &lt;div
+        key={report?.index}
+        className="d-flex justify-content-between mt-3 p-2  mb-3 bg-light-orange">
+        &lt;div>
+          &lt;div>
+            &lt;strong> Date:&lt;/strong>
+            {/* {format(new Date(report?.issueDate), DateFormat.DD_MM_YYYY_SLASH)} */}
+            {format(new Date(report?.issueDate), DateFormat.DD_MM_YYYY_SLASH)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Brand Name:&lt;/strong>
+            {checkValue(report?.brandName)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Generic Name:&lt;/strong>
+            {checkValue(report?.genericName)}
+          &lt;/div>
+          &lt;div>
+            &lt;strong>Strength:&lt;/strong>
+            {checkValue(report?.strength)}
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+    &lt;/Accordion>
+  );
+
+  /**
+   * This function renders test parameters and their results in a specific format.
+   * @returns The function `renderTestParameters` returns a JSX element that displays test parameters and
+   * their results. If there are no test parameters, it returns a JSX element that says "No Data
+   * Available".
+   * @param {Array} testParameters
+   */
+  const renderTestParameters = (testParameters) => {
+    if (testParameters &amp;&amp; testParameters.length > 0) {
+      return testParameters.map((test, index) => {
+        return (
+          &lt;div className="mt-2 mb-2 bg-super-light-orange p-3" key={index}>
+            &lt;div>
+              &lt;div className="d-flex justify-content-between">
+                &lt;div>
+                  &lt;strong>Metric:&lt;/strong>
+                &lt;/div>
+                &lt;div>{test?.testParameter}&lt;/div>
+              &lt;/div>
+              &lt;div className="d-flex justify-content-between">
+                &lt;div>
+                  &lt;strong>Result:&lt;/strong>
+                &lt;/div>
+                &lt;div>
+                  {getLabResultData(
+                    test?.numericResult,
+                    test?.numericResultUnits,
+                    test?.unstructuredResult
+                  )}
+                &lt;/div>
+              &lt;/div>
+              {/* &lt;div className="d-flex justify-content-between">
+                &lt;div>
+                  &lt;strong>Units of Measure:&lt;/strong>
+                &lt;/div>
+                &lt;div>{test?.numericResultUnits}&lt;/div>
+              &lt;/div> */}
+            &lt;/div>
+            {/* &lt;hr /> */}
+            {/* &lt;div>
+              &lt;div>
+                &lt;strong>Note:&lt;/strong>
+              &lt;/div>
+              &lt;div>
+                {test?.unstructuredResult ? test?.unstructuredResult : 'N/A'}
+              &lt;/div>
+            &lt;/div> */}
+          &lt;/div>
+        );
+      });
+    } else {
+      &lt;div>No Data Avaliable&lt;/div>;
+    }
+  };
+
+  /**
+   * This function takes in a list of reports data and renders a unique list of reports based on the type
+   * of report.
+   *
+   * @returns The function `renderReportList` returns an array of components based on the `type` of
+   * report passed as an argument. If `reportsData` is not empty, it maps over the unique data and
+   * returns a component based on the `type` of report. If `reportsData` is empty, it returns a div with
+   * the message "No Data Available!".
+   * @param {Array} reportsData
+   */
+  const renderReportList = (reportsData) => {
+    if (reportsData &amp;&amp; reportsData.length > 0) {
+      //   console.log('REPORTS DATA=>', reportsData);
+      const uniqueData = uniqWith(reportsData, isEqual);
+      //   console.log('UINQUE DATA=>', uniqueData);
+      return uniqueData.map((report, index) => {
+        switch (type) {
+          case 'radiologyReports':
+            return radiologyReports(report, index);
+          case 'labReports':
+            return labReports(report, index);
+          case 'medications':
+            return medicationReports(report, index);
+          case 'clinicalNotes':
+            return clinicalReports(report, index);
+          case 'otherTests':
+            return otherTestsReport(report, index);
+          case 'surgicalDetails':
+            return surgicalDetailsReport(report, index);
+          case 'radiationTherapy':
+            return radiationTherapyReport(report, index);
+          case 'otherTreatment':
+            return otherTreatmentReport(report, index);
+          default:
+            break;
+        }
+      });
+    } else {
+      return &lt;div> No Data Avaliable!&lt;/div>;
+    }
+  };
+
+  /**
+   * The function renders a list of categories with their respective report counts and allows for
+   * toggling of view records.
+   * @returns The function `renderCategoriesData` is returning a mapped array of JSX elements. Each
+   * element is a `div` with a class of `report-details item pointer mb-2` and an `onClick` event
+   * listener that toggles the `viewRecordsToggle` state and calls the `onProcedureChange` function with
+   * the `item` parameter. The `item` parameter is the current item being iter
+   */
+  const renderCategoriesData = () => {
+    return sortObjectKeysByName(categories).map((item, index) => {
+      return (
+        &lt;div
+          className="report-details item pointer mb-2"
+          onClick={() => {
+            setviewRecordsToggle(!viewRecordsToggle);
+            onProcedureChange(item);
+          }}
+          key={`${item}-${index}`}>
+          &lt;div className="p-3 d-flex ">
+            &lt;div className="report-details-desc">
+              &lt;div className="report-label mb-2">
+                &lt;strong>{convertMedicationName(item)}&lt;/strong>
+              &lt;/div>
+              &lt;div className="report-count">
+                Total Reports:{categories[item]}
+              &lt;/div>
+            &lt;/div>
+            {/* &lt;div className="report-icon d-flex justify-content-center aling-items-center">
+      ICON
+    &lt;/div> */}
+          &lt;/div>
+        &lt;/div>
+      );
+    });
+  };
+  if (!viewRecordsToggle)
+    return (
+      &lt;div className="report-mobile-view">
+        &lt;div className="filter-month-year item mb-3 mt-3 justify-content-center">
+          &lt;div className="p-3 flex-basic-80">
+            &lt;div>
+              &lt;Form.Group>
+                &lt;Form.Control
+                  value={selectedYear}
+                  className="input-normal"
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    onYearChange(yearData[e.target.value], e.target.value);
+                  }}
+                  name="selectedYear"
+                  as={'select'}>
+                  &lt;option value="" hidden>
+                    Select Year
+                  &lt;/option>
+
+                  {Object.keys(yearDataList)
+                    .reverse()
+                    .map((key) => {
+                      if (yearData)
+                        return (
+                          &lt;option key={key} value={key}>
+                            {key} ({yearData[key]?.total})
+                          &lt;/option>
+                        );
+                    })}
+                &lt;/Form.Control>
+              &lt;/Form.Group>
+            &lt;/div>
+            &lt;div className="mt-3">
+              &lt;Form.Group>
+                &lt;Form.Control
+                  value={selectedMonth}
+                  className="input-normal"
+                  onChange={(e) => {
+                    setselectedMonth(e.target.value);
+                    //   onMonthChange(selectedMonth, monthsDataList[selectedMonth]);
+                  }}
+                  name="selectedMonth"
+                  as={'select'}>
+                  &lt;option value="" hidden>
+                    Select Month
+                  &lt;/option>
+                  {getMonthsDataSorted(monthsDataList).map((key) => (
+                    &lt;option key={key} value={key}>
+                      {key} ({monthsDataList[key]?.total})
+                    &lt;/option>
+                  ))}
+                &lt;/Form.Control>
+              &lt;/Form.Group>
+            &lt;/div>
+            &lt;div className="mt-3 text-center">
+              &lt;button
+                onClick={() =>
+                  onFilter(
+                    selectedMonth,
+                    selectedYear,
+                    monthsDataList[selectedMonth]
+                  )
+                }
+                className="btn-patient-theme">
+                Filter Now
+              &lt;/button>
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+        {categories ? (
+          renderCategoriesData(categories)
+        ) : (
+          &lt;div
+            className="report-details item pointer"
+            onClick={() => setviewRecordsToggle(!viewRecordsToggle)}>
+            &lt;div className="p-3 d-flex ">
+              &lt;div className="report-details-desc">
+                &lt;div className="report-label mb-2">
+                  &lt;strong>{label}&lt;/strong>
+                &lt;/div>
+                &lt;div className="report-count">
+                  Total Reports:{monthsDataList[selectedMonth]?.total}
+                &lt;/div>
+              &lt;/div>
+              {/* &lt;div className="report-icon d-flex justify-content-center aling-items-center">
+            ICON
+          &lt;/div> */}
+            &lt;/div>
+          &lt;/div>
+        )}
+      &lt;/div>
+    );
+  else
+    return (
+      &lt;div className="report-mobile-view">
+        &lt;div className="report-list">
+          {renderReportList(reportsDataList, isAccordion)}
+        &lt;/div>
+        &lt;button
+          onClick={() => setviewRecordsToggle(!viewRecordsToggle)}
+          className="btn-patient-theme">
+          Back
+        &lt;/button>
+      &lt;/div>
+    );
+};
+
+export default ReportsAndTestMobileView;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#acknowledgeRebatePaid">acknowledgeRebatePaid</a></li><li><a href="global.html#acknowledgeSubventionPaid">acknowledgeSubventionPaid</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#captalizeEveryWordOfSentence">captalizeEveryWordOfSentence</a></li><li><a href="global.html#checkifReportsDataInSync">checkifReportsDataInSync</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkifValueExists">checkifValueExists</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#checkValue">checkValue</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertMedicationName">convertMedicationName</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createHospitalIpConfig">createHospitalIpConfig</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createMobileVersion">createMobileVersion</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteHospitalIpConfig">deleteHospitalIpConfig</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#disableMobileVersion">disableMobileVersion</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getAllApprovalRegPatients">getAllApprovalRegPatients</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getApprovalRegPatients">getApprovalRegPatients</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDocumentName">getDocumentName</a></li><li><a href="global.html#getDocumentType">getDocumentType</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getMonthsDataSorted">getMonthsDataSorted</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getReportSyncFlag">getReportSyncFlag</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#handleRegRequest">handleRegRequest</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#isValueNull">isValueNull</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LabelValue">LabelValue</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readAndroidMobileVersionsList">readAndroidMobileVersionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitalIpConfigList">readHospitalIpConfigList</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readIosMobileVersionsList">readIosMobileVersionsList</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readMobileVersionsList">readMobileVersionsList</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#selectMonthWithData">selectMonthWithData</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryReduxEnhancer">sentryReduxEnhancer</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setNewToken">setNewToken</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setSelectedRole">setSelectedRole</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setupStore">setupStore</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showHospitalIpConfig">showHospitalIpConfig</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#sortObjectKeysByName">sortObjectKeysByName</a></li><li><a href="global.html#splitCamelCaseString">splitCamelCaseString</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateHospitalIpConfig">updateHospitalIpConfig</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMobileVersion">updateMobileVersion</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#updateVersionMapping">updateVersionMapping</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyOtp">verifyOtp</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri May 19 2023 18:39:27 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

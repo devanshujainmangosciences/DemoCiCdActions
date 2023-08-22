@@ -1,0 +1,101 @@
+import {faEdit} from '@fortawesome/free-solid-svg-icons/faEdit';
+import {Routes} from '@/routes';
+
+export const tableHeadersVbcDrugSchedule = [
+  {
+    keyName: 'ID',
+    keyValue: 'id',
+    className: '',
+    showColumn: true,
+    key: 0,
+  },
+  {
+    keyName: 'VBC Drug Id',
+    keyValue: 'drugId',
+    className: '',
+    showColumn: true,
+    key: 1,
+  },
+  {
+    keyName: 'Cycle No',
+    keyValue: 'cycleNo',
+    className: '',
+    showColumn: true,
+    key: 3,
+  },
+  {
+    keyName: 'MRP',
+    keyValue: 'marketPrice',
+    className: '',
+    showColumn: true,
+    key: 4,
+  },
+  {
+    keyName: 'Cumulative Amount',
+    keyValue: 'cumAmount',
+    className: '',
+    showColumn: false,
+    key: 5,
+  },
+  {
+    keyName: 'Payout',
+    keyValue: 'payout',
+    className: '',
+    showColumn: false,
+    key: 6,
+  },
+  {
+    keyName: 'Rebate %',
+    keyValue: 'percentageOfRebate',
+    className: '',
+    showColumn: true,
+    key: 7,
+  },
+  {
+    keyName: 'Mango Grant Amount',
+    keyValue: 'mangoGrantAmount',
+    className: '',
+    showColumn: true,
+    key: 8,
+  },
+  {
+    keyName: 'Paid Cycle',
+    keyValue: 'paidCycleHtml',
+    className: '',
+    showColumn: true,
+    key: 9,
+  },
+  {
+    keyName: 'Actions',
+    keyValue: 'actions',
+    className: '',
+    showColumn: true,
+    key: 10,
+    options: [
+      // {
+      //   type: 'changeView',
+      //   keyName: '',
+      //   icon: faEye,
+      //   url: '/admin/drug/vbc-drug-schedule/get/:id',
+      //   label: 'View Details',
+      //   performingAction: 'can view details',
+      // },
+      {
+        type: 'changeView',
+        keyName: '',
+        icon: faEdit,
+        url: Routes.updateVbcDrugSchedule.path,
+        label: 'Edit Details',
+        performingAction: 'can view editDetails',
+      },
+      // {
+      //   type: 'confirmModal',
+      //   keyName: '',
+      //   className: 'text-danger',
+      //   icon: faTrashAlt,
+      //   label: 'Remove',
+      //   performingAction: 'can view remove',
+      // },
+    ],
+  },
+];

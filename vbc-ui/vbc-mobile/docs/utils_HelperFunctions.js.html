@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: utils/HelperFunctions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: utils/HelperFunctions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This module helps to basically define
+ * all the helper functions that are
+ * used in defining logic at
+ * component level.
+ */
+import moment from 'moment';
+import jwt_decode from 'jwt-decode';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
+import {
+  check as checkPermission,
+  request as requestPermission,
+} from 'react-native-permissions';
+import EncryptedStorageKeys from 'constants/EncryptedStorageKeys';
+import {authoriedRoles} from 'constants/appConstants';
+
+var months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** get current date in DD-MM-YYYY format */
+export const getCurrentFormattedDate = () => {
+  return moment().format('DD-MM-YYYY');
+};
+
+// checks if access_token is expired by comparing its exp time with current time
+export const isTokenExpired = (accessToken) => {
+  if (accessToken) {
+    let currentDate = new Date();
+    const decodeTokenResponse = decodeToken(accessToken);
+    return decodeTokenResponse?.exp &lt; currentDate.getTime() / 1000;
+  }
+};
+
+// returns years and months from total months passed as an argument
+export const convertToYearsAndMonths = (
+  monthsData,
+  yearString,
+  monthString
+) => {
+  if (monthsData) {
+    var years = Math.floor(monthsData / 12);
+    var months = monthsData % 12;
+    return `${years} ${yearString} ${months} ${monthString}`;
+  } else {
+    return '';
+  }
+};
+
+/** get date in DD-MM-YYYY format */
+export const getFormattedDate = (date) => {
+  return date ? moment(date).format('DD-MM-YYYY') : null;
+};
+
+/** get current date in Date object */
+export const getCurrentDateInDateObject = () => {
+  return new Date();
+};
+
+export const getMonthFromString = (mon) => {
+  var month = months.indexOf(mon);
+  return month + 1;
+};
+
+/** get date in Date object */
+export const getDateInDateObject = (date) => {
+  return date ? new Date(date) : null;
+};
+
+/** get date in DD MM YYYY format */
+export const getFormattedDateInMonthWordFormat = (date) => {
+  return date ? moment(date).format('DD MMM YYYY') : null;
+};
+
+/** get date in DD/MM/YYYY format */
+export const getFormattedDateInSlashFormat = (date) => {
+  return date ? moment(date).format('DD/MM/YYYY') : null;
+};
+
+/**
+ * get date in YYYY-MM-DD format in string
+ */
+export const getDateInYMDFormat = (date) => {
+  return date ? moment(date).format('YYYY-MM-DD') : null;
+};
+
+/**
+ * get date in DD-MM-YYYY format in string
+ */
+export const getDateInDMYHyphenFormat = (date) => {
+  return date ? moment(date).format('DD-MM-YYYY') : null;
+};
+
+// helps to check validity of email
+export const validateEmail = (email) => {
+  const re = /^(([^&lt;>()[\]\\.,;:\s@"]+(\.[^&lt;>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+};
+
+// validates mobile number. Whether it contains 10 digits or not.
+export const validateMobile = (mobileNumber) => {
+  const re = /^\d{10}$/;
+  return re.test(mobileNumber);
+};
+
+// validates month to be less then 11
+export const validateMonth = (month) => {
+  return month &lt;= 11;
+};
+
+/**
+ * Takes Date string as argument and checks that date is greater than today's
+ * date and returns the boolean value
+ * @param {String} value
+ * @returns {Boolen}
+ */
+export const dobValidator = (value) => {
+  let myDate = moment(value);
+  let today = moment();
+  let recievedDate = new Date(value);
+  let currentDate = new Date();
+  let isInvalid = true;
+  const maxAge = 100;
+  const years = today.diff(myDate, 'years');
+  const months = today.diff(myDate, 'months');
+
+  if (years !== NaN &amp;&amp; years &lt;= maxAge &amp;&amp; myDate !== today &amp;&amp; months >= 6) {
+    isInvalid = false;
+  }
+  if (recievedDate > currentDate) isInvalid = true;
+  return !isInvalid;
+};
+
+/** validates both email &amp; phone number */
+export const validateEmailMobile = (emailMobile) => {
+  const re = /^(?:\d{10}|^(([^&lt;>()[\]\\.,;:\s@"]+(\.[^&lt;>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,})))$/;
+  return re.test(emailMobile);
+};
+
+/** validate password strongness */
+export const validatePassword = (password) => {
+  const re = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[^\w\s]).{8,}$/;
+  return re.test(password);
+};
+
+/** decode access_token */
+export const decodeToken = (accessToken) => {
+  return jwt_decode(accessToken);
+};
+
+// checks if user who logs in is authoried to access the application
+export const isUserAuthorized = (decodeTokenResponse) => {
+  const {
+    realm_access: {roles},
+  } = decodeTokenResponse;
+  const found = roles?.some((role) => authoriedRoles?.indexOf(role) >= 0);
+  return found;
+};
+
+/**
+ * get dropdown item object depending upon
+ * the dropdown value.
+ */
+export const getDropdownValueId = (dropdownItems, dropdownValue) => {
+  const item = dropdownItems?.find((item) => item.value === dropdownValue);
+  return item;
+};
+
+/**
+ * store passed data in async storage by passed storageKey
+ */
+export const storeInAsyncStorage = async (storageKey, storageValueInString) => {
+  await AsyncStorage.setItem(storageKey, storageValueInString);
+  return;
+};
+
+/**
+ * get parsed data from async storage
+ */
+export const getFromAsyncStorage = async (storageKey) => {
+  const data = await AsyncStorage.getItem(storageKey);
+  return data;
+};
+
+/**
+ * clearing all keys from async storage
+ */
+export const clearAsyncStorage = async () => {
+  await AsyncStorage.clear();
+  return;
+};
+
+/**
+ * removing passed keys from async storage
+ */
+export const removeKeyFromAsyncStorage = async (asyncStorageKey) => {
+  await AsyncStorage.removeItem(asyncStorageKey);
+  return;
+};
+
+/**
+ * store passed data in encrypted storage by passed storageKey
+ */
+export const storeInEncryptedStorage = async (
+  storageKey,
+  storageValueInString
+) => {
+  await EncryptedStorage.setItem(storageKey, storageValueInString);
+  return;
+};
+
+/**
+ * get parsed data from encrypted storage
+ */
+export const getFromEncryptedStorage = async (storageKey) => {
+  const data = await EncryptedStorage.getItem(storageKey);
+  return data;
+};
+
+/**
+ * clearing all keys from encrypted storage
+ */
+export const clearEncryptedStorage = async () => {
+  await EncryptedStorage.clear();
+  return;
+};
+
+/**
+ * removing passed keys from encrypted storage
+ */
+export const removeKeyFromEncryptedStorage = async (storageKey) => {
+  await EncryptedStorage.removeItem(storageKey);
+  return;
+};
+
+/** calculates progress of update downloaded from code push, partial and total size in MB */
+export const caculateCodePushProgress = (progress) => {
+  let currProgress = parseFloat(
+    progress.receivedBytes / progress.totalBytes
+  ).toFixed(2);
+  var partialSizeInMB = (progress.receivedBytes / (1024 * 1024)).toFixed(2);
+  var totalSizeInMb = (progress.totalBytes / (1024 * 1024)).toFixed(2);
+  return {currProgress, partialSizeInMB, totalSizeInMb};
+};
+
+/** get logged in user data from async storage */
+export const getLoggedInUserData = async () => {
+  const data = await getFromEncryptedStorage(
+    EncryptedStorageKeys.LOGGED_IN_USER_DATA
+  );
+  return data ? JSON.parse(data) : '';
+};
+
+/** to check permission */
+export const checkPermissionHelperFunction = async (permission) => {
+  const result = await checkPermission(permission);
+  return result;
+};
+
+/** to request permission */
+export const requestPermissionHelperFunction = async (permission) => {
+  const permissionReq = await requestPermission(permission);
+  return permissionReq;
+};
+
+// Accepts a string, and returns no information available if we are getting NULL in the value
+export const renderForNoData = (value) => {
+  if (value &amp;&amp; value !== 'NULL') {
+    return value;
+  } else {
+    return 'Information not available';
+  }
+};
+
+/** get user role */
+export const getUserRole = (userPermissions) => {
+  if (!userPermissions) {
+    return '';
+  }
+  const roleId = Object.keys(userPermissions.roles)[0];
+  return userPermissions.roles[roleId].roleName;
+};
+
+/** get dropdown item value based on passed dropdownItem &amp; dropdownId */
+export const getDropdownValueItemValue = (dropdownItems, dropdownId) => {
+  if (!dropdownItems || dropdownItems.length === 0) {
+    return '';
+  }
+  const index = dropdownItems.findIndex((item) => item.id == dropdownId);
+  let result;
+  if (index >= 0) {
+    result = dropdownItems[index].value || dropdownItems[index].name;
+  } else {
+    result = '';
+  }
+  return result;
+};
+
+/** get dropdown item id based on passed dropdownItem &amp; dropdownValue */
+export const getDropdownValueItemId = (dropdownItems, dropdownValue) => {
+  if (!dropdownItems || dropdownItems.length === 0) {
+    return '';
+  }
+  const index = dropdownItems.findIndex(
+    (item) => item.value == dropdownValue || item.name == dropdownValue
+  );
+  let result;
+  if (index >= 0) {
+    result = dropdownItems[index].id;
+  } else {
+    result = '';
+  }
+  return result;
+};
+
+/**
+ * The Verhoeff algorithm’s most common usage is in the UIDAI-Aadhaar number generation program
+ *
+ * returns false:- Input is not a valid aadhar number
+ * returns true:- Input is a valid aadhar number or Input is Null
+ */
+export const validateVerhoeffAlgo = (number) => {
+  // multiplication table
+  const d = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+    [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+    [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+    [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+    [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+    [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+    [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+    [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+    [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+  ];
+
+  // permutation table
+  const p = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+    [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+    [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+    [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+    [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+    [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+    [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
+  ];
+
+  // generates checksum
+  let c = 0;
+  let invertedArray = number.split('').map(Number).reverse();
+
+  invertedArray.forEach((val, i) => {
+    c = d[c][p[i % 8][val]];
+  });
+
+  return c === 0;
+};
+
+/**
+ * Takes string and validate if given pan is valid or not using PAN_REGEX
+ * returns true if PAN entered is correct or else return false
+ */
+export const panValidator = (value) => {
+  const PAN_REGEX = /([A-Z]){5}([0-9]){4}([A-Z]){1}$/;
+  const panRegex = value.match(PAN_REGEX);
+  if (panRegex || value === '') {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Takes number and validates if entered number is valid format of aadhar number or not
+ * @returns returns true if AADHAR entered is correct or else return false
+ */
+export const aadharValidator = (value) => {
+  const AADHAR_REGEX = /^[0-9]\d{11}$/g;
+  const aadharValidator = value.match(AADHAR_REGEX);
+  const condition = aadharValidator &amp;&amp; validateVerhoeffAlgo(value);
+  if (condition || value === '') {
+    return true;
+  }
+  return false;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

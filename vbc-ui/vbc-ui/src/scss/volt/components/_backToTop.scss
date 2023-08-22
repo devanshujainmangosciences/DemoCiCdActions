@@ -1,0 +1,20 @@
+.backToTop-container {
+  position: fixed;
+  top: 542px;
+  right: 0;
+
+  .backToTop-button {
+    height: 34px;
+    width: 101px;
+    background: #ff801e 0% 0% no-repeat padding-box;
+    box-shadow: 0px 3px 6px #00000029;
+    border-radius: 4px 0px 0px 4px;
+    opacity: 1;
+    font-size: $font-size-sm;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+}

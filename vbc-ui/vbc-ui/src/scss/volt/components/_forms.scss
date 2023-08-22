@@ -1,0 +1,265 @@
+.input {
+  font-size: $font-size-sm;
+}
+.form-control {
+  font-size: $font-size-sm;
+}
+.form-control {
+  box-shadow: none;
+  appearance: auto;
+  @include media-breakpoint-up(lg) {
+    &.form-control-lg {
+      padding: $inpu-lg-padding-y $input-padding-x;
+    }
+  }
+}
+
+.form-check-input {
+  &.round-check {
+    &[type='checkbox'] {
+      @include border-radius($form-check-radio-border-radius);
+    }
+  }
+}
+
+.search-bar {
+  .form-control {
+    transition: width 0.2s ease-in-out;
+    width: 220px;
+    &:focus {
+      width: 220px;
+    }
+    @include media-breakpoint-between(xs, sm) {
+      width: 200px;
+      &:focus {
+        width: 200px;
+      }
+    }
+  }
+}
+
+.input-group > .form-control,
+.input-group > .form-select {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid $gray-500;
+}
+.input-group-normal > .form-control,
+.input-group-normal > .form-select {
+  border: 1px solid $gray-500;
+  border-radius: 3px;
+  span {
+    background-color: $gray-light;
+    color: $white;
+  }
+}
+
+.input-group {
+  .input-group-text {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid $gray-500;
+  }
+  .form-control:focus {
+    border-color: $patient;
+    & + .input-group-text {
+      border-color: $patient;
+    }
+  }
+}
+
+.input-group.input-group-normal {
+  .input-group-text {
+    width: 15%;
+    margin-left: 0px;
+    cursor: pointer;
+    border: 1px solid $gray-500;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  .input-box {
+    padding: 3px 15px;
+    width: 85%;
+    cursor: pointer;
+    border: 1px solid $gray-500;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+  .form-control:focus {
+    border: 1px solid $gray-500;
+    & + .input-group-text {
+      border: 1px solid $gray-500;
+    }
+  }
+}
+.focused {
+  .form-control {
+    border-color: $input-focus-border-color;
+    background-color: $input-focus-bg;
+  }
+}
+
+.form-switch {
+  padding-left: $form-switch-padding-start;
+
+  .form-check-input {
+    height: 1.275em;
+  }
+}
+
+.form-select {
+  .form-select-lg {
+    padding: $form-select-padding-y
+      ($form-select-padding-x + $form-select-indicator-padding)
+      $form-select-padding-y $form-select-padding-x;
+  }
+}
+
+//Add File Alternative Style
+
+.file-field input[type='file'] {
+  max-width: 230px;
+  position: absolute;
+  cursor: pointer;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  padding-bottom: 30px;
+}
+.file-field span {
+  cursor: pointer;
+}
+
+.datepicker-dropdown {
+  z-index: 9999;
+}
+.add-form {
+  .row {
+    margin-top: 15px;
+    .col {
+      margin: 10px 0px;
+      div {
+        label {
+          margin-bottom: 5px;
+          margin-left: 6px;
+        }
+        small {
+          position: absolute;
+        }
+        input {
+          margin-left: 3px;
+        }
+      }
+    }
+  }
+  .col {
+    label {
+      margin-bottom: 5px;
+      margin-left: 6px;
+    }
+  }
+}
+.form-modal {
+  .form-label {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+}
+.input-group-sm {
+  display: table;
+  border-collapse: collapse;
+  border: 1px solid $gray-550;
+  border-radius: 13px;
+  width: 100%;
+}
+.input-group-sm > div {
+  display: table-cell;
+  vertical-align: middle; /* needed for Safari */
+}
+.input-group-icon {
+  background: #eee;
+  color: $gray-light;
+  padding: 0 12px;
+}
+.input-group-area {
+  width: 100%;
+}
+.input-group-sm input {
+  border: 0;
+  display: block;
+  width: 100%;
+  padding: 8px;
+}
+.document-form {
+  font-size: $font-size-sm;
+  input,
+  select,
+  span {
+    height: 32px;
+    border: 1px solid $gray-550;
+    border-radius: 3px;
+    color: $gray-700;
+    font-size: $font-size-sm;
+    &:focus {
+      outline: 0px;
+      box-shadow: none;
+    }
+  }
+  label,
+  span,
+  h6 {
+    color: $pure-black;
+  }
+  span {
+    cursor: pointer;
+    background: $gray-light;
+    color: $white;
+  }
+}
+.upload {
+  display: flex;
+  flex-direction: row;
+  .input-box {
+    width: 100%;
+    height: 32px;
+    border: 1px solid $gray-550;
+    border-top-left-radius: 3px;
+    color: $gray-700;
+    font-size: $font-size-sm;
+    border-bottom-left-radius: 3px;
+    border-right: 0px solid;
+    overflow: hidden;
+  }
+  .browse {
+    font-size: $font-size-sm;
+    font-weight: 400;
+    line-height: 1.5;
+    background: $gray-light;
+    color: $white;
+    padding: 4px;
+    cursor: pointer;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-right: none;
+    border-bottom: 3px;
+    border: 1px solid $gray-550;
+  }
+}
+
+.correct-form {
+  padding: 0.4rem 1rem 0.4rem 0.75rem;
+  border-radius: 25rem;
+  font-size: 0.875rem;
+}
+
+.termination-form {
+  label {
+    font-weight: 500;
+  }
+}
+
+.version-select {
+  height: 38px;
+  font-size: 14px;
+}

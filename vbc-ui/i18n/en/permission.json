@@ -1,0 +1,15 @@
+{
+  "removePermission": "Remove Permission",
+  "updatePermission": "Update Permission",
+  "viewPermission": "View Permission",
+  "createPermission": "Create Permission",
+  "areYouSure": "Are you sure you want to remove this permission?",
+  "remove": "remove",
+  "action": "Action",
+  "status": "Status",
+  "description": "Description",
+  "permissions": "Permissions",
+  "list": "List",
+  "permissionList": "Permissions List",
+  "addNewPermission": "Add New Permission"
+}

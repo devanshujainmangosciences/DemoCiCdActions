@@ -1,0 +1,12 @@
+{
+  "hello": "Hello",
+  "pleaseEnterMessage": "Please enter the OTP you have received in your mobile.",
+  "clickHereToResendOtp": "Click here to resend OTP",
+  "otp": "OTP",
+  "enterOtp": "Please enter the OTP you have received in your email/phone",
+  "validOtp": "Please enter a valid OTP",
+  "submit": "Submit",
+  "resendOtp": "Click here to Resend OTP",
+  "placeholderEnterOtp": "Enter OTP",
+  "resendOtpIn": "Resend OTP in "
+}
