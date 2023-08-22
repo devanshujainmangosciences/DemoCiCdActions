@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/documents-upload/DocumentsUpload.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/documents-upload/DocumentsUpload.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Document upload screen
+ */
+import React, {useEffect, useRef, useState} from 'react';
+import {View, ScrollView} from 'react-native';
+import {useSelector} from 'react-redux';
+import {useRoute} from '@react-navigation/native';
+import DocumentPicker from 'react-native-document-picker';
+import {PERMISSIONS} from 'react-native-permissions';
+import {useTranslation} from 'react-i18next';
+import {AuthContext} from 'src/App';
+import {AppText, Container, Button, TextInput, Loader} from 'components';
+import AlreadyUploadedDocuments from './AlreadyUploadedDocuments';
+import {downArrorIcon} from 'assets/icons';
+import {
+  deleteDocumentApiCall,
+  downloadDocumentApiCall,
+  fetchUploadedDocumentsApiCall,
+  uploadDocumentForPatientApiCall,
+} from 'apis';
+import {requiredFields} from './formatter';
+import {requestPermissionHelperFunction} from 'utils';
+import styles from './styles';
+
+const DocumentsUpload = () => {
+  const scrollViewRef = useRef(); // ref of main scroll view
+  const {documentTypes} = useSelector((state) => state.documents);
+  const {loginData} = useSelector((state) => state.login);
+  const {params} = useRoute();
+  const {toggleConfirmationModal, isConfirmed} = React.useContext(AuthContext);
+
+  const {t} = useTranslation([
+    'documents',
+    'validationMessages',
+    'confirmationModal',
+  ]);
+  const initialFormFields = {
+    selectedDocument: null, // coming from previous screen
+    availableUploadingDocumentTypes: null, // available options to upload for particular selectedDocument
+    selectedUploadingDocumentType: null, // user selected uploading document type
+    selectFile: null, // uploading document
+  };
+  const initialFormFieldsError = {
+    selectedDocumentError: null,
+    availableUploadingDocumentTypesError: null,
+    selectedUploadingDocumentTypeError: null,
+    selectFileError: null, // uploading document error
+    apiError: null, // if any api error occurs
+  };
+  const [formFields, setFormFields] = useState(initialFormFields);
+  const [deleteDocumentId, setDeleteDocuentId] = useState('');
+  const [formFieldsError, setFormFieldsError] = useState(
+    initialFormFieldsError
+  );
+  // list of all uploaded documents
+  const [alreadyUploadedDocuments, setAlreadyUploadedDocuments] =
+    useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fullPageLoading, setFullPageLoading] = useState(true);
+
+  /**
+   * get uploaded documents from api
+   */
+  useEffect(() => {
+    loginData &amp;&amp; fetchUploadedDocuments();
+  }, []);
+
+  /** fetching documents from api */
+  const fetchUploadedDocumentsService = async () => {
+    const {access_token} = loginData;
+    const response = await fetchUploadedDocumentsApiCall(access_token);
+    return response;
+  };
+
+  /**
+   * calling function to fetch already uploaded documents
+   * and saving it in our local state
+   * */
+  const fetchUploadedDocuments = async () => {
+    const {apiResponse} = await fetchUploadedDocumentsService();
+    if (apiResponse) {
+      setAlreadyUploadedDocuments(apiResponse.data?.data);
+    }
+    setFullPageLoading(false);
+  };
+
+  /**
+   * getting what user selected in previous screen
+   * and saving it in our local state
+   * to show it in dropdown.
+   * Also, what all could user upload i.e. availableUploadingDocumentTypes values
+   * are also parsed from documentTypes object that is present in redux store.
+   * We fetched documentTypes from api in previous screen i.e. Documents
+   */
+  useEffect(() => {
+    if (params.selectedDocument) {
+      setFormFields({...formFields, selectedDocument: params.selectedDocument});
+      const availableDocumentTypes = Object.keys(documentTypes).filter(
+        (item) => item === params.selectedDocument
+      );
+
+      if (availableDocumentTypes.length > 0) {
+        const availableDocumentTypesDropdownValues = documentTypes[
+          availableDocumentTypes
+        ].map((item) => {
+          return {
+            id: item,
+            name: item,
+          };
+        });
+        setFormFields({
+          ...formFields,
+          selectedDocument: params.selectedDocument,
+          availableUploadingDocumentTypes: availableDocumentTypesDropdownValues,
+          selectedUploadingDocumentType:
+            params.selectedUploadingDocumentType || null,
+        });
+      }
+    }
+  }, []);
+
+  /**
+   * to get user input text/dropdown-items values
+   * We are taking second parameter of first functions
+   * as whether the fields is dropdown or not.
+   * If yes, we have to arrange the selected value as 'id' &amp; 'value'
+   * to showcase the value in input field &amp;
+   * to send id to apis.
+   */
+  const handleChangeText = (type, inputType) => (value) => {
+    if (inputType === 'filePicker') {
+      handleFilePicker();
+      return;
+    }
+    setFormFieldsError({...formFieldsError, [`${type}Error`]: null});
+    setFormFields({
+      ...formFields,
+      [`${type}`]: value.name,
+      // [`${type}Name`]: value.name,
+    });
+  };
+
+  /**
+   * file picker callback
+   */
+  const handleFilePicker = async () => {
+    try {
+      const res = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.images, DocumentPicker.types.pdf],
+      });
+      console.log('>>>>>>>>>>>>>>>', res);
+      setFormFields({...formFields, selectFile: res});
+      setFormFieldsError({...formFieldsError, selectFileError: null});
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        // User cancelled the picker, exit any dialogs or menus and move on
+      } else {
+        throw err;
+      }
+    }
+  };
+
+  /**
+   * When user presses upload button -
+   * we check validations
+   * and then upload document to the server.
+   * Once document is successfully uploded -
+   * we fetch all uploaded documents -
+   * to refresh already uploaded documents view
+   */
+  const onPressAddNewDocument = async () => {
+    setLoading(true);
+    /**
+     * Check if there is already an error
+     * present due to text input items
+     */
+    let isValidationError = false;
+    let errorObj = {};
+    Object.keys(formFieldsError).map((item) => {
+      if (item !== 'apiError' &amp;&amp; formFieldsError[item]) {
+        isValidationError = true;
+      }
+    });
+
+    // user has confirmed with terms &amp; conditions
+    requiredFields.map((field) => {
+      const fieldValue = formFields[field];
+      if (!fieldValue) {
+        isValidationError = true;
+        errorObj = {
+          ...errorObj,
+          [`${field}Error`]:
+            field === 'selectedUploadingDocumentType'
+              ? t('validationMessages:please') +
+                t('selectSelectedUploadingDocument')
+              : t('validationMessages:please') + t('selectFile'),
+        };
+      }
+    });
+    // show validation errors
+    if (isValidationError) {
+      setFormFieldsError({...formFieldsError, ...errorObj});
+      setLoading(false);
+      return;
+    }
+    setFormFieldsError(initialFormFieldsError);
+    const file = new FormData();
+    file.append('file', formFields.selectFile);
+    file.append('documentType', formFields.selectedUploadingDocumentType);
+    const {apiResponse, apiError} = await uploadDocumentService(file);
+    if (apiResponse) {
+      setFormFields({
+        ...formFields,
+        selectedUploadingDocumentType: null,
+        selectFile: null,
+      });
+      scrollViewRef.current.scrollToEnd();
+      /** fetching uploaded documents again */
+      setFullPageLoading(true);
+      await fetchUploadedDocuments();
+      await params.refreshData();
+    } else if (apiError) {
+      setFormFieldsError({
+        ...initialFormFieldsError,
+        apiError: t('validationMessages:somethingWentWrong'),
+      });
+    }
+    setLoading(false);
+  };
+
+  /** calling api function to upload document */
+  const uploadDocumentService = async (file) => {
+    const {access_token} = loginData;
+    const data = await uploadDocumentForPatientApiCall(file, access_token);
+    return data;
+  };
+
+  /**
+   * when user clicks on cancel button -
+   * we clear internal local state values
+   */
+  const onPressCancelNewDocument = () => {
+    setFormFields({
+      ...formFields,
+      selectedUploadingDocumentType: null,
+      selectFile: null,
+    });
+    setFormFieldsError(initialFormFieldsError);
+  };
+
+  /**
+   * delete document api call
+   */
+  const deleteDocumentService = async (documentId) => {
+    const {access_token} = loginData;
+    const data = await deleteDocumentApiCall(documentId, access_token);
+    return data;
+  };
+
+  // called when user confirms to delete the document, it delets the selected document
+  const handleDeleteDocument = async () => {
+    const {apiResponse} = await deleteDocumentService(deleteDocumentId);
+    if (apiResponse) {
+      const data = alreadyUploadedDocuments
+        ? alreadyUploadedDocuments.filter(
+            (item) => item.id !== deleteDocumentId
+          )
+        : null;
+      if (data &amp;&amp; data.length > 0) {
+        setAlreadyUploadedDocuments(data);
+      } else {
+        setAlreadyUploadedDocuments(null);
+      }
+    }
+  };
+
+  /**
+   * when user presses delete button -
+   * we call delete document api
+   */
+  const handlePressDelete = async (documentId) => {
+    setDeleteDocuentId(documentId);
+    toggleConfirmationModal(t('confirmationModal:confirmDeleteDocument'));
+  };
+
+  // To be called when user clicked on the confirm button of the confirmation modal
+  useEffect(() => {
+    if (isConfirmed) {
+      handleDeleteDocument();
+    }
+  }, [isConfirmed]);
+
+  /**
+   * callback function -
+   * that is invoked
+   * when user presses download button
+   */
+  const handleDownloadPress = async (documentId, documentFormat) => {
+    const permissionReq = await requestPermissionHelperFunction(
+      PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE
+    );
+    if (permissionReq === 'granted' || permissionReq === 'unavailable') {
+      await downloadDocumentService(documentId, documentFormat);
+    }
+  };
+
+  /**
+   * download document api call
+   */
+  const downloadDocumentService = async (documentId, documentFormat) => {
+    const {access_token} = loginData;
+    const data = await downloadDocumentApiCall(
+      documentId,
+      documentFormat,
+      access_token
+    );
+    return data;
+  };
+
+  const alreadySelectedDocument =
+    alreadyUploadedDocuments?.filter(
+      (item) =>
+        item.documentTypeName === formFields['selectedUploadingDocumentType']
+    ).length > 0 &amp;&amp;
+    formFields?.selectedDocument !== 'MEDICAL' &amp;&amp;
+    formFields?.selectedUploadingDocumentType !== 'Cancelled Cheque';
+
+  return (
+    &lt;ScrollView
+      ref={scrollViewRef}
+      contentContainerStyle={styles.view}
+      style={styles.viewStyle}>
+      &lt;Container style={styles.container}>
+        &lt;TextInput
+          disabled={true}
+          required={true}
+          inputType={'dropdown'}
+          value={formFields.selectedDocument}
+          dropdownValue={formFields.selectedDocument}
+          rightInputIcon={downArrorIcon}
+          placeholder={t('documentType')}
+          style={styles.textInputContainer}
+          errorMessage={formFieldsError.selectedDocumentError}
+        />
+        &lt;TextInput
+          required={true}
+          inputType={'dropdown'}
+          value={formFields.selectedUploadingDocumentType}
+          dropdownValue={formFields.selectedUploadingDocumentType}
+          rightInputIcon={downArrorIcon}
+          dropdownItems={formFields.availableUploadingDocumentTypes}
+          placeholder={t('document')}
+          style={styles.textInputContainer}
+          onChangeText={handleChangeText(
+            'selectedUploadingDocumentType',
+            'dropdown'
+          )}
+          errorMessage={formFieldsError.selectedUploadingDocumentTypeError}
+        />
+        &lt;TextInput
+          required={true}
+          inputType={'filePicker'}
+          value={formFields.selectFile?.name}
+          placeholder={t('selectFile')}
+          style={styles.textInputContainer}
+          onChangeText={handleChangeText('selectFile', 'filePicker')}
+          errorMessage={formFieldsError.selectFileError}
+        />
+
+        {alreadySelectedDocument &amp;&amp; (
+          &lt;AppText style={[styles.apiErrorText]}>
+            {t('documentAlreadyAdded')}
+          &lt;/AppText>
+        )}
+
+        &lt;View style={styles.buttonContainer}>
+          &lt;Button
+            disabled={loading}
+            style={styles.buttonCancel}
+            onPressEvent={onPressCancelNewDocument}
+            label={t('cancel')}
+          />
+          &lt;Button
+            disabled={loading || alreadySelectedDocument}
+            style={styles.button}
+            onPressEvent={onPressAddNewDocument}
+            label={t('upload')}
+            isLoading={loading}
+          />
+        &lt;/View>
+        &lt;AppText style={styles.apiErrorText}>
+          {formFieldsError.apiError}
+        &lt;/AppText>
+      &lt;/Container>
+
+      {fullPageLoading &amp;&amp; (
+        &lt;View style={styles.fullPageLoadingContainer}>
+          &lt;Loader />
+        &lt;/View>
+      )}
+
+      {!fullPageLoading &amp;&amp;
+        alreadyUploadedDocuments &amp;&amp;
+        alreadyUploadedDocuments.length > 0 &amp;&amp; (
+          &lt;AlreadyUploadedDocuments
+            uploadedDocuments={alreadyUploadedDocuments}
+            onDeletePress={handlePressDelete}
+            onDownloadPress={handleDownloadPress}
+          />
+        )}
+    &lt;/ScrollView>
+  );
+};
+
+export default DocumentsUpload;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

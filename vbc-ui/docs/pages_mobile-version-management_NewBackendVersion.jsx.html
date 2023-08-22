@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/mobile-version-management/NewBackendVersion.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/mobile-version-management/NewBackendVersion.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Component to Add/Edit/Update new backend version
+ */
+import React, {useEffect, useState} from 'react';
+import {Form, Button, Row, Col, Container} from '@themesberg/react-bootstrap';
+import {useAppDispatch, useAppSelector} from '../../redux/redux-hooks';
+import CustomReactSelect from '../../components/CustomReactSelect';
+import {addationSelect} from '../../services/utility';
+import uniqBy from 'lodash/uniqBy';
+import {useLocation, useNavigate} from 'react-router-dom';
+import {VERSION_TYPE, DateFormat, ALERT_MESSAGE} from '../../constants';
+import {
+  readMobileVersionsList,
+  createMobileVersion,
+  updateMobileVersion,
+  setToast,
+} from '../../actions';
+import format from 'date-fns/format';
+
+import {Routes} from '../../routes';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
+
+const NewBackendVersion = () => {
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const history = useNavigate();
+  const stateRecieved = location.state;
+  const [activePage, setActivePage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [isDisabled, setisDisabled] = useState(false);
+  const [isUpdate, setisUpdate] = useState(false);
+  const [androidVersionsList, setandroidVersionsList] = useState([]);
+  const [iosVersionList, setiosVersionList] = useState([]);
+  const [iosVersion, setiosVersion] = useState(null);
+  const [androidVersion, setandroidVersion] = useState(null);
+  const [selectedAndroidVersion, setselectedAndroidVersion] = useState(null);
+  const [selectedIosVersion, setselectedIosVersion] = useState(null);
+  const [isInvalidBackendVersion, setisInvalidBackendVersion] = useState(false);
+  const [selectedIosVersionMaster, setselectedIosVersionMaster] =
+    useState(null);
+  const [selectedAndroidVersionMaster, setselectedAndroidVersionMaster] =
+    useState(null);
+  const [iosCodePushVersionList, setiosCodePushVersionList] = useState(null);
+  const [androidCodePushVersionList, setandroidCodePushVersionList] =
+    useState(null);
+  const formDataInitialState = {
+    id: '',
+    backendVersion: '',
+    releaseDate: '',
+  };
+  const [formData, setformData] = useState(formDataInitialState);
+  const {backendVersion, releaseDate} = formData;
+  const androidVersions = useAppSelector(
+    (state) => state.admin.mobileVersionManagement?.androidVersionListAll
+  );
+  const iosVersions = useAppSelector(
+    (state) => state.admin.mobileVersionManagement?.iosVersionListAll
+  );
+  const mobileVersion = useAppSelector(
+    (state) => state.admin.mobileVersionManagement?.backendVersionList
+  );
+  const mobileVersionAll = useAppSelector(
+    (state) => state.admin.mobileVersionManagement?.backendVersionListAll
+  );
+
+  /** The below code is using the `useEffect` hook in a React component to dispatch three different
+actions to read mobile versions list for Android, Backend, and iOS. These actions are dispatched
+with specific parameters such as page number, page size, version type, and an empty array as a
+filter. The `useEffect` hook is used with an empty dependency array to ensure that these actions are
+only dispatched once when the component mounts. */
+  useEffect(() => {
+    dispatch(
+      readMobileVersionsList(0, pageSize, VERSION_TYPE.ANDROID, true, [])
+    );
+    dispatch(
+      readMobileVersionsList(0, pageSize, VERSION_TYPE.BACKEND, true, [])
+    );
+    dispatch(readMobileVersionsList(0, pageSize, VERSION_TYPE.IOS, true, []));
+  }, []);
+
+  /* The below code is a React useEffect hook that runs when the dependencies `backendVersion`,
+ `mobileVersionAll`, or `stateRecieved` change. It checks if `backendVersion` and `mobileVersionAll`
+ are truthy and if `mobileVersionAll` has at least one item. If so, it finds the first item in
+ `mobileVersionAll` that has a `backendVersion` property matching the value of `backendVersion`. If
+ `stateRecieved` has an `id` property, it finds the first item in `mobileVersionAll` that has an
+ `id` property */
+  useEffect(() => {
+    if (backendVersion &amp;&amp; mobileVersionAll &amp;&amp; mobileVersionAll.length > 0) {
+      const avaliableBackendVersion = mobileVersionAll.find(
+        (item) => item.backendVersion === backendVersion
+      );
+      if (stateRecieved?.id) {
+        const requiredData = mobileVersionAll.find(
+          (item) => item.id === stateRecieved?.id
+        );
+
+        if (
+          avaliableBackendVersion &amp;&amp;
+          avaliableBackendVersion.backendVersion !== requiredData.backendVersion
+        )
+          setisInvalidBackendVersion(true);
+        else setisInvalidBackendVersion(false);
+      } else {
+        if (avaliableBackendVersion) setisInvalidBackendVersion(true);
+        else setisInvalidBackendVersion(false);
+      }
+    }
+  }, [backendVersion, mobileVersionAll, stateRecieved]);
+
+  /** The below code is a React useEffect hook that runs when the component mounts or when the
+dependencies (stateRecieved, iosVersionList, androidVersionsList) change. It checks the value of
+stateRecieved and sets the values of isDisabled and isUpdate based on its label. If stateRecieved
+has an id and iosVersionList and androidVersionsList are not empty, it finds the required data from
+mobileVersion array based on the id and sets the selectedAndroidVersionMaster,
+selectedAndroidVersion, selectedIosVersionMaster, selectedIosVersion, and formData based on the
+required data. */
+  useEffect(() => {
+    if (stateRecieved &amp;&amp; stateRecieved?.label === 'View Details') {
+      setisDisabled(true);
+      setisUpdate(false);
+    } else if (stateRecieved &amp;&amp; stateRecieved?.label === 'Edit Details') {
+      setisDisabled(false);
+      setisUpdate(true);
+    } else {
+      setformData(formDataInitialState);
+      setisDisabled(false);
+      setisUpdate(false);
+    }
+
+    if (
+      stateRecieved?.id &amp;&amp;
+      iosVersionList &amp;&amp;
+      iosVersionList.length > 0 &amp;&amp;
+      androidVersionsList &amp;&amp;
+      androidVersionsList.length > 0
+    ) {
+      const requiredData = mobileVersion.find(
+        (item) => item.id === stateRecieved?.id
+      );
+      if (
+        requiredData.androidVersions &amp;&amp;
+        requiredData.androidVersions.length > 0
+      ) {
+        // setandroidVersion(requiredData.androidVersions[0].androidVersion);
+        const reqAndroidVersions = uniqBy(
+          requiredData.androidVersions,
+          'androidVersion'
+        ).map((item) => item?.androidVersion);
+        const requiredAndroidVersionMasterList = androidVersionsList.filter(
+          (item) => reqAndroidVersions.includes(item.label)
+        );
+
+        setselectedAndroidVersionMaster(requiredAndroidVersionMasterList);
+        const androidVersionsMapped = requiredData.androidVersions.map(
+          (item) => {
+            return {
+              label: `${item.androidVersion}(${
+                item.codePushVersion ? item.codePushVersion : 'N/A'
+              })`,
+              value: item.id,
+            };
+          }
+        );
+
+        setselectedAndroidVersion(androidVersionsMapped);
+      }
+      if (requiredData.iosVersions &amp;&amp; requiredData.iosVersions.length > 0) {
+        const reqIosVersions = uniqBy(
+          requiredData.iosVersions,
+          'iosVersion'
+        ).map((item) => item?.iosVersion);
+        const requiredIosVersionMasterList = iosVersionList.filter((item) =>
+          reqIosVersions.includes(item.label)
+        );
+        setselectedIosVersionMaster(requiredIosVersionMasterList);
+        const iosVersionsMapped = requiredData.iosVersions.map((item) => {
+          return {
+            label: `${item.iosVersion}(${
+              item.codePushVersion ? item.codePushVersion : 'N/A'
+            })`,
+            value: item.id,
+          };
+        });
+
+        setselectedIosVersion(iosVersionsMapped);
+      }
+
+      const reqState = {...requiredData};
+
+      const requiredDate = format(
+        new Date(reqState.releaseDate),
+        DateFormat.US_DATE_DASH
+      );
+      reqState['releaseDate'] = requiredDate;
+      setformData(reqState);
+    }
+  }, [stateRecieved, iosVersionList, androidVersionsList]);
+
+  // console.log('selectedIosVersionMaster=>', selectedIosVersionMaster);
+
+  /**
+   * set the state with label and value property If androidVersions  have data
+   */
+  useEffect(() => {
+    if (androidVersions) {
+      const converted = uniqBy(androidVersions, 'androidVersion').map(
+        (version) => ({
+          value: version.id,
+          label: version.androidVersion,
+        })
+      );
+      setandroidVersionsList(converted);
+    }
+  }, [androidVersions]);
+
+  /**
+   * set the state with label and value property If iosVersions  have data
+   */
+  useEffect(() => {
+    if (iosVersions) {
+      const converted = uniqBy(iosVersions, 'iosVersion').map((version) => ({
+        value: version.id,
+        label: version.iosVersion,
+      }));
+      setiosVersionList(converted);
+    }
+  }, [iosVersions]);
+
+  /* The below code is a React useEffect hook that runs when the dependencies `selectedIosVersionMaster`
+and `iosVersions` change. It checks if `selectedIosVersionMaster` is not null and has a length
+greater than 0, and if `iosVersions` is not null and has a length greater than 0. If both conditions
+are true, it filters `iosVersions` based on the `iosVersion` property of each item that matches the
+`label` property of each item in `selectedIosVersionMaster`. It then maps the filtered `iosVersions`
+to a new */
+  useEffect(() => {
+    if (
+      selectedIosVersionMaster &amp;&amp;
+      selectedIosVersionMaster.length > 0 &amp;&amp;
+      iosVersions &amp;&amp;
+      iosVersions.length > 0
+    ) {
+      // setselectedIosVersion(null);
+
+      const reqIosVersionSelected = selectedIosVersionMaster.map(
+        (item) => item.label
+      );
+      const requiredCodepushVersions = iosVersions.filter((item) =>
+        reqIosVersionSelected.includes(item.iosVersion)
+      );
+
+      if (requiredCodepushVersions &amp;&amp; requiredCodepushVersions.length > 0) {
+        const reqData = requiredCodepushVersions
+          .map((item) => {
+            return {
+              value: item.id,
+              label: `${item.iosVersion}(${
+                item.codePushVersion ? item.codePushVersion : 'N/A'
+              })`,
+            };
+          })
+          .filter((item) => item.label);
+        // if (reqData.length > 0) reqData.unshift(...addationSelect);
+        setiosCodePushVersionList(reqData);
+      }
+    } else if (
+      selectedIosVersionMaster &amp;&amp;
+      selectedIosVersionMaster.length === 0
+    ) {
+      setiosCodePushVersionList(null);
+      setselectedIosVersion(null);
+    }
+  }, [selectedIosVersionMaster, iosVersions]);
+
+  /* The below code is a React useEffect hook that runs when the dependencies
+`selectedAndroidVersionMaster` and `androidVersions` change. It checks if
+`selectedAndroidVersionMaster` is not null and has at least one item, and if `androidVersions` is
+not null and has at least one item. If both conditions are true, it filters `androidVersions` based
+on the `androidVersion` property that matches the `label` property of each item in
+`selectedAndroidVersionMaster`. It then creates a new array of objects with the `id` and a formatted
+string of `androidVersion` */
+  useEffect(() => {
+    if (
+      selectedAndroidVersionMaster &amp;&amp;
+      selectedAndroidVersionMaster.length > 0 &amp;&amp;
+      androidVersions &amp;&amp;
+      androidVersions.length > 0
+    ) {
+      // setselectedAndroidVersion(null);
+      const reqAndroidVersionSelected = selectedAndroidVersionMaster.map(
+        (item) => item.label
+      );
+      const requiredCodepushVersions = androidVersions.filter((item) =>
+        reqAndroidVersionSelected.includes(item.androidVersion)
+      );
+      if (requiredCodepushVersions &amp;&amp; requiredCodepushVersions.length > 0) {
+        const reqData = requiredCodepushVersions
+          .map((item) => {
+            return {
+              value: item.id,
+              label: `${item.androidVersion}(${
+                item.codePushVersion ? item.codePushVersion : 'N/A'
+              })`,
+            };
+          })
+          .filter((item) => item.label);
+        // if (reqData.length > 0) reqData.unshift(...addationSelect);
+        setandroidCodePushVersionList(reqData);
+      }
+    } else if (
+      selectedAndroidVersionMaster &amp;&amp;
+      selectedAndroidVersionMaster.length === 0
+    ) {
+      setandroidCodePushVersionList(null);
+      setselectedAndroidVersion(null);
+    }
+  }, [selectedAndroidVersionMaster, androidVersions]);
+
+  /**
+   * This function updates the selected Android or iOS versions based on the user's multi-select input,
+   * with an option to select all versions.
+   * @param {Array} data
+   * @param {Object} singleData
+   * @param {String} type
+   */
+
+  const onMultiSelectVersion = (data, singleData, type) => {
+    if (type === VERSION_TYPE.ANDROID) {
+      if (singleData?.option?.value === 'all') {
+        const newAndroidVersions = [...androidVersionsList];
+        newAndroidVersions.shift();
+        setselectedAndroidVersion(newAndroidVersions);
+      } else setselectedAndroidVersion(data);
+    } else {
+      if (singleData?.option?.value === 'all') {
+        const newIosVersion = [...iosVersionList];
+        newIosVersion.shift();
+        setselectedIosVersion(newIosVersion);
+      } else setselectedIosVersion(data);
+    }
+  };
+  /**
+   * This function sets the selected version for either Android or iOS based on the type parameter.
+   * @param {Array} data
+   * @param {Object} singleData
+   * @param {String} type
+   */
+  const onMultiSelectVersionMaster = (data, singleData, type) => {
+    if (type === VERSION_TYPE.ANDROID) setselectedAndroidVersionMaster(data);
+    else setselectedIosVersionMaster(data);
+  };
+
+  /**
+   * This function updates the state of a form data object with the new value of the input field that
+   * triggered the change event.
+   */
+  const handelFormChange = (e) => {
+    setformData({...formData, [e.target.name]: e.target.value});
+  };
+
+  /**
+   * This function handles the submission of a form for creating or updating mobile versions, including
+   * checking for required versions and dispatching actions.
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let iosIds = [];
+    let androidIds = [];
+    if (selectedIosVersion &amp;&amp; selectedIosVersion.length > 0)
+      iosIds = selectedIosVersion.map((item) => item.value);
+    else {
+      const requiredIosVersion = iosVersions.find(
+        (item) => item.iosVersion === iosVersion &amp;&amp; !item.codePushVersion
+      );
+      if (requiredIosVersion) iosIds.push(requiredIosVersion.id);
+    }
+    if (selectedAndroidVersion &amp;&amp; selectedAndroidVersion.length > 0)
+      androidIds = selectedAndroidVersion.map((item) => item.value);
+    else {
+      const requiredAndroidVersion = androidVersions.find(
+        (item) =>
+          item.androidVersion === androidVersion &amp;&amp; !item.codePushVersion
+      );
+      if (requiredAndroidVersion) androidIds.push(requiredAndroidVersion.id);
+    }
+
+    const reqData = {
+      ...formData,
+      releaseDate: new Date(releaseDate),
+      iosVersionIds: iosIds,
+      androidVersionIds: androidIds,
+    };
+    const customOnSuccess = () => {
+      dispatch(
+        readMobileVersionsList(0, pageSize, VERSION_TYPE.BACKEND, false, [])
+      );
+      history(Routes.BackendVersionList.path);
+      setformData(formDataInitialState);
+    };
+
+    if (iosIds.length > 0 &amp;&amp; androidIds.length > 0) {
+      if (isUpdate)
+        dispatch(
+          updateMobileVersion(reqData, VERSION_TYPE.BACKEND, customOnSuccess)
+        );
+      else
+        dispatch(
+          createMobileVersion(reqData, VERSION_TYPE.BACKEND, customOnSuccess)
+        );
+    } else {
+      dispatch(
+        setToast(ALERT_MESSAGE.ADD_ATLEAST_ONE_VERSION, true, 'warning')
+      );
+    }
+  };
+
+  return (
+    &lt;Form onSubmit={handleSubmit} className="form-modal">
+      &lt;h3>
+        {isDisabled
+          ? 'View Backend Version'
+          : isUpdate
+          ? 'Update Backend Version'
+          : 'Create Backend Version'}
+      &lt;/h3>
+      &lt;Container className="bg-white px-4 py-4 rounded mt-4">
+        &lt;div className="d-flex gap-2 flex-wrap">
+          &lt;Form.Group as={Col} controlId="backendVersion">
+            &lt;Form.Label>Backend Version&lt;/Form.Label>
+            &lt;Form.Control
+              required
+              type="text"
+              placeholder="Enter backend Version"
+              disabled={isDisabled}
+              name="backendVersion"
+              value={backendVersion}
+              isInvalid={isInvalidBackendVersion}
+              onChange={handelFormChange}
+            />
+            {isInvalidBackendVersion &amp;&amp; (
+              &lt;Form.Control.Feedback type="invalid">
+                Backend Version is already available
+              &lt;/Form.Control.Feedback>
+            )}
+          &lt;/Form.Group>
+
+          &lt;Form.Group as={Col} controlId="releaseDate">
+            &lt;Form.Label>Release Date&lt;/Form.Label>
+            &lt;Form.Control
+              required
+              type="date"
+              disabled={isDisabled}
+              name="releaseDate"
+              value={releaseDate}
+              onChange={handelFormChange}
+            />
+          &lt;/Form.Group>
+        &lt;/div>
+        &lt;div className="d-flex gap-2">
+          &lt;Form.Group as={Col} controlId="iosVersionList">
+            &lt;Form.Label>IOS Versions&lt;/Form.Label>
+            &lt;CustomReactSelect
+              isDisabled={isDisabled}
+              onInputChange={(data, singleData) =>
+                onMultiSelectVersionMaster(data, singleData, VERSION_TYPE.IOS)
+              }
+              optionData={iosVersionList}
+              defaultData={selectedIosVersionMaster}
+              backgroundColor="#09a6e0"
+              classes="remove-seperator-span-padding modified-settings"
+            />
+          &lt;/Form.Group>
+
+          {selectedIosVersionMaster &amp;&amp;
+            selectedIosVersionMaster.length > 0 &amp;&amp;
+            iosCodePushVersionList &amp;&amp;
+            iosCodePushVersionList.length > 0 &amp;&amp; (
+              &lt;Form.Group as={Col} controlId="iosVersionList">
+                &lt;Form.Label>IOS Codepush Version&lt;/Form.Label>
+
+                &lt;CustomReactSelect
+                  isDisabled={isDisabled}
+                  onInputChange={(data, singleData) =>
+                    onMultiSelectVersion(data, singleData, VERSION_TYPE.IOS)
+                  }
+                  optionData={iosCodePushVersionList}
+                  defaultData={selectedIosVersion}
+                  backgroundColor="#09a6e0"
+                  classes="remove-seperator-span-padding modified-settings"
+                />
+              &lt;/Form.Group>
+            )}
+        &lt;/div>
+        &lt;div className="d-flex gap-2">
+          &lt;Form.Group as={Col} controlId="androidVersionList">
+            &lt;Form.Label>Android Versions&lt;/Form.Label>
+
+            &lt;CustomReactSelect
+              isDisabled={isDisabled}
+              onInputChange={(data, singleData) =>
+                onMultiSelectVersionMaster(
+                  data,
+                  singleData,
+                  VERSION_TYPE.ANDROID
+                )
+              }
+              optionData={androidVersionsList}
+              defaultData={selectedAndroidVersionMaster}
+              backgroundColor="#09a6e0"
+              classes="remove-seperator-span-padding modified-settings"
+            />
+          &lt;/Form.Group>
+
+          {selectedAndroidVersionMaster &amp;&amp;
+            selectedAndroidVersionMaster.length > 0 &amp;&amp;
+            androidCodePushVersionList &amp;&amp;
+            androidCodePushVersionList.length > 0 &amp;&amp; (
+              &lt;Form.Group as={Col} controlId="androidVersionList">
+                &lt;Form.Label>Android Codepush Version&lt;/Form.Label>
+
+                &lt;CustomReactSelect
+                  isDisabled={isDisabled}
+                  onInputChange={(data, singleData) =>
+                    onMultiSelectVersion(data, singleData, VERSION_TYPE.ANDROID)
+                  }
+                  optionData={androidCodePushVersionList}
+                  defaultData={selectedAndroidVersion}
+                  backgroundColor="#09a6e0"
+                  classes="remove-seperator-span-padding modified-settings"
+                />
+              &lt;/Form.Group>
+            )}
+        &lt;/div>
+        &lt;div className="d-flex flex-row gap-2">
+          {!isDisabled &amp;&amp; (
+            &lt;Button
+              variant="success"
+              type="submit"
+              className="mt-3 modal-btn"
+              disabled={isInvalidBackendVersion}>
+              {isUpdate ? 'Update' : 'Create'}
+            &lt;/Button>
+          )}
+          &lt;Button
+            variant="light"
+            className="mt-3 modal-btn"
+            onClick={() => history(Routes.BackendVersionList.path)}>
+            Back
+          &lt;/Button>
+        &lt;/div>
+      &lt;/Container>
+    &lt;/Form>
+  );
+};
+
+export default NewBackendVersion;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#acknowledgeRebatePaid">acknowledgeRebatePaid</a></li><li><a href="global.html#acknowledgeSubventionPaid">acknowledgeSubventionPaid</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#captalizeEveryWordOfSentence">captalizeEveryWordOfSentence</a></li><li><a href="global.html#checkifReportsDataInSync">checkifReportsDataInSync</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkifValueExists">checkifValueExists</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#checkValue">checkValue</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertMedicationName">convertMedicationName</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createHospitalIpConfig">createHospitalIpConfig</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createMobileVersion">createMobileVersion</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteHospitalIpConfig">deleteHospitalIpConfig</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#disableMobileVersion">disableMobileVersion</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getAllApprovalRegPatients">getAllApprovalRegPatients</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getApprovalRegPatients">getApprovalRegPatients</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDocumentName">getDocumentName</a></li><li><a href="global.html#getDocumentType">getDocumentType</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getMonthsDataSorted">getMonthsDataSorted</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getReportSyncFlag">getReportSyncFlag</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#handleRegRequest">handleRegRequest</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#isValueNull">isValueNull</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LabelValue">LabelValue</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readAndroidMobileVersionsList">readAndroidMobileVersionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitalIpConfigList">readHospitalIpConfigList</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readIosMobileVersionsList">readIosMobileVersionsList</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readMobileVersionsList">readMobileVersionsList</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#selectMonthWithData">selectMonthWithData</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryReduxEnhancer">sentryReduxEnhancer</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setNewToken">setNewToken</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setSelectedRole">setSelectedRole</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setupStore">setupStore</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showHospitalIpConfig">showHospitalIpConfig</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#sortObjectKeysByName">sortObjectKeysByName</a></li><li><a href="global.html#splitCamelCaseString">splitCamelCaseString</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateHospitalIpConfig">updateHospitalIpConfig</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMobileVersion">updateMobileVersion</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#updateVersionMapping">updateVersionMapping</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyOtp">verifyOtp</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri May 19 2023 18:39:27 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

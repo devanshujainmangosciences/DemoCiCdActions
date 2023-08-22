@@ -1,0 +1,37 @@
+#We can use this template to run locally, create a file .env and paste the below contents with actual values
+
+
+Mandatory Envirnoment Variables
+
+VITE_REALM=""
+VITE_CLIENT_ID=""
+VITE_KEYCLOAK_URL="http://localhost:8080/auth/"
+VITE_API_BASE_URL=""
+VITE_VBC_PROGRAM_TERMS="https://www.mangosciences.com/privacy-policy/"
+VITE_SHOW_CONSOLE_LOGS=true
+VITE_LOGIN_KEYCLOAK_URL="http://localhost:8080/auth/realms/realm/protocol/openid-connect/token"
+VITE_CHANGE_USER_PASSWORD="http://localhost:8080/auth/realms/realm/account/password"
+VITE_SSE_LINK=""
+VITE_VBC_PRIVACY_POLICY=""
+VITE_VBC_TERMS=""
+VITE_SENTRY_DNS=""
+VITE_HEADER=""
+VITE_WEB_STORAGE_SECRET_KEY=""
+
+Optional Envirnoment Variables
+
+VITE_NULL_VALUE='N/A'
+VITE_NULL_TOOL_TIP='Not Available'
+VITE_NO_RECORDS_AVALIABLE = 'No Records Available'
+VITE_NO_RADIOLOGY_NOTE='No radiology report found'
+VITE_NO_CLINICAL_NOTE='No clinical note found'
+VITE_NO_OTHER_TEST_NOTE='No other test report found'
+VITE_NO_OTHER_TREATMENT_NOTE='No other treatment report found'
+VITE_NO_CLINICAL_REPORT_FOUND='No records of clinical notes found'
+VITE_NO_RADIOLOGY_REPORT_FOUND='No record of radiology found'
+VITE_NO_OTHER_TEST_REPORT_FOUND='No record of other test found'
+VITE_NO_OTHER_TREATMENT_REPORT_FOUND='No records of other treatment found'
+VITE_NO_LAB_REPORT_FOUND='No record of lab found'
+VITE_NO_SURGERY_REPORT_FOUND='No records of surgery found'
+VITE_NO_MEDICATION_REPORT_FOUND='No records of medication found'
+VITE_NO_RADIATION_THERAPY_REPORT_FOUND='No records of radiation therapy found'

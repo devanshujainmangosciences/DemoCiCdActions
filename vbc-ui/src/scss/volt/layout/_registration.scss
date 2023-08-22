@@ -1,0 +1,785 @@
+.container.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 480px;
+  flex-direction: column;
+}
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.login-main {
+  min-height: 100vh;
+  position: relative;
+  footer {
+    position: absolute;
+    bottom: 0;
+  }
+}
+.complete-profile {
+  background-size: cover;
+  background-image: url(/src/assets/images/loginBgWeb.svg);
+  @include media-breakpoint-down(xl) {
+    background-image: url(/src/assets/images/loginBgiPad.svg);
+  }
+}
+
+.login-main-registration {
+  min-height: 100vh;
+  position: relative;
+  // background: transparent
+  //   linear-gradient(180deg, #ffffff 0%, #f2f2f2 68%, #e4e4e4 100%) 0% 0%
+  //   no-repeat padding-box;
+  background-image: url(/src/assets/images/loginBgWeb.svg);
+  @include media-breakpoint-down(xl) {
+    background-image: url(/src/assets/images/loginBgiPad.svg);
+  }
+
+  background-size: cover;
+  font-family: $font-family-roboto;
+
+  .item-position {
+    position: absolute;
+    left: 50%;
+    top: 49%;
+    transform: translate(-50%, -50%);
+    @include media-breakpoint-up(sm) {
+      top: 46%;
+    }
+  }
+
+  .reg-container {
+    // display: block;
+
+    .reg-box {
+      padding: 45px;
+      height: auto;
+      width: 360px;
+
+      input {
+        width: 100%;
+        border: 1px solid #e2e2e2;
+        border-radius: 5px;
+        height: 52px;
+        color: #28252e;
+        background-color: transparent;
+        padding-left: 55px;
+        transition: 0.5s;
+        box-sizing: border-box;
+        font-weight: 500;
+        font-size: 16px;
+        letter-spacing: 0.16px;
+        box-shadow: none;
+      }
+      ::placeholder {
+        font-size: 16px;
+        font-style: normal;
+        color: #6f6f6f;
+      }
+
+      button {
+        margin-top: 0;
+        text-transform: uppercase;
+        font-weight: 500;
+        height: 45px;
+        padding: 10px;
+        background: transparent
+          linear-gradient(180deg, #09a6e0 0%, #0890c2 100%) 0% 0% no-repeat
+          padding-box;
+        box-shadow: 0px 6px 20px #1f54c326;
+        border-radius: 5px;
+        border: none;
+        min-height: 45px;
+        font-size: 14px;
+      }
+
+      @include media-breakpoint-up(sm) {
+        width: 500px;
+      }
+      @include media-breakpoint-down(xl) {
+        width: 360px;
+      }
+      @include media-breakpoint-down(lg) {
+        width: 500px;
+      }
+
+      h6 {
+        font-size: $font-size-xl;
+        font-family: $font-family-roboto;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  @media (max-width: 320px) {
+    .reg-box {
+      width: 300px !important;
+    }
+  }
+  @media (max-width: 434px) {
+    .reg-box {
+      width: 360px !important;
+    }
+  }
+  footer {
+    position: absolute;
+    bottom: 0;
+  }
+}
+// @media (max-width: 1024px) {
+//   .login-main-registration {
+//     background-image: url(/src/assets/images/loginBgiPad.svg);
+//   }
+// }
+
+.header-container {
+  display: flex;
+  justify-content: center;
+  // margin-bottom: 1rem;
+  #header-wrapper {
+    @include media-breakpoint-up(sm) {
+      font-size: 29px;
+      color: #363636;
+      font-weight: normal;
+      letter-spacing: 3px;
+    }
+    font-size: 20px;
+    font-weight: bold;
+    color: #72767b;
+    font-family: $font-family-roboto;
+
+    line-height: 1.2em;
+    white-space: normal;
+  }
+
+  #header-wrapper::after {
+    display: block;
+    content: '';
+    position: relative;
+    left: 0;
+    bottom: 0;
+    /* max-width: 120px; */
+    border-bottom: 3px solid #f67816;
+    margin: 0 auto;
+    padding: 5px 0px;
+  }
+}
+
+.login-role {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  width: 100%;
+  border-bottom: 2px solid #c8cad6;
+  box-sizing: border-box;
+  font-weight: 400;
+  font-size: 16px;
+  font-family: 'roboto';
+  letter-spacing: 0.16px;
+  height: 40px;
+  color: #323036;
+  // padding-left: 45px;
+  text-indent: 45px;
+  // padding-top: 8px;
+}
+.login-role:focus.admin {
+  border-bottom: 2px solid $admin;
+}
+.login-role:focus.patient {
+  border-bottom: 2px solid $patient;
+}
+.login-role:focus.pharma {
+  border-bottom: 2px solid $pharmer;
+}
+.login-role:focus.doctor {
+  border-bottom: 2px solid $doctor;
+}
+.reg-label {
+  position: absolute;
+  bottom: 45px;
+}
+.RegisterBox {
+  width: 100%;
+  height: auto;
+  display: inline-block;
+  .Form {
+    .inputBox {
+      margin-top: 30px;
+    }
+    width: 100% !important;
+    .dropdown {
+      margin-top: 25px;
+      svg {
+        position: absolute;
+        bottom: 13px;
+        left: 6px;
+        color: #93a5be;
+      }
+    }
+    .rdt {
+      margin-top: 25px;
+      div {
+        svg {
+          position: absolute;
+          bottom: 13px;
+          left: 6px;
+          color: #93a5be;
+        }
+      }
+    }
+  }
+  .login-btn {
+    margin-top: 40px;
+  }
+}
+.login {
+  width: 59%;
+  height: 400px;
+  display: flex;
+}
+.select-role {
+  width: 40%;
+  height: 150px;
+  display: flex;
+}
+.loginBox,
+.RegisterBox {
+  background-color: #fff;
+  border-radius: 6px;
+  justify-content: center;
+  align-items: center;
+  .Form {
+    width: 300px;
+    .dropdown {
+      margin-top: 25px;
+      svg {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        color: #c8cad6;
+      }
+    }
+    input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid #c8cad6;
+      outline: none;
+      height: 40px;
+      color: #323036;
+      background-color: transparent;
+      padding-left: 45px;
+      padding-top: 8px;
+      transition: 0.5s;
+      box-sizing: border-box;
+      font-weight: medium;
+      font-size: 16px;
+      font-family: 'roboto';
+      letter-spacing: 0.16px;
+      margin-top: 25px;
+    }
+
+    input[type='email']:focus.doctor,
+    input[type='text']:focus.doctor,
+    input[type='password']:focus.doctor {
+      border-bottom: 2px solid $doctor;
+    }
+
+    input[type='email']:focus.patient,
+    input[type='text']:focus.patient,
+    input[type='password']:focus.patient {
+      border-bottom: 2px solid $patient;
+    }
+
+    input[type='email']:focus.pharma,
+    input[type='text']:focus.pharma,
+    input[type='password']:focus.pharma {
+      border-bottom: 2px solid $pharmer;
+    }
+  }
+}
+// .mango-logo{
+//     width: 60px;
+//     height:60px;
+// }
+.logo-container {
+  display: flex;
+  flex-direction: row;
+  padding-left: 15px;
+  cursor: pointer;
+  h5 {
+    font-family: $font-family-sans-serif;
+    width: 100px;
+    font-weight: 600;
+    line-height: 20px;
+    font-size: 19px;
+    margin: 10px 0px;
+    span {
+      letter-spacing: 2px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+  .mango-logo {
+    @include media-breakpoint-up(sm) {
+      width: 165px;
+      height: 65px;
+      margin: 20px 0px 0px 0px;
+    }
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: auto;
+    width: 150px;
+    display: flex;
+    justify-content: flex-start;
+    object-fit: initial;
+    margin: 20px 0px 0px 15px;
+  }
+}
+.inputBox {
+  position: relative;
+  svg {
+    position: absolute;
+    left: 5px;
+    bottom: 12px;
+    color: #c8cad6;
+  }
+}
+
+.head-text {
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-block;
+  padding-bottom: 9px;
+  position: relative;
+  margin-bottom: 35px;
+  //   text-transform: uppercase;
+}
+.head-text:before {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 1px;
+  bottom: 0;
+  left: 25%;
+  border-bottom: 3px solid $admin;
+}
+.head-text.pharma:before {
+  border-bottom: 3px solid $pharmer;
+}
+.head-text.patient:before {
+  border-bottom: 3px solid $patient;
+}
+.head-text.doctor:before {
+  border-bottom: 3px solid $doctor;
+}
+.forget-text {
+  display: block;
+  text-align: right;
+  text-decoration: none;
+  color: #525057;
+  margin-top: 10px;
+  margin-bottom: 30px;
+  font-size: 0.9rem;
+  transition: 0.3s;
+  font-weight: 500;
+}
+.forget-text.patienthover:hover {
+  color: $patient;
+}
+.forget-text.pharmahover:hover {
+  color: $pharmer;
+}
+.forget-text.doctorhover:hover {
+  color: $doctor;
+}
+.login-btn {
+  color: #fff;
+  border-radius: 3px;
+  font-size: 16px;
+  display: block;
+  width: 100%;
+  height: 40px;
+  background-color: #59b5cc;
+  border: none;
+  text-transform: uppercase;
+  box-shadow: 0px 12px 25px #d8dee6;
+}
+.register-text {
+  text-align: center;
+  margin-top: 23px;
+  span {
+    cursor: pointer;
+  }
+}
+.patienttextcolor {
+  color: $patient;
+  text-decoration: none;
+  &:hover {
+    color: $patient;
+  }
+}
+.pharmatextcolor {
+  color: $pharmer;
+  text-decoration: none;
+  &:hover {
+    color: $pharmer;
+  }
+}
+.doctortextcolor {
+  color: $doctor;
+  text-decoration: none;
+  &:hover {
+    color: $doctor;
+  }
+}
+.reg-container {
+  width: 100%;
+  display: flex;
+  .approval-container {
+    width: auto;
+    height: auto;
+    // background: #ffffff 0% 0% no-repeat padding-box;
+    // box-shadow: 0px 3px 20px #00000033;
+    border-radius: 8px;
+    opacity: 1;
+    // padding: 45px;
+    .user-name {
+      text-align: center;
+      font: normal normal normal 24px/29px Roboto;
+    }
+    .waiting-for-approval {
+      text-align: center;
+      font: normal normal normal 19px/23px Roboto;
+      letter-spacing: 0px;
+      color: #747474;
+      opacity: 1;
+    }
+  }
+  .reg-box {
+    width: 500px;
+    height: 390px;
+    background: $white 0% 0% no-repeat padding-box;
+    box-shadow: 0px 3px 20px #00000033;
+    border-radius: 8px;
+    padding: 48px 60px;
+    h6 {
+      font: normal normal normal 30px/17px $font-family-roboto;
+      letter-spacing: 0px;
+      color: #747474;
+    }
+    p {
+      font: normal normal normal 19px/24px $font-family-roboto;
+      letter-spacing: 0px;
+      // color: #28252e;
+      span {
+        cursor: pointer;
+      }
+    }
+    input,
+    select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid $gray-450;
+      border-radius: 5px;
+      font: normal normal normal 15px/17px $font-family-roboto;
+      &:focus {
+        outline: none;
+      }
+    }
+    input[type='checkbox'] {
+      width: 15px;
+      height: 15px;
+      margin-top: 2px;
+    }
+    .login-here {
+      font: normal normal normal 17px/17px $font-family-roboto;
+    }
+    .back-to-login {
+      font: normal normal normal 14px/14px $font-family-roboto;
+    }
+    button {
+      width: 100%;
+      height: 49px;
+      min-height: 49px;
+      background: transparent linear-gradient(180deg, #09a6e0 0%, #0890c2 100%)
+        0% 0% no-repeat padding-box;
+      box-shadow: 0px 6px 20px #1f54c326;
+      border-radius: 5px;
+      outline: none;
+      border: none;
+      text-transform: uppercase;
+      color: $white;
+    }
+    .otp {
+      color: #09a6e0 !important;
+      letter-spacing: 0px;
+      background: none !important;
+      box-shadow: none !important;
+      text-transform: capitalize;
+      font: normal normal normal 17px/17px $font-family-roboto;
+      cursor: pointer;
+    }
+  }
+  .reg-box-inner-screens {
+    @extend .reg-box;
+    background: none;
+    box-shadow: none;
+    input {
+      background: #ffffff 0% 0% no-repeat padding-box;
+      background-color: #fff !important;
+      color: #6f6f6f !important;
+    }
+  }
+}
+.reg-container.self {
+  label {
+    font: normal normal normal 16px/17px $font-family-roboto;
+  }
+  .reg-box {
+    width: 900px;
+    height: auto;
+    .confirm-text {
+      font: normal normal normal 14px/24px $font-family-roboto;
+    }
+    p {
+      letter-spacing: 0px;
+      font: normal normal normal 18px/17px $font-family-roboto;
+      letter-spacing: 0px;
+      cursor: pointer;
+    }
+    .head {
+      margin-bottom: 15px;
+    }
+    form {
+      .row {
+        height: 70px;
+        .col {
+          padding: 0px 10px;
+          div {
+            input,
+            select {
+              width: 100%;
+              height: 42px;
+              border-radius: 5px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+@media screen and (max-width: 600px) {
+  .reg-container.self .reg-box form .row {
+    height: auto;
+    padding-bottom: 10px;
+    .col {
+      margin-bottom: 1rem;
+    }
+  }
+}
+.text-lg {
+  font: normal normal medium 30px/37px $font-family-roboto;
+}
+.profile-text {
+  font: normal normal normal 15px/17px $font-family-roboto;
+  letter-spacing: 0px;
+  color: $text-muted;
+}
+
+.main-box {
+  height: 80vh;
+  @include media-breakpoint-down(lg) {
+    justify-content: center;
+    align-items: center;
+  }
+  .reg-box-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .reg-info {
+    @include media-breakpoint-down(lg) {
+      display: none;
+    }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+    // justify-content: space-between;
+    border-right: 1px solid #e2e2e2;
+    // padding: 30px;
+    .reg-info-item {
+      text-align: center;
+      display: grid;
+      justify-content: center;
+      margin-top: 10px;
+      .pbp {
+        .line {
+          position: absolute;
+          height: 1px;
+          border-top: 2px solid #f68e24;
+        }
+        .small-line-top {
+          width: 100px;
+          top: -15px;
+          left: 80px;
+        }
+        .big-line-top {
+          width: 126px;
+          top: -10px;
+          left: 140px;
+        }
+        .big-line-bottom {
+          width: 150px;
+          bottom: -10px;
+          left: 80px;
+        }
+        .small-line-bottom {
+          width: 100px;
+          bottom: -15px;
+          left: 190px;
+        }
+
+        position: relative;
+        height: 35px;
+        border: 0.5px solid #edeced;
+        background: #fff;
+        // max-width: 387px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+        padding-left: 12px;
+        .pbp-text {
+          position: absolute;
+          color: #f68e24;
+          font: normal normal bold 18px/23px 'Roboto', sans-serif;
+          top: -15px;
+        }
+      }
+      .targeted-immuno {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+      }
+      .support-low-cost-emi {
+        display: flex;
+        gap: 150px;
+      }
+      .support {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        max-width: 164px;
+      }
+      .low-cost-emi {
+        @extend .support;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 255px;
+        .emi-box {
+          display: flex;
+          gap: 15px;
+          padding: 20px;
+          background: #ffffff 0% 0% no-repeat padding-box;
+          border-radius: 10px;
+        }
+      }
+      .contact-details {
+        @extend .targeted-immuno;
+        gap: 10px;
+        font-size: 24px;
+
+        .number {
+          padding: 10px;
+          color: #f68e26;
+        }
+        .vertical-line {
+          border: 2px solid #fde4cf;
+          width: 2px;
+          height: 30px;
+        }
+        .email {
+          padding: 10px;
+          color: #1a1a1a;
+          // border-left: 2px solid #fde4cf;
+        }
+      }
+
+      .percent-text {
+        color: #f68e26;
+        font-size: 29px;
+      }
+      .black-text {
+        color: #000000;
+      }
+      .black-text-17 {
+        @extend .black-text;
+        font-size: 17px;
+      }
+      .blue-text {
+        color: #0ea5de;
+      }
+      .blue-text-17 {
+        @extend .blue-text;
+        font-size: 17px;
+      }
+      .blue-text-18 {
+        @extend .blue-text;
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+@media (max-width: 1111px) {
+  .main-box {
+    .reg-info {
+      .reg-info-item {
+        .contact-details {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-height: 730px) {
+  .main-box {
+    .reg-info {
+      gap: 15px;
+      justify-content: flex-start;
+      .reg-info-item {
+        margin-top: 0px;
+        .contact-details {
+          font-size: 20px;
+        }
+        .low-cost-emi {
+          margin-bottom: 10px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-height: 620px) {
+  .main-box {
+    .reg-info {
+      gap: 0px;
+      justify-content: flex-end;
+      .reg-info-item {
+        margin-top: 0px;
+        .contact-details {
+          font-size: 20px;
+        }
+        .low-cost-emi {
+          margin-bottom: 25px;
+        }
+      }
+    }
+  }
+}

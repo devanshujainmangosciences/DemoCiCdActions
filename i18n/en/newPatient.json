@@ -1,0 +1,14 @@
+{
+  "home": "Home",
+  "newPatient": "New Patient",
+  "patientRecruitment": "Patient Recruitment And Conversion",
+  "patientLongitudinality": "Patient Longitudinality",
+  "survivalAndResponse": "Survival and Response",
+  "discontinuation": "Discontinuation and adverse Events",
+  "patientReportedOutcomes": "Patient Reported Outcomes",
+  "individualPatientData": "Individual Patient data",
+  "salesAndFreePack": "Sales and Free Packs",
+  "perPatientRevenue": "Per-Patient Revenue",
+  "logout": "Logout",
+  "chooseOneRoleToContinue": "Choose One Role to Continue"
+}

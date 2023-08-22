@@ -1,0 +1,15 @@
+{
+  "somethingWentWrong": "Something went wrong. Please try again later.",
+  "pleaseEnter": "Please enter ",
+  "please": "Please ",
+  "pleaseSelect": "Please select ",
+  "pleaseEnterValid": "Please enter valid ",
+  "userRegisteredSuccessfully": "User registered successfully.",
+  "noUserExists": "Kindly register yourself.",
+  "strongPassword": "Please choose strong password",
+  "confirmation": "Please confirm to our policies by going through terms & conditions",
+  "emailOrMobile": "Please enter either Email/Mobile",
+  "selectSelectedUploadingDocument": "Select Selected Uploading Document",
+  "selectFile": "Select File",
+  "passwordConfirmPassword": "Password and Confirm password should be same."
+}

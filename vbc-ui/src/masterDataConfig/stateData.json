@@ -1,0 +1,16 @@
+{
+  "dataVariables": "StateDataVariables",
+  "readListAction": "readStates",
+  "deleteDataAction": "deleteState",
+  "reduxDataListState": "state.template?.masterData?.states",
+  "reduxPaginationData": "state.template?.masterData?.states?.pagination",
+  "tableHeadersPath": "tableHeadersStates",
+  "updateData": "updateState",
+  "createData": "createState",
+  "showData": "showState",
+  "newPath": "NewState",
+  "viewPath": "ViewState",
+  "updatePath": "UpdateState",
+  "listPath": "States",
+  "reduxSelectedData": "state.state.selectedState"
+}

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: actions/adminActions.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: actions/adminActions.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {setToast, getMasterData} from '../actions';
+import {Routes} from '@/routes';
+import {
+  actionTypes,
+  ALERT_MESSAGE,
+  endpoints,
+  MASTER_DATA_FIELDS,
+  VERSION_TYPE,
+} from '../constants';
+import {formatEndpoint, isObjectEmpty} from '@/services/utility';
+
+const {
+  LIST_HOLIDAY_FOR_YEAR,
+  REDIRECT,
+  API,
+  SET_TOAST,
+  SET_MEDICATION_SCHEDULE,
+  SET_USERS_WITH_DEVICE_TOKEN,
+  SET_MOBILE_VERSION_LIST_BACKEND,
+  SET_MOBILE_VERSION_BACKEND,
+  SET_MOBILE_VERSION_LIST_ANDROID,
+  SET_MOBILE_VERSION_ANDROID,
+  SET_MOBILE_VERSION_IOS,
+  SET_MOBILE_VERSION_LIST_IOS,
+  SET_MOBILE_VERSION_MAPPING,
+  SET_ALL_BACKEND_VERSION,
+  SET_ALL_IOS_VERSION,
+  SET_ALL_ANDROID_VERSION,
+} = actionTypes;
+
+/**
+ * Get the holiday list for a particular
+ * @param {Integer} year
+ Array
+ */
+export const getHolidaysForYear = (year) => async (dispatch) => {
+  const queryParams = {year};
+  const onSuccess = (response) => ({
+    type: LIST_HOLIDAY_FOR_YEAR,
+    payload: response.data,
+  });
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const holidayList = {
+    url: endpoints.LIST_HOLIDAYS_FOR_YEAR,
+    method: 'GET',
+    data: queryParams,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: holidayList});
+};
+
+/**
+ * Get the Sunday for a particular year
+ * @param {Integer} year
+ Array
+ */
+export const getSundaysForYear = (year) => async (dispatch) => {
+  const queryParams = {year};
+  const onSuccess = () => {
+    dispatch(getHolidaysForYear(year));
+    dispatch(
+      setToast(
+        `Sundays for year ${year} populated successfully`,
+        true,
+        'success'
+      )
+    );
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const sundayList = {
+    url: endpoints.POPULATE_SUNDAYS_FOR_YEAR,
+    method: 'GET',
+    data: queryParams,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: sundayList});
+};
+/**
+ * Create Holiday
+ * @param {Object}
+ String
+ */
+export const addHoliday = (reqData) => async (dispatch) => {
+  const onSuccess = () => {
+    dispatch(
+      setToast(
+        'Holiday added successfully',
+        true,
+        'success',
+        Routes.HolidayList.path
+      )
+    );
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const addHoliday = {
+    url: endpoints.ADD_HOLIDAY,
+    method: 'POST',
+    data: reqData,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: addHoliday});
+};
+
+/**
+ * The api fetch the list of programs avaliable in the system
+ *
+ * @param {Number} pageNumber
+ * @param {Number} size
+ Array
+ */
+export const readProgram = (pageNumber, size, filter) => async (dispatch) => {
+  let queryParams = {};
+  pageNumber &amp;&amp; (queryParams['page'] = pageNumber);
+  size &amp;&amp; (queryParams['limit'] = size);
+  const onSuccess = (response) => ({
+    type: actionTypes.SET_PROGRAM_LIST,
+    payload: response.data,
+  });
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const readProgramData = {
+    url: endpoints.READ_PROGRAM,
+    method: 'POST',
+    data: filter,
+    params: queryParams,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: readProgramData});
+};
+/**
+ * Create Program
+ * @param {Object}
+ String
+ */
+export const createProgram = (reqData) => async (dispatch) => {
+  const onSuccess = (response) => {
+    dispatch(readProgram(0, 10));
+    dispatch(
+      setToast(response.message, true, 'success', Routes.VbcProgramList.path)
+    );
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const addHoliday = {
+    url: endpoints.CREATE_PROGRAM,
+    method: 'POST',
+    data: reqData,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: addHoliday});
+};
+/**
+ *  This action will update the program, apart from the data it has program id that needs to be updated
+ * @param {*} reqData
+ Response Object
+ */
+export const updateProgram = (reqData, id) => async (dispatch) => {
+  const url = id
+    ? `${endpoints.UPDATE_PROGRAM}/${id}`
+    : endpoints.UPDATE_PROGRAM;
+  const onSuccess = (response) => {
+    dispatch(readProgram(0, 10));
+    dispatch(
+      setToast(response.message, true, 'success', Routes.VbcProgramList.path)
+    );
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const showProgramData = {
+    url: url,
+    method: 'POST',
+    data: reqData,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: showProgramData});
+};
+
+/**
+ * This api returns the data of a single program
+ * @param {Number} id
+ Object
+ */
+export const showProgram = (id) => async (dispatch) => {
+  const url = id ? `${endpoints.SHOW_PROGRAM}/${id}` : endpoints.SHOW_PROGRAM;
+  const onSuccess = (response) => ({
+    type: actionTypes.SET_PROGRAM,
+    payload: response.data,
+  });
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const showProgramData = {
+    url: url,
+    method: 'GET',
+    data: null,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: showProgramData});
+};
+
+/**
+ * API To delete program
+ * @param {Number} id
+ Response Object
+ */
+export const deleteProgram = (id) => async (dispatch) => {
+  const url = id
+    ? `${endpoints.DELETE_PROGRAM}/${id}`
+    : endpoints.DELETE_PROGRAM;
+  const onSuccess = (response) => {
+    dispatch(readProgram(0, 10));
+    dispatch(
+      setToast(response.message, true, 'success', Routes.VbcProgramList.path)
+    );
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const deleteProgramData = {
+    url: url,
+    method: 'POST',
+    data: null,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: deleteProgramData});
+};
+
+/**
+ * Get MEDICATION Schedule
+ Array
+ */
+export const getMedicationScheduleByDrugId = (drugId) => async (dispatch) => {
+  const url =
+    drugId &amp;&amp; endpoints.GET_MEDICATION_SCHEDULE.replace('{drugId}', drugId);
+  const onSuccess = (response) => ({
+    type: SET_MEDICATION_SCHEDULE,
+    payload: response.data,
+  });
+  const onFailure = (response) => ({
+    type: SET_TOAST,
+    payload: {
+      message: response.message,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+  const getSchedule = {
+    url: url,
+    method: 'GET',
+    data: null,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: getSchedule});
+};
+
+/**
+ * This function will update single medication schedule data , it will recieve the reqData with all the details
+ * 
+ *Request Data Skeleton:- {
+  "cycleNo": 0,
+  "drugId": 0,
+  "id": 0,
+  "mangoGrantAmount": 0,
+  "marketPrice": 0,
+  "percentageOfRebate": 0
+} 
+ * 
+ * @param {Object} reqData 
+  Response Object
+ */
+
+export const updateMedicationScheduleByCycleNo =
+  (reqData, onCustomSuccess) => async (dispatch) => {
+    const onSuccess = (response) => {
+      onCustomSuccess &amp;&amp; onCustomSuccess(response?.data?.drugId);
+      dispatch({
+        type: SET_TOAST,
+        payload: {
+          message: response.message,
+          isShowToast: true,
+          toastType: 'success',
+        },
+      });
+    };
+    const onFailure = (response) => {
+      dispatch({
+        type: SET_TOAST,
+        payload: {
+          message: response.message,
+          isShowToast: true,
+          toastType: 'warning',
+        },
+      });
+    };
+    const updateSchedule = {
+      url: endpoints.UPDATED_MEDICATION_SCHEDULE,
+      method: 'POST',
+      data: reqData,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: updateSchedule});
+  };
+
+/**
+ * API to get the users whoes device token is present in the database
+ * @param {Boolean} active
+ */
+export const getUsersWithDeviceToken = () => async (dispatch) => {
+  const url = `${endpoints.GET_USER_DEVICES}`;
+  const onSuccess = (response) => ({
+    type: SET_USERS_WITH_DEVICE_TOKEN,
+    payload: response.data,
+  });
+  const onFailure = (response) => ({
+    type: SET_TOAST,
+    payload: {
+      message: response.message,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+  const getUsersWithDeviceToken = {
+    url: url,
+    method: 'GET',
+    data: null,
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: getUsersWithDeviceToken});
+};
+/**
+ * This action sends push notification to users with content.
+ * @param {Object} reqData {
+ * content:"",
+ * mangoAccountIds:["id"]
+ * }
+
+ */
+export const sendPushNotification =
+  (reqData, customOnSuccess) => async (dispatch) => {
+    const onSuccess = () => {
+      customOnSuccess &amp;&amp; customOnSuccess();
+      dispatch({
+        type: SET_TOAST,
+        payload: {
+          message: ALERT_MESSAGE.PUSH_NOTIFICATION_SUCCESS,
+          isShowToast: true,
+          toastType: 'success',
+        },
+      });
+    };
+    const onFailure = (response) => {
+      dispatch({
+        type: SET_TOAST,
+        payload: {
+          message: response.message,
+          isShowToast: true,
+          toastType: 'warning',
+        },
+      });
+    };
+    const pushNotification = {
+      url: endpoints.SEND_PUSH_NOTIFICATION,
+      method: 'POST',
+      data: reqData,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: pushNotification});
+  };
+
+/**
+ * API to read countrues data.
+ */
+export const readCountries = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.COUNTRIES]));
+};
+/**
+ * API to delete country
+ */
+export const deleteCountry = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.PUSH_NOTIFICATION_SUCCESS,
+      isShowToast: true,
+      toastType: 'success',
+    },
+  });
+};
+/**
+ * API to read states data from master table.
+ */
+export const readStates = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.STATES]));
+};
+/**
+ * API to delete states data from master table.
+ */
+export const deleteState = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to delete city from master data
+ */
+export const deleteCity = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read banks from master data
+ */
+export const readBanks = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.BANKS]));
+};
+/**
+ * API to delete banks from master data
+ */
+export const deleteBank = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read gross Annual Incomes from master data
+ */
+export const readGrossAnnualIncomes = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.GROSS_ANNUAL_INCOME]));
+};
+/**
+ * API to delete grossAnnualIncomes from master data
+ */
+export const deleteGrossAnnualIncomes = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to Income Range List  from master data
+ */
+export const readIncomeRangeList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.INCOME_RANGE_LIST]));
+};
+/**
+ * API to delete Income Range List from master data
+ */
+export const deleteIncomeRange = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Company Types from master data
+ */
+export const readCompanyTypes = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.COMPANY_TYPES]));
+};
+/**
+ * API to delete Company Types from master data
+ */
+export const deleteCompanyType = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Employer List from master data
+ */
+export const readEmployerList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.EMPLOYERS]));
+};
+/**
+ * API to delete Employer from master data
+ */
+export const deleteEmployer = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Industry Types from master data
+ */
+export const readIndustryTypes = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.INDUSTRY_TYPES]));
+};
+/**
+ * API to delete industry from master data
+ */
+export const deleteIndustry = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Nature of Business from master data
+ */
+export const readNatureOfBusiness = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.NATURE_OF_BUSINESS]));
+};
+/**
+ * API to delete Nature of Business from master data
+ */
+export const deleteNatureOfBusiness = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Occupation List from master data
+ */
+export const readOccupationList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.OCCUPATIONS]));
+};
+/**
+ * API to delete Occupation from master data
+ */
+export const deleteOccupation = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Profession List from master data
+ */
+export const readProfessionList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.PROFESSIONS]));
+};
+/**
+ * API to delete profession from master data
+ */
+export const deleteProfession = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Years In Business from master data
+ */
+export const readYearsInBusiness = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.YEARS_IN_BUSINESS]));
+};
+/**
+ * API to delete Years In Business from master data
+ */
+export const deleteYearsInBusiness = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Language List from master data
+ */
+export const readLanguageList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.LANGUAGES]));
+};
+/**
+ * API to delete Language from master data
+ */
+export const deleteLanguage = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Residence Type List from master data
+ */
+export const readResidenceTypeList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.RESIDENCE_TYPES]));
+};
+/**
+ * API to delete Residence Type from master data
+ */
+export const deleteResidenceType = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Education Level List from master data
+ */
+export const readEducationLevelList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.EDUCATION_LEVEL_LIST]));
+};
+/**
+ * API to delete Education Level from master data
+ */
+export const deleteEducationLevel = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Experience List from master data
+ */
+export const readExperienceList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.EXPERIENCES]));
+};
+/**
+ * API to delete Experience from master data
+ */
+export const deleteExperience = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Relationship List from master data
+ */
+export const readRelationshipList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.RELATIONSHIPS]));
+};
+/**
+ * API to delete Relationship from master data
+ */
+export const deleteRelationship = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Cancer Type List from master data
+ */
+export const readCancerTypeList = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.CANCER_TYPES]));
+};
+/**
+ * API to delete Cancer Type from master data
+ */
+export const deleteCancerType = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read doctor change Reasons from master data
+ */
+export const readDoctorChangeReasons = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.DOCTOR_CHANGE_REASONS]));
+};
+/**
+ * API to delete Doctor Change Reasons from master data
+ */
+export const deleteDoctorChangeReason = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Clinical Dropout reasons from master data
+ */
+export const readClinicalDropoutReasons = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.CLINICAL_DROP_OUT]));
+};
+/**
+ * API to delete Clinical Dropout  from master data
+ */
+export const deleteClinicalDropout = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read non clinical dropout reasons from master data
+ */
+export const readNonClinicalDropoutReasons = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.NON_CLINICAL_DROP_OUT]));
+};
+/**
+ * API to delete non clinical dropout from master data
+ */
+export const deleteNonClinicalDropout = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read insurance companies from master data
+ */
+export const readInsuranceCompanies = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.INSURANCE_COMPANIES]));
+};
+/**
+ * API to delete insurance company from master data
+ */
+export const deleteInsuranceCompany = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+/**
+ * API to read Patient Statues from master data
+ */
+export const readPatientStatuses = () => (dispatch) => {
+  dispatch(getMasterData([MASTER_DATA_FIELDS.PATIENT_STATUSES]));
+};
+/**
+ * API to delete Patient Status from master data
+ */
+export const deletePatientStatus = () => (dispatch) => {
+  dispatch({
+    type: SET_TOAST,
+    payload: {
+      message: ALERT_MESSAGE.FUNCTIONALITY_NOT_IMPLEMENTED,
+      isShowToast: true,
+      toastType: 'warning',
+    },
+  });
+};
+
+/**
+ * Action to fetch the mobile version list
+ *
+ * @param {Number} pageNumber
+ * @param {Number} size
+ *
+ */
+export const readMobileVersionsList =
+  (pageNumber, size, versionType, isAll = false, filter) =>
+  async (dispatch) => {
+    let queryParams = {};
+    pageNumber &amp;&amp; (queryParams['page'] = pageNumber);
+    size &amp;&amp; (queryParams['limit'] = size);
+    if (isAll) queryParams['limit'] = 999999;
+    const actionType =
+      VERSION_TYPE.ANDROID === versionType
+        ? isAll
+          ? SET_ALL_ANDROID_VERSION
+          : SET_MOBILE_VERSION_LIST_ANDROID
+        : VERSION_TYPE.IOS === versionType
+        ? isAll
+          ? SET_ALL_IOS_VERSION
+          : SET_MOBILE_VERSION_LIST_IOS
+        : isAll
+        ? SET_ALL_BACKEND_VERSION
+        : SET_MOBILE_VERSION_LIST_BACKEND;
+
+    const urlRequired =
+      VERSION_TYPE.ANDROID === versionType
+        ? endpoints.MOBILE_VERSION_LIST_ANDROID
+        : VERSION_TYPE.IOS === versionType
+        ? endpoints.MOBILE_VERSION_LIST_IOS
+        : endpoints.MOBILE_VERSION_LIST_BACKEND;
+
+    const onSuccess = (response) => {
+      dispatch({
+        type: actionType,
+        payload: response,
+      });
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+
+    const readMobileVersions = {
+      url: urlRequired,
+      method: VERSION_TYPE.BACKEND === versionType ? 'GET' : 'POST',
+      params: queryParams,
+      data: isObjectEmpty(filter) ? [] : filter,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: readMobileVersions});
+  };
+
+/**
+ * Reading the IOS Mobile version
+ * @param {Number} pageNumber
+ * @param {Number} size
+ * @param {Array} filter
+
+ */
+export const readIosMobileVersionsList =
+  (pageNumber, size, filter) => async (dispatch) => {
+    let queryParams = {};
+    pageNumber &amp;&amp; (queryParams['page'] = pageNumber);
+    size &amp;&amp; (queryParams['limit'] = size);
+
+    const onSuccess = (response) => {
+      dispatch({
+        type: SET_MOBILE_VERSION_LIST_IOS,
+        payload: response,
+      });
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+
+    const readMobileVersions = {
+      url: endpoints.MOBILE_VERSION_LIST_IOS,
+      method: 'POST',
+      params: queryParams,
+      data: isObjectEmpty(filter) ? [] : filter,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: readMobileVersions});
+  };
+
+/**
+ * Reading the IOS Mobile version
+ * @param {Number} pageNumber
+ * @param {Number} size
+ * @param {Array} filter
+
+ */
+
+export const readAndroidMobileVersionsList =
+  (pageNumber, size, filter) => async (dispatch) => {
+    let queryParams = {};
+    pageNumber &amp;&amp; (queryParams['page'] = pageNumber);
+    size &amp;&amp; (queryParams['limit'] = size);
+
+    const onSuccess = (response) => {
+      dispatch({
+        type: SET_MOBILE_VERSION_LIST_ANDROID,
+        payload: response,
+      });
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+
+    const readMobileVersions = {
+      url: endpoints.MOBILE_VERSION_LIST_ANDROID,
+      method: 'POST',
+      params: queryParams,
+      data: isObjectEmpty(filter) ? [] : filter,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: readMobileVersions});
+  };
+
+export const getMobileVersion = (id, versionType) => async (dispatch) => {
+  const actionType =
+    VERSION_TYPE.ANDROID === versionType
+      ? SET_MOBILE_VERSION_ANDROID
+      : VERSION_TYPE.IOS === versionType
+      ? SET_MOBILE_VERSION_IOS
+      : SET_MOBILE_VERSION_BACKEND;
+  const url =
+    VERSION_TYPE.ANDROID === versionType
+      ? endpoints.GET_MOBILE_VERSION_ANDROID
+      : VERSION_TYPE.IOS === versionType
+      ? endpoints.GET_MOBILE_VERSION_IOS
+      : endpoints.GET_MOBILE_VERSION_BACKEND;
+  const urlRequired = formatEndpoint(url, [id]);
+  const onSuccess = (response) => {
+    dispatch({
+      type: actionType,
+      payload: response,
+    });
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const readMobileVersions = {
+    url: urlRequired,
+    method: 'GET',
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: readMobileVersions});
+};
+
+/**
+ * Action to create the mobile version entry
+ * @param {Object} reqData
+ * @param {Function} customOnSuccess
+
+ */
+export const createMobileVersion =
+  (reqData, versionType, customOnSuccess) => async (dispatch) => {
+    const urlRequired =
+      VERSION_TYPE.ANDROID === versionType
+        ? endpoints.CREATE_MOBILE_VERSION_ANDROID
+        : VERSION_TYPE.IOS === versionType
+        ? endpoints.CREATE_MOBILE_VERSION_IOS
+        : endpoints.CREATE_MOBILE_VERSION_BACKEND;
+
+    const onSuccess = (response) => {
+      if (response)
+        dispatch(
+          setToast(ALERT_MESSAGE.MOBILE_VERSION_CREATE_SUCCESS, true, 'success')
+        );
+      customOnSuccess &amp;&amp; customOnSuccess(response);
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+    const create = {
+      url: urlRequired,
+      method: 'POST',
+      data: reqData,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: create});
+  };
+
+/**
+ * Action to update mobile version
+ * @param {Object} reqData
+ * @param {Function} customOnSuccess
+ */
+export const updateMobileVersion =
+  (reqData, versionType, customOnSuccess) => async (dispatch) => {
+    const urlRequired =
+      VERSION_TYPE.ANDROID === versionType
+        ? endpoints.UPDATE_MOBILE_VERSION_ANDROID
+        : VERSION_TYPE.IOS === versionType
+        ? endpoints.UPDATE_MOBILE_VERSION_IOS
+        : endpoints.UPDATE_MOBILE_VERSION_BACKEND;
+
+    const onSuccess = (response) => {
+      if (response)
+        dispatch(
+          setToast(ALERT_MESSAGE.MOBILE_VERSION_UPDATE_SUCCESS, true, 'success')
+        );
+      customOnSuccess &amp;&amp; customOnSuccess(response);
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+    const update = {
+      url: urlRequired,
+      method: 'POST',
+      data: reqData,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: update});
+  };
+/**
+ * Action to soft delete mobile version
+ * @param {*} id
+
+ */
+export const disableMobileVersion =
+  (id, versionType, customOnSuccess, customOnFaliure) => async (dispatch) => {
+    const url =
+      VERSION_TYPE.ANDROID === versionType
+        ? endpoints.DELETE_MOBILE_VERSION_ANDROID
+        : VERSION_TYPE.IOS === versionType
+        ? endpoints.DELETE_MOBILE_VERSION_IOS
+        : endpoints.DELETE_MOBILE_VERSION_BACKEND;
+    const urlRequired = formatEndpoint(url, [id]);
+    const onSuccess = (response) => {
+      dispatch(
+        setToast(ALERT_MESSAGE.MOBILE_VERSION_DELETE_SUCCESS, true, 'success')
+      );
+      customOnSuccess &amp;&amp; customOnSuccess(response);
+    };
+    const onFailure = (value) => {
+      customOnFaliure &amp;&amp; customOnFaliure();
+      dispatch(
+        setToast(ALERT_MESSAGE.MOBILE_VERSION_DELETE_ERROR, true, 'warning')
+      );
+    };
+    const deleteData = {
+      url: urlRequired,
+      method: 'POST',
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+      handleError: false,
+    };
+    dispatch({type: API, payload: deleteData});
+  };
+
+/**
+ * API to update Mapping Versions
+ * @param {Object} reqData
+ * @param {Function} customOnSuccess
+
+ */
+export const updateVersionMapping =
+  (reqData, customOnSuccess) => async (dispatch) => {
+    const onSuccess = (response) => {
+      if (response)
+        dispatch(
+          setToast(ALERT_MESSAGE.MOBILE_VERSION_UPDATE_SUCCESS, true, 'success')
+        );
+      customOnSuccess &amp;&amp; customOnSuccess(response);
+    };
+    const onFailure = (value) => ({
+      type: REDIRECT,
+      payload: value,
+    });
+    const update = {
+      url: endpoints.VERSION_MAPPING_UPDATE,
+      method: 'POST',
+      data: reqData,
+      authorization: true,
+      onSuccess,
+      onFailure,
+      showLoader: true,
+    };
+    dispatch({type: API, payload: update});
+  };
+
+export const getVersionMapping = (id) => async (dispatch) => {
+  const urlRequired = formatEndpoint(endpoints.GET_VERSION_MAPPING, [id]);
+  const onSuccess = (response) => {
+    dispatch({
+      type: SET_MOBILE_VERSION_MAPPING,
+      payload: response,
+    });
+  };
+  const onFailure = (value) => ({
+    type: REDIRECT,
+    payload: value,
+  });
+  const update = {
+    url: urlRequired,
+    method: 'GET',
+    authorization: true,
+    onSuccess,
+    onFailure,
+    showLoader: true,
+  };
+  dispatch({type: API, payload: update});
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#acknowledgeRebatePaid">acknowledgeRebatePaid</a></li><li><a href="global.html#acknowledgeSubventionPaid">acknowledgeSubventionPaid</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#captalizeEveryWordOfSentence">captalizeEveryWordOfSentence</a></li><li><a href="global.html#checkifReportsDataInSync">checkifReportsDataInSync</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkifValueExists">checkifValueExists</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#checkValue">checkValue</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertMedicationName">convertMedicationName</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createHospitalIpConfig">createHospitalIpConfig</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createMobileVersion">createMobileVersion</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteHospitalIpConfig">deleteHospitalIpConfig</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#disableMobileVersion">disableMobileVersion</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getAllApprovalRegPatients">getAllApprovalRegPatients</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getApprovalRegPatients">getApprovalRegPatients</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDocumentName">getDocumentName</a></li><li><a href="global.html#getDocumentType">getDocumentType</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getMonthsDataSorted">getMonthsDataSorted</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getReportSyncFlag">getReportSyncFlag</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#handleRegRequest">handleRegRequest</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#isValueNull">isValueNull</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LabelValue">LabelValue</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readAndroidMobileVersionsList">readAndroidMobileVersionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitalIpConfigList">readHospitalIpConfigList</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readIosMobileVersionsList">readIosMobileVersionsList</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readMobileVersionsList">readMobileVersionsList</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#selectMonthWithData">selectMonthWithData</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryReduxEnhancer">sentryReduxEnhancer</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setNewToken">setNewToken</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setSelectedRole">setSelectedRole</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setupStore">setupStore</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showHospitalIpConfig">showHospitalIpConfig</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#sortObjectKeysByName">sortObjectKeysByName</a></li><li><a href="global.html#splitCamelCaseString">splitCamelCaseString</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateHospitalIpConfig">updateHospitalIpConfig</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMobileVersion">updateMobileVersion</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#updateVersionMapping">updateVersionMapping</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyOtp">verifyOtp</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri May 19 2023 18:39:27 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

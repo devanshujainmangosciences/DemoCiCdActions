@@ -1,0 +1,148 @@
+/**
+ * = Custom forms
+ */
+
+.custom-control-label {
+  // Background-color and (when enabled) gradient
+  &:before {
+    box-shadow: $custom-control-box-shadow;
+    @if $enable-transitions {
+      transition: $input-transition;
+    }
+  }
+
+  span {
+    position: relative;
+    top: 2px;
+  }
+}
+
+.custom-control-label {
+  margin-bottom: 0;
+}
+
+.custom-control-input {
+  &:active ~ .custom-control-label::before {
+    border-color: $custom-control-indicator-active-border-color;
+  }
+}
+
+// Custom File Input
+
+.custom-file-label {
+  background-color: #f3f3f5;
+
+  &::after {
+    background-color: #f3f3f5;
+  }
+}
+
+//Select
+.custom-select {
+  font-size: $input-btn-font-size;
+  box-shadow: none;
+
+  &.custom-select-shadow {
+    box-shadow: $input-box-shadow;
+    transition: box-shadow 0.15s ease;
+
+    &:focus {
+      box-shadow: $shadow-input-focus;
+    }
+  }
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+// Inbox star
+.rating-star {
+  &.star-lg {
+    label {
+      margin-bottom: 0.5rem;
+      &::before {
+        font-size: $font-size-xl;
+      }
+    }
+  }
+  label {
+    position: relative;
+    margin-bottom: 0;
+    cursor: pointer;
+    color: $light;
+    &:before {
+      content: '\f005';
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      transition: all 0.2s ease;
+      font-size: 1.0625rem;
+    }
+  }
+  input {
+    position: absolute;
+    z-index: -1;
+    opacity: 0;
+  }
+
+  > input:checked ~ label {
+    color: $warning;
+  }
+
+  > label {
+    &:hover {
+      color: $warning;
+    }
+    &:hover ~ label {
+      color: $warning;
+    }
+  }
+}
+.add-form {
+  button {
+    margin-top: 10px;
+  }
+}
+.custom-input {
+  svg {
+    position: relative;
+    left: 10px;
+    bottom: 29px;
+  }
+  input {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid #c8cad6;
+    outline: none;
+    height: 40px;
+    color: #323036;
+    background-color: transparent;
+    padding-left: 45px;
+    padding-top: 8px;
+    transition: 0.5s;
+    box-sizing: border-box;
+    font-weight: medium;
+    font-size: 16px;
+    font-family: 'roboto';
+    letter-spacing: 0.16px;
+    margin-top: 25px;
+  }
+
+  input[type='email']:focus.doctor,
+  input[type='text']:focus.doctor,
+  input[type='password']:focus.doctor {
+    border-bottom: 2px solid $doctor;
+  }
+
+  input[type='email']:focus.patient,
+  input[type='text']:focus.patient,
+  input[type='password']:focus.patient {
+    border-bottom: 2px solid $patient;
+  }
+
+  input[type='email']:focus.pharma,
+  input[type='text']:focus.pharma,
+  input[type='password']:focus.pharma {
+    border-bottom: 2px solid $pharmer;
+  }
+}

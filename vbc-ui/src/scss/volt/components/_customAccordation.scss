@@ -1,0 +1,94 @@
+.custom-accordation {
+  h2 {
+    button {
+      font-family: Roboto, sans-serif;
+      font-size: $font-size-sm-2;
+    }
+  }
+
+  .accordion-item {
+    background: #f78f27 0% 0% no-repeat padding-box;
+    box-shadow: 0px 4px 8px #00000008;
+    border-radius: 8px;
+    opacity: 1;
+    border: white;
+  }
+
+  .accordion-button {
+    border: 0;
+    background: #f78f27;
+    color: white;
+  }
+
+  .accordion-button:not(.collapsed) {
+    color: #22273a;
+    background-color: #f78f27;
+    border: 0;
+    border-radius: 8px 8px 0px 0px;
+    color: white;
+  }
+  .accordion-button::after {
+    background-image: url(/src/assets/icons/downAccordian.svg);
+    background-size: 16px;
+  }
+  .accordion-button:not(.collapsed)::after {
+    background-image: url(/src/assets/icons/downAccordian.svg);
+    transform: rotate(-180deg);
+    background-size: 16px;
+  }
+
+  .accordion-button:focus {
+    box-shadow: none;
+  }
+
+  .accordion-body {
+    padding: 1rem;
+    background: #ffffff 0% 0% no-repeat padding-box;
+    box-shadow: 0px 4px 8px #00000008;
+    border-radius: 0px 0px 8px 8px;
+    opacity: 1;
+    border: white;
+    :last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  .accordion-collapse {
+    border: 0;
+  }
+}
+
+.document-accordion {
+  font-size: $font-size-sm;
+  .accordion-item {
+    background-color: #fff3e8;
+    // border: 0.0625rem solid #ffd5ab;
+  }
+  .accordion-button {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    padding: 0.6rem;
+    background-color: #ffd5ab;
+  }
+  .accordion-body {
+    padding: 0.5rem;
+  }
+
+  .accordion-button:not(.collapsed) {
+    background-color: #ffd5ab;
+  }
+  .accordion-item:first-of-type {
+    border-radius: 0 !important;
+  }
+
+  .accordion-item:last-of-type {
+    border-radius: 0 !important;
+  }
+
+  .accordion-item:first-of-type .accordion-button {
+    border-radius: 0;
+  }
+  .accordion-item:last-of-type .accordion-button.collapsed {
+    border-radius: 0;
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "home": "Home",
+  "users": "Users",
+  "new": "New",
+  "firstName": "First Name",
+  "enterFirstName": "Enter First Name",
+  "middleName": "Middle Name",
+  "enterMiddleName": "Enter Middle Name",
+  "lastName": "Last Name",
+  "enterLastName": "Enter Last Name",
+  "email": "Email address",
+  "enterEmail": "Enter email",
+  "selectGender": "Select Gender",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "they": "They",
+  "other": "Others",
+  "mobileNumber": "Mobile Number",
+  "enterMobileNumber": "Enter Mobile Number",
+  "dob": "Date of Birth",
+  "userRole": "User Role",
+  "update": "update",
+  "add": "add",
+  "invalidDob": "Invalid Date: Age should be between 6 Months-100 years"
+  
+}

@@ -1,0 +1,17 @@
+{
+  "dataVariables": "ExperiencesDataVariables",
+  "readListAction": "readCities",
+  "deleteDataAction": "deleteCity",
+  "reduxDataListState": "state.template?.masterData?.experiences",
+  "reduxPaginationData": "state.template?.masterData?.experiences?.pagination",
+  "tableHeadersPath": "tableHeadersExperiences",
+  "filterConfig": "cityFilters",
+  "updateData": "updateCity",
+  "createData": "createCity",
+  "showData": "showCity",
+  "newPath": "NewCity",
+  "viewPath": "ViewCity",
+  "updatePath": "UpdateCity",
+  "listPath": "Cities",
+  "reduxSelectedData": "state.state.selectedCity"
+}

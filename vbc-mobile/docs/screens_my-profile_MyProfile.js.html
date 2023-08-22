@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/my-profile/MyProfile.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/my-profile/MyProfile.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Screen component for Profile
+ */
+import React, {useState, useEffect, useCallback} from 'react';
+import {View, Image, ScrollView} from 'react-native';
+import {useSelector} from 'react-redux';
+import {
+  financialInformationIcon,
+  myProfileIcon,
+  addressDetailsIcon,
+  hospitalDetailsIcon,
+} from 'assets/icons';
+import {useTranslation} from 'react-i18next';
+import {AppText, Button, Container, Loader} from 'components';
+import {
+  getMasterDataApiCall,
+  getRegistrationCompleteProfileApiCall,
+} from 'apis';
+import {formatterForGetCompleteProfile} from 'screens/edit-profile/formatter';
+import {useNavigation} from '@react-navigation/native';
+import {getDateInDMYHyphenFormat, getUserRole} from 'utils';
+import {
+  addressDetailFields,
+  financialDetailFields,
+  hospitalDetailFields,
+  patientDetailFields,
+  personalDetailFields,
+} from './formFields';
+import styles from './styles';
+import {MASTER_DATA_COMPLETE_PROFILE} from 'constants/appConstants';
+
+const MyProfile = () => {
+  const {t} = useTranslation(['myProfile']);
+  const {navigate} = useNavigation();
+  const {loginData, masterData} = useSelector((state) => state.login);
+  const initialFormFieldsState = {
+    firstName: null,
+    middleName: null,
+    lastName: null,
+    email: null,
+    gender: null,
+    genderName: null,
+    birthDate: null,
+    birthDateName: null,
+    panNumber: null,
+    aadharNumber: null,
+    homeNumber: null,
+    permanentAddress: null,
+    permanentCity: null,
+    permanentState: null,
+    permanentCountry: null,
+    permanentPinCode: null,
+    presentAddress: null,
+    presentCity: null,
+    presentState: null,
+    presentCountry: null,
+    presentPinCode: null,
+    typeOfCancerId: null,
+    drugId: null,
+    drugIdName: null,
+    hospitalId: null,
+    hospitalIdName: null,
+    doctorId: null,
+    doctorIdName: null,
+    mrn: null,
+    patientDiagnosis: null,
+    patientDrugName: null,
+    patientHospitalName: null,
+    relationToPatient: null,
+  };
+
+  const [formFields, setFormFields] = useState(initialFormFieldsState);
+  const [fullPageLoading, setFullPageLoading] = useState(true); // to show loader at full page
+  const {userPermissions} = useSelector((state) => state.login);
+  /**
+   * fetch user profile details
+   */
+  useEffect(() => {
+    loginData &amp;&amp; fetchRegistrationCompleteProfileUserData();
+  }, []);
+
+  // fetch master data based on if we jave states in master data as My Profile has dependency on states
+  const fetchMasterDataService = async () => {
+    if (!masterData?.states) {
+      const {apiResponse: masterDataApiResponse} = await getMasterDataApiCall(
+        MASTER_DATA_COMPLETE_PROFILE
+      );
+      return masterDataApiResponse;
+    }
+  };
+
+  /**
+   * fetching user profile details by calling api
+   * and then formatting the response of the api
+   * with the component states
+   */
+  const fetchRegistrationCompleteProfileUserData = async () => {
+    const loggedInUserRole = getUserRole(userPermissions?.data);
+    const isApplicant = loggedInUserRole === 'applicant';
+    const {access_token} = loginData;
+    const masterDataApiResponse = fetchMasterDataService();
+    if (masterDataApiResponse &amp;&amp; masterData?.states) {
+      const {apiResponse} = await getRegistrationCompleteProfileApiCall(
+        access_token,
+        isApplicant
+      );
+      if (apiResponse) {
+        const formattedData = formatterForGetCompleteProfile(
+          apiResponse.data?.data,
+          masterData
+        );
+        setFormFields(formattedData);
+      }
+      setFullPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (masterData?.states) {
+      fetchRegistrationCompleteProfileUserData();
+    }
+  }, [masterData?.states]);
+
+  // When user clicks on Edit profile button
+  const handlePressEdit = () => {
+    navigate('EditProfile', {
+      fromScreen: 'MyProfile',
+    });
+  };
+
+  if (fullPageLoading) {
+    return (
+      &lt;View style={styles.loaderContainer}>
+        &lt;Loader />
+      &lt;/View>
+    );
+  }
+
+  // renders form based on different sections dynamically
+  const renderForm = (item) => {
+    if (item.valueKey === 'uniqueId' &amp;&amp; isApplicant) {
+      return null;
+    } else {
+      return (
+        &lt;View style={styles.valuesContainer}>
+          &lt;AppText style={styles.valueHeadingText}>{t(item.heading)}:&lt;/AppText>
+          &lt;AppText style={styles.valueText}>
+            {item.valueKey === 'birthDateName'
+              ? getDateInDMYHyphenFormat(formFields[item.valueKey])
+              : formFields[item.valueKey] || '-'}
+          &lt;/AppText>
+        &lt;/View>
+      );
+    }
+  };
+  const loggedInUserRole = getUserRole(userPermissions?.data);
+  const isApplicant = loggedInUserRole === 'applicant';
+
+  return (
+    &lt;ScrollView showsVerticalScrollIndicator={false}>
+      &lt;View style={styles.container}>
+        {/* KEPT DELIBERATELY. Required for profile image functionality in future */}
+
+        {/* &lt;Container style={styles.profilePhotoContainer}>
+          &lt;View style={styles.profilePhotoSubContainer}>
+            &lt;View style={styles.profilePhotoView}>
+              &lt;Image
+                source={profileIcon}
+                resizeMode={'contain'}
+                style={styles.profileIcon}
+              />
+            &lt;/View> */}
+        {/* KEPT DELIBERATELY. Required for update profile functionality in future */}
+        {/* &lt;Button style={styles.profileButton}>
+              &lt;AppText style={styles.buttonText}>
+                {t('updateProfilePicture')}
+              &lt;/AppText>
+            &lt;/Button> */}
+        {/* &lt;/View>
+        &lt;/Container> */}
+
+        &lt;Container style={styles.accountDetailsContainer}>
+          &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+            &lt;Image
+              source={myProfileIcon}
+              resizeMode={'contain'}
+              style={styles.reviewIcon}
+            />
+            &lt;AppText style={styles.financialInfo}>
+              {t('personalDetails')}
+            &lt;/AppText>
+          &lt;/View>
+          {personalDetailFields.map((item) => renderForm(item))}
+        &lt;/Container>
+
+        &lt;Container style={styles.addressDetailsContainer}>
+          &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+            &lt;Image
+              source={addressDetailsIcon}
+              resizeMode={'contain'}
+              style={styles.reviewIcon}
+            />
+            &lt;AppText style={styles.financialInfo}>
+              {t('addressDetails')}
+            &lt;/AppText>
+          &lt;/View>
+          {addressDetailFields.map((item) => renderForm(item))}
+        &lt;/Container>
+
+        {!isApplicant &amp;&amp; (
+          &lt;Container style={styles.hospitalDetailsContainer}>
+            &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+              &lt;Image
+                source={hospitalDetailsIcon}
+                resizeMode={'contain'}
+                style={styles.reviewIcon}
+              />
+              &lt;AppText style={styles.financialInfo}>
+                {t('hospitalDetails')}
+              &lt;/AppText>
+            &lt;/View>
+            {hospitalDetailFields.map((item) => renderForm(item))}
+          &lt;/Container>
+        )}
+
+        {isApplicant &amp;&amp; (
+          &lt;Container style={styles.patientDetailsContainer}>
+            &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+              &lt;Image
+                source={hospitalDetailsIcon}
+                resizeMode={'contain'}
+                style={styles.reviewIcon}
+              />
+              &lt;AppText style={styles.financialInfo}>
+                {t('patientDetails')}
+              &lt;/AppText>
+            &lt;/View>
+            {patientDetailFields.map((item) => renderForm(item))}
+          &lt;/Container>
+        )}
+
+        &lt;Container style={styles.financialDetailsContainer}>
+          &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+            &lt;Image
+              source={financialInformationIcon}
+              resizeMode={'contain'}
+              style={styles.reviewIcon}
+            />
+            &lt;AppText style={styles.financialInfo}>
+              {t('financialInformation')}
+            &lt;/AppText>
+          &lt;/View>
+          {financialDetailFields.map((item) => renderForm(item))}
+        &lt;/Container>
+
+        &lt;Button
+          style={styles.buttonContainer}
+          onPressEvent={handlePressEdit}
+          label={t('editProfile')}
+        />
+      &lt;/View>
+    &lt;/ScrollView>
+  );
+};
+
+export default MyProfile;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

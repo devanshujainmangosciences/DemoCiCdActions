@@ -1,0 +1,192 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - 'demo-ci-cd-ios'
+      - 'pre-prod'
+    paths:
+      - 'vbc-mobile/**'
+
+defaults:
+  run:
+    working-directory: 'vbc-mobile'
+
+jobs:
+  android-build-dev:
+    env:
+      commitmsg: ${{ github.event.head_commit.message }}
+    name: Android Build Dev
+    environment: 'dev'
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    defaults:
+      run:
+        working-directory: vbc-mobile
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Cache Node Modules
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: |
+            **/node_modules
+            **/.eslintcache
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 300000
+
+      - name: 'Create env file'
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 'Run Bundler'
+        run: yarn start-cd-dev
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+
+      - name: Make Gradlew Executable
+        run: cd android && chmod +x ./gradlew
+
+      - name: Build Android Release
+        run: |
+          cd android && ./gradlew clean && ./gradlew app:assembleRelease
+
+      - name: Sign APK
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+
+      - name: Upload APK
+        id: uploadArtifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.ANDROID_FIREBASE_APP_ID_DEV }}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: mango-internal-team
+          file: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release/app-release.apk
+          releaseNotes: ${{env.commitmsg}}
+
+  android-build-test:
+    env:
+      commitmsg: ${{ github.event.head_commit.message }}
+    name: Android Build Test
+    environment: 'test'
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/pre-prod'
+    defaults:
+      run:
+        working-directory: vbc-mobile
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Cache Node Modules
+        uses: actions/cache@v2
+        id: yarn-cache
+        with:
+          path: |
+            **/node_modules
+            **/.eslintcache
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 300000
+
+      - name: 'Create env file'
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 'Run Bundler'
+        run: yarn start-cd-test
+
+      - name: Cache Gradle Wrapper
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-caches-
+
+      - name: Make Gradlew Executable
+        run: cd android && chmod +x ./gradlew
+
+      - name: Build Android Release
+        run: |
+          cd android && ./gradlew clean && ./gradlew app:assembleRelease
+
+      - name: Sign APK
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+
+      - name: Upload APK
+        id: uploadArtifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.ANDROID_FIREBASE_APP_ID_TEST }}
+          token: ${{secrets.FIREBASE_TOKEN}}
+          groups: mango-internal-team
+          file: ${{ github.workspace}}/vbc-mobile/android/app/build/outputs/apk/release/app-release.apk
+          releaseNotes: ${{env.commitmsg}}

@@ -1,0 +1,66 @@
+/**
+ * = Footers
+ */
+
+.footer {
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $white 0% 0% no-repeat padding-box;
+  z-index: 200;
+  padding: 10px;
+  a {
+    color: $text-muted;
+    font: normal normal normal 14px/16px Roboto;
+  }
+  span {
+    margin-left: 20px;
+    color: $text-muted;
+    font: normal normal normal 14px/16px Roboto;
+  }
+  .footer-language-link {
+    font-size: $font-size-sm;
+    i {
+      font-size: 0.75rem;
+    }
+  }
+  .copyright {
+    font-size: $font-size-sm;
+  }
+
+  .pull-center {
+    display: inline-block;
+    float: none;
+  }
+}
+@include media-breakpoint-down(sm) {
+  .footer {
+    height: auto;
+  }
+}
+
+.registration-pages-footer {
+  .footer {
+    background: white;
+    border-top: 1px solid #d3cccc;
+    // @include media-breakpoint-up(lg) {
+    //   padding: 28px 20px 0px 0px;
+    // }
+    .left-23 {
+      margin-left: 23px;
+    }
+    .left-18 {
+      margin-left: 18px;
+    }
+
+    p {
+      background: none !important;
+    }
+    a {
+      font-size: 12px;
+      color: #363636;
+      background: none !important;
+    }
+  }
+}

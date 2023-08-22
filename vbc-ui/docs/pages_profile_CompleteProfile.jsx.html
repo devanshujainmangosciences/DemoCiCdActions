@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/profile/CompleteProfile.jsx</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/profile/CompleteProfile.jsx</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This Component renders a form , user needs to compelete this form in order to complete his profile
+ * onSubmitting this form user profile details are submitted to the server
+ */
+import React, {useState, useEffect, Suspense} from 'react';
+import {Container, Image, Row, Col, Form} from '@themesberg/react-bootstrap';
+import {useAppSelector, useAppDispatch} from '@/redux/redux-hooks';
+import {MangoCancerCareSVG} from '@/assets/images';
+import {useTranslation} from 'react-i18next';
+import PropTypes from 'prop-types';
+import {
+  myProfile,
+  drugsList,
+  hospitalsList,
+  setToast,
+  doctorsList,
+  completeProfile,
+  getCitiesFromStateId,
+  getMasterData,
+  getUserPermissions,
+  setSelectedRole,
+} from '@/actions';
+import {
+  aadharValidator,
+  capitalizeFirstLetter,
+  dobValidator,
+  emailValidator,
+  mobileValidator,
+  panValidator,
+  captalizeEveryWordOfSentence,
+  setNewToken,
+  forceLogout,
+} from '@/services/utility';
+import {
+  ALERT_MESSAGE,
+  MASTER_DATA_COMPLETE_PROFILE,
+  ROLES,
+  ROLE_ID_MAP,
+  USER_SELECTED_ROLE,
+  SELECTED_ROLE_NAME,
+} from '../../constants';
+import {CustomModal} from '@/components';
+import TermsOfUse from '@/pages/terms-policy/TermsOfUse';
+import NumberFormat from 'react-number-format';
+import {useLocation, useNavigate} from 'react-router-dom';
+import SuspenseFallbackLoader from '@/components/SuspenseFallbackLoader';
+import {secureLocalStorage} from '@/services/web.storage';
+
+const WaitingForApproval = React.lazy(() => import('./WaitingForApproval'));
+const CompleteProfile = () => {
+  const {t} = useTranslation(['completeProfile']);
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const drugList = useAppSelector((state) => state.template.drugList);
+  const doctorList = useAppSelector((state) => state.template.doctorList);
+  const hospitalList = useAppSelector((state) => state.template.hospitalList);
+  const [drugListState, setdrugListState] = useState([]);
+  const [gender, setGender] = useState('');
+  const [drugId, setDrugId] = useState('');
+  const [doctorId, setDoctorId] = useState('');
+  const [hospitalId, setHospitalId] = useState('');
+  const [diagnosis, setDiagnosis] = useState('');
+  const [mrn, setMrn] = useState('');
+  const [isAccepted, setIsAccepted] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [dob, setDob] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const initialErrorState = {
+    emailWarning: false,
+    mobileWarning: false,
+    aadharError: false,
+    panError: false,
+    dobWarning: false,
+  };
+  const [errors, seterrors] = useState(initialErrorState);
+  const [permanentAddress, setPermanentAddress] = useState('');
+  const [permanentCity, setPermanentCity] = useState('');
+  const [permanentState, setPermanentState] = useState('');
+  const [permanentCountry, setPermanentCountry] = useState('');
+  const [permanentPinCode, setPermanentPinCode] = useState('');
+  const [isChecked, setIsChecked] = useState(false);
+  const [presentAddress, setPresentAddress] = useState('');
+  const [presentCity, setPresentCity] = useState('');
+  const [presentState, setPresentState] = useState('');
+  const [presentCountry, setPresentCountry] = useState('');
+  const [presentPinCode, setPresentPinCode] = useState('');
+  const [panNumber, setPanNumber] = useState('');
+  const [aadharNumber, setAadharNumber] = useState('');
+  const [isApproved, setisApproved] = useState(false);
+  const [termsModal, settermsModal] = useState(false);
+  const myProfileData = useAppSelector((state) => state.app.myProfile);
+  const userSelectedRole = location?.state?.selectedRole;
+  const [userinfoState, setUserInfoState] = useState(null);
+  const isApplicant = parseInt(userSelectedRole) === ROLE_ID_MAP.applicant;
+  const isPatient = parseInt(userSelectedRole) === ROLE_ID_MAP.patient;
+  const masterData = useAppSelector((state) => state.template.masterData);
+  const userInfo = useAppSelector((state) => state.app?.keycloak?.userInfo);
+  const userDetails = useAppSelector(
+    (state) => state.app?.userPermissions?.user
+  );
+  const flags = useAppSelector((state) => state.app?.userPermissions?.flags);
+  const {aadharError, dobWarning, emailWarning, mobileWarning, panError} =
+    errors;
+  const history = useNavigate();
+  // console.log('IS PATIENT=>', isPatient);
+  // console.log('IS APPLICANT=>', isApplicant);
+  // console.log('USER SELECTED ROLE=>', userSelectedRole);
+
+  /**
+   * This Callback will set Manufacturer details to corresponding
+   * states if Manufacturer and Manufacturer id is not null else it will
+   * set all states empty
+   */
+  useEffect(() => {
+    if (isChecked) {
+      onStateChange(permanentState, 'presentState');
+      setPresentAddress(permanentAddress);
+      setPresentCity(permanentCity);
+      setPresentState(permanentState);
+      setPresentCountry(permanentCountry);
+      setPresentPinCode(permanentPinCode);
+    } else {
+      setPresentAddress('');
+      setPresentCity('');
+      setPresentState('');
+      setPresentCountry('');
+      setPresentPinCode('');
+    }
+  }, [
+    isChecked,
+    permanentAddress,
+    permanentCity,
+    permanentPinCode,
+    permanentCountry,
+    permanentState,
+  ]);
+
+  /**
+   * This Callback acts like ComponentDidMount and ComponentDidUpdate which is used to dispatch
+   * showManufacturer Action if Manufacturer id is present to get
+   * Manufacturers array
+   */
+  useEffect(() => {
+    if (isApplicant) {
+      if (!myProfileData) {
+        dispatch(myProfile(isApplicant));
+      }
+    }
+  }, [dispatch, myProfileData, isApplicant]);
+
+  /**
+   * UseEffect to set profileData when avaliable
+   */
+  useEffect(() => {
+    if (myProfileData) {
+      setGender(myProfileData.gender);
+      setEmail(myProfileData.email);
+      setMobile(myProfileData.mobile);
+      setFirstName(myProfileData.firstName);
+      setMiddleName(myProfileData.middleName);
+      setLastName(myProfileData.lastName);
+      setDob(myProfileData.birthDate);
+      setPermanentAddress(myProfileData.permanentAddress);
+      setPermanentCity(myProfileData.permanentCity);
+      setPermanentState(myProfileData.permanentState);
+      setPermanentCountry(myProfileData.permanentCountry);
+      setPermanentPinCode(myProfileData.permanentPinCode);
+      setPresentAddress(myProfileData.presentAddress);
+      setPresentCity(myProfileData.presentCity);
+      setPresentState(myProfileData.presentState);
+      setPresentCountry(myProfileData.presentCountry);
+      setPresentPinCode(myProfileData.presentPinCode);
+      setPanNumber(myProfileData.panNumber);
+      setAadharNumber(myProfileData.aadharNumber);
+    }
+  }, [myProfileData]);
+
+  /**
+   * UseEffect to set the isApproved flag
+   */
+  useEffect(() => {
+    if (flags) setisApproved(flags.accepted);
+  }, [flags]);
+
+  /**
+   * Dispatch drugsList action when druglist or isPatient is empty or false
+   */
+  useEffect(() => {
+    if (!drugList &amp;&amp; isPatient &amp;&amp; isApproved) {
+      dispatch(drugsList());
+    } else if (drugList) {
+      const requiredDrugsList = drugList.filter((drug) => drug.visible);
+      setdrugListState(requiredDrugsList);
+    }
+  }, [dispatch, drugList, isPatient, isApproved]);
+
+  /**
+   * Lifecycle to get the master data if not avaliable in the complete profile page
+   */
+  useEffect(() => {
+    if (!masterData?.countries &amp;&amp; (isApproved || isApplicant))
+      dispatch(getMasterData(MASTER_DATA_COMPLETE_PROFILE));
+  }, [masterData, isApproved]);
+
+  /**
+   * This Callback acts like ComponentDidMount and ComponentDidUpdate which is used to dispatch
+   * doctorsList Action if Manufacturer id is present to get
+   * doctorsList array
+   */
+  useEffect(() => {
+    if (hospitalId &amp;&amp; isApproved) {
+      dispatch(doctorsList(hospitalId));
+    }
+  }, [dispatch, hospitalId, isApproved]);
+
+  /**
+   * This Callback acts like ComponentDidMount and ComponentDidUpdate which is used to dispatch
+   * hospitalsList Action if Manufacturer id is present to get
+   * hospitalsList array
+   */
+  useEffect(() => {
+    if (!hospitalList &amp;&amp; isPatient &amp;&amp; isApproved) {
+      dispatch(hospitalsList());
+    }
+  }, [dispatch, hospitalList, isPatient, isApproved]);
+
+  /**
+   * Checks for the user info and updated the state
+   */
+  useEffect(() => {
+    if (userInfo &amp;&amp; isApproved) {
+      const data = {...userInfo};
+      const userName = data?.preferred_username;
+      if (userName) {
+        const isEmail = data?.email?.includes('@');
+        const isMobile = !userName.includes('@');
+        data.isEmail = isEmail;
+        data.isMobile = isMobile;
+      }
+      if (data?.isEmail) setEmail(data?.email);
+      if (data?.isMobile) setMobile(userName);
+      setUserInfoState(data);
+      // console.log('DATA=>', data);
+    }
+  }, [userInfo, isApproved]);
+
+  /* The below code is a React useEffect hook that runs when the dependencies `userDetails` and
+`isApproved` change. It checks if the `userDetails` object exists and if the user is a patient and
+is approved. If these conditions are met, it splits the user's name into first, middle, and last
+name using the `split()` method. It then sets the state variables `firstName`, `middleName`,
+`lastName`, and `gender` based on the values extracted from the `userDetails` object. If the last
+name is empty, it sets the `lastName` state variable */
+  useEffect(() => {
+    if (userDetails &amp;&amp; isPatient &amp;&amp; isApproved) {
+      const splitedName = userDetails.name.split(' ');
+
+      const FName = splitedName[0];
+      const MName = splitedName[1];
+      const LName = splitedName[2];
+
+      if (LName === '') setLastName(MName);
+      else {
+        setMiddleName(MName);
+        setLastName(LName);
+      }
+      setFirstName(FName);
+
+      setGender(userDetails.gender);
+    }
+  }, [userDetails, isApproved]);
+
+  /**
+   * Submits the user entered data to completeProfile action only if the user accept the terms and conditions
+   * @param {any} e
+   *
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      firstName: captalizeEveryWordOfSentence(firstName),
+      middleName: captalizeEveryWordOfSentence(middleName),
+      lastName: captalizeEveryWordOfSentence(lastName),
+      gender,
+      birthDate: dob,
+      permanentAddress: captalizeEveryWordOfSentence(permanentAddress),
+      permanentCity: permanentCity,
+      permanentState: permanentState,
+      permanentCountry: permanentCountry,
+      permanentPinCode: permanentPinCode,
+      presentAddress: captalizeEveryWordOfSentence(presentAddress),
+      presentCity: presentCity,
+      presentState: presentState,
+      presentCountry: presentCountry,
+      presentPinCode: presentPinCode,
+      panNumber: panNumber ? panNumber.toUpperCase() : null,
+      aadharNumber: aadharNumber,
+      email: email,
+    };
+    if (isPatient) {
+      data['doctorId'] = parseInt(doctorId);
+      data['drugId'] = parseInt(drugId);
+      data['hospitalId'] = parseInt(hospitalId);
+      data['diagnosis'] = diagnosis;
+      data['mrn'] = mrn;
+      data['mobileNumber'] = mobile;
+    }
+    if (isApplicant) {
+      data['mobile'] = mobile;
+    }
+    if (dobWarning) return;
+    if (isAccepted) {
+      const onSuccess = () => {
+        dispatch(myProfile(isApplicant));
+        dispatch(getUserPermissions());
+      };
+      dispatch(completeProfile(data, history, isApplicant, onSuccess));
+    } else {
+      dispatch(setToast(t('acceptTerms&amp;conditions'), true, 'warning'));
+    }
+  };
+  /**
+   * Validates the Date of Birth and set warning if
+   * regex test fails
+   * @param {String} value
+   */
+  const handleDob = (value) => {
+    seterrors({...errors, dobWarning: dobValidator(value)});
+    setDob(value);
+  };
+  /**
+   * This function validates an email input and updates the errors state accordingly.
+   *  @param {String} value
+   */
+  const emailValidatorFunction = (value) => {
+    setEmail(value);
+
+    if (!emailValidator(value)) {
+      seterrors({...errors, emailWarning: false});
+    } else {
+      seterrors({...errors, emailWarning: true});
+    }
+  };
+  /**
+   * This function sets the mobile value and checks if it passes a mobile validation function, updating
+   * the errors state accordingly.
+   *  @param {String} value
+   */
+  const mobileValidatorFunction = (value) => {
+    setMobile(value);
+    if (!mobileValidator(value)) {
+      seterrors({...errors, mobileWarning: false});
+    } else {
+      seterrors({...errors, mobileWarning: true});
+    }
+  };
+
+  /**
+   * Validating pan card
+   * @param {Event} e
+   */
+  const validatePanNumber = (e) => {
+    const value = e.target.value;
+    setPanNumber(value);
+    seterrors({...errors, panError: panValidator(value)});
+  };
+
+  /**
+   * Validating Aadhar card
+   * @param {Event} e
+   */
+  const validateAadharCardNumber = (data) => {
+    const value = data.value;
+    setAadharNumber(value);
+    seterrors({
+      ...errors,
+      aadharError: aadharValidator(value),
+    });
+  };
+
+  /**
+   * The function sets the state of a termsModal variable to false, effectively closing a modal.
+   */
+  const handleModalClose = () => {
+    settermsModal(false);
+  };
+
+  /**
+   * The function updates the state and dispatches an action to get cities based on the selected state.
+   */
+  const onStateChange = (value, name) => {
+    let cityType = 'cities';
+    if (name === 'permanentState') {
+      setPermanentState(value);
+      cityType = 'permanentCities';
+    } else {
+      setPresentState(value);
+      cityType = 'presentCities';
+    }
+    const relatedState = masterData.states.find(
+      (state) => state.name === value
+    );
+    // console.log('RELATED STATE=>', relatedState);
+    if (relatedState)
+      dispatch(getCitiesFromStateId(relatedState?.id, cityType));
+  };
+
+  /**
+   * The function sets various items in local storage and dispatches actions upon registration approval,
+   * including setting a new token and getting user permissions after a delay.
+   */
+  const onRegistrationApproved = () => {
+    dispatch(setToast(ALERT_MESSAGE.REGISTRATION_APPROVED, true, 'success'));
+    secureLocalStorage.setItem(USER_SELECTED_ROLE, ROLE_ID_MAP.patient);
+    secureLocalStorage.setItem(SELECTED_ROLE_NAME, ROLES.PATIENT);
+    dispatch(setSelectedRole(ROLE_ID_MAP.patient, ROLES.PATIENT));
+    setNewToken(window.keycloak);
+    setTimeout(() => {
+      dispatch(getUserPermissions());
+    }, 5000);
+  };
+  /**
+   * This function dispatches a warning toast message for a rejected registration and optionally logs the
+   * user out after a delay.
+   */
+  const onRegistrationRejected = () => {
+    dispatch(setToast(ALERT_MESSAGE.REGISTRATION_REJECTED, true, 'warning'));
+    // setTimeout(() => {
+    //   forceLogout();
+    // }, 5000);
+  };
+  return (
+    &lt;main
+      className={`login-main ${
+        !isApproved &amp;&amp; !isApplicant ? '' : 'complete-profile'
+      }`}>
+      &lt;CustomModal
+        Show={termsModal}
+        title={''}
+        handleClose={handleModalClose}
+        cssClass={'privacy-modal'}
+        closeButton={true}>
+        &lt;div>
+          &lt;TermsOfUse removeIcon={true} />
+        &lt;/div>
+      &lt;/CustomModal>
+
+      {!isApproved &amp;&amp; !isApplicant ? (
+        &lt;>&lt;/>
+      ) : (
+        &lt;div className="logo-container">
+          &lt;Image
+            src={MangoCancerCareSVG}
+            className="mango-logo d-none d-sm-block"
+          />
+        &lt;/div>
+      )}
+      &lt;div>
+        {!isApproved &amp;&amp; !isApplicant ? (
+          &lt;Suspense fallback={&lt;SuspenseFallbackLoader />}>
+            &lt;WaitingForApproval
+              onRegistrationApproved={onRegistrationApproved}
+              onRegistrationRejected={onRegistrationRejected}
+            />
+          &lt;/Suspense>
+        ) : (
+          &lt;Container className="reg-container self d-flex justify-content-center align-items-center ">
+            &lt;div className="reg-box d-flex flex-column">
+              &lt;p className="text-patient head">{t('fillAllFields')}&lt;/p>
+              &lt;Form onSubmit={handleSubmit}>
+                &lt;fieldset className={`${dobWarning &amp;&amp; 'pb-3'}`}>
+                  &lt;legend>{t('personalDetails')}:&lt;/legend>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;Form.Group controlId="First-Name">
+                        &lt;Form.Control
+                          required
+                          type="text"
+                          value={capitalizeFirstLetter(firstName)}
+                          placeholder={t('firstName')}
+                          onChange={(e) => setFirstName(e.target.value)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;Col>
+                      &lt;Form.Group controlId="Middle-Name">
+                        &lt;Form.Control
+                          type="text"
+                          value={capitalizeFirstLetter(middleName)}
+                          placeholder={t('middleName')}
+                          onChange={(e) => setMiddleName(e.target.value)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;Col>
+                      &lt;Form.Group controlId="Last-Name">
+                        &lt;Form.Control
+                          required
+                          type="text"
+                          value={capitalizeFirstLetter(lastName)}
+                          placeholder={t('lastName')}
+                          onChange={(e) => setLastName(e.target.value)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          value={gender}
+                          required
+                          as={'select'}
+                          onChange={(e) => setGender(e.target.value)}>
+                          &lt;option value="" hidden>
+                            {t('gender')}
+                          &lt;/option>
+                          &lt;option value="MALE">{t('male')}&lt;/option>
+                          &lt;option value="FEMALE">{t('female')}&lt;/option>
+                          {/* &lt;option value="THEY">{t('they')}&lt;/option> */}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;Col>
+                      &lt;Form.Group controlId="Dob">
+                        &lt;Form.Control
+                          required
+                          isInvalid={dobWarning}
+                          type="date"
+                          value={dob}
+                          onChange={(e) => handleDob(e.target.value)}
+                        />
+                        {dobWarning &amp;&amp; (
+                          &lt;Form.Control.Feedback type="invalid">
+                            {t('invalidDob')}
+                          &lt;/Form.Control.Feedback>
+                        )}
+                      &lt;/Form.Group>
+                    &lt;/Col>
+
+                    &lt;Col>
+                      &lt;Form.Group controlId="mobile">
+                        &lt;Form.Control
+                          isInvalid={mobileWarning}
+                          value={mobile}
+                          readOnly={userinfoState?.isMobile}
+                          onChange={(e) =>
+                            mobileValidatorFunction(e.target.value)
+                          }
+                          type="text"
+                          placeholder={t('mobile')}
+                        />
+                        {mobileWarning &amp;&amp; (
+                          &lt;Form.Control.Feedback type="invalid">
+                            Please enter a valid mobile number
+                          &lt;/Form.Control.Feedback>
+                        )}
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+
+                  &lt;Row>
+                    &lt;Col lg="4" className="mb-lg-0 mb-3">
+                      &lt;Form.Group controlId="email">
+                        &lt;Form.Control
+                          isInvalid={emailWarning}
+                          value={email}
+                          type="email"
+                          readOnly={userinfoState?.isEmail}
+                          onChange={(e) =>
+                            emailValidatorFunction(e.target.value)
+                          }
+                          placeholder={t('email')}
+                        />
+                        {emailWarning &amp;&amp; (
+                          &lt;Form.Control.Feedback type="invalid">
+                            Please enter a valid email address
+                          &lt;/Form.Control.Feedback>
+                        )}
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                &lt;/fieldset>
+                &lt;fieldset>
+                  &lt;legend>{t('addressInformation')} :&lt;/legend>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;Form.Group controlId="Address">
+                        &lt;Form.Control
+                          value={permanentAddress}
+                          type="text"
+                          required
+                          placeholder={t('permanentAddress')}
+                          onChange={(e) => setPermanentAddress(e.target.value)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          value={permanentCountry}
+                          required
+                          as={'select'}
+                          onChange={(e) => setPermanentCountry(e.target.value)}
+                          placeholder={t('country')}>
+                          &lt;option value="" hidden>
+                            {t('select-country')}
+                          &lt;/option>
+                          {masterData?.countries.map(({id, name}) => (
+                            &lt;option key={id}>{name}&lt;/option>
+                          ))}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          value={permanentState}
+                          required
+                          name="permanentState"
+                          as={'select'}
+                          onChange={(e) =>
+                            onStateChange(e.target.value, e.target.name)
+                          }
+                          placeholder={t('state')}>
+                          &lt;option value="" hidden>
+                            {t('select-state')}
+                          &lt;/option>
+                          {masterData?.states.map(({id, name}) => (
+                            &lt;option key={id}>{name}&lt;/option>
+                          ))}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;div className="col-lg-4 col">
+                      &lt;Form.Group controlId="city">
+                        &lt;Form.Control
+                          value={permanentCity}
+                          required
+                          placeholder={t('city')}
+                          as={'select'}
+                          onChange={(e) => setPermanentCity(e.target.value)}>
+                          &lt;option value="" hidden>
+                            {t('select-city')}
+                          &lt;/option>
+                          {masterData?.permanentCities ? (
+                            masterData?.permanentCities.map(({id, name}) => (
+                              &lt;option key={id} value={name}>
+                                {name}
+                              &lt;/option>
+                            ))
+                          ) : (
+                            &lt;option key={1} value={''}>
+                              {'No cities avaliable!'}
+                            &lt;/option>
+                          )}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/div>
+
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          type="text"
+                          value={permanentPinCode}
+                          required
+                          onChange={(e) => setPermanentPinCode(e.target.value)}
+                          placeholder={t('pinCode')}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Form.Group>
+                    &lt;Form.Check
+                      value={isChecked}
+                      isChecked={isChecked}
+                      onChange={() => setIsChecked(!isChecked)}
+                      className="m-0"
+                      type="checkbox"
+                      label={t('clickToCopy')}
+                    />
+                  &lt;/Form.Group>
+                  &lt;Row className="mt-2">
+                    &lt;Col>
+                      &lt;Form.Group controlId="Address">
+                        &lt;Form.Control
+                          value={presentAddress}
+                          type="text"
+                          required
+                          placeholder="Present Address"
+                          onChange={(e) => setPresentAddress(e.target.value)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          value={presentCountry}
+                          required
+                          as={'select'}
+                          onChange={(e) => setPresentCountry(e.target.value)}
+                          placeholder={t('country')}>
+                          &lt;option value="" hidden>
+                            {t('select-country')}
+                          &lt;/option>
+                          {masterData?.countries.map(({id, name}) => (
+                            &lt;option key={id}>{name}&lt;/option>
+                          ))}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                  &lt;Row>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          value={presentState}
+                          required
+                          as={'select'}
+                          name="presentState"
+                          onChange={(e) =>
+                            onStateChange(e.target.value, e.target.name)
+                          }
+                          placeholder={t('state')}>
+                          &lt;option value="" hidden>
+                            {t('select-state')}
+                          &lt;/option>
+                          {masterData?.states.map(({id, name}) => (
+                            &lt;option key={id}>{name}&lt;/option>
+                          ))}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                    &lt;div className="col-lg-4 col">
+                      &lt;Form.Group controlId="city">
+                        &lt;Form.Control
+                          value={presentCity}
+                          required
+                          as={'select'}
+                          placeholder={t('city')}
+                          onChange={(e) => setPresentCity(e.target.value)}>
+                          &lt;option value="" hidden>
+                            {t('select-city')}
+                          &lt;/option>
+                          {masterData?.presentCities ? (
+                            masterData?.presentCities.map(({id, name}) => (
+                              &lt;option key={id} value={name}>
+                                {name}
+                              &lt;/option>
+                            ))
+                          ) : (
+                            &lt;option key={1} value={''}>
+                              {'No cities avaliable!'}
+                            &lt;/option>
+                          )}
+                        &lt;/Form.Control>
+                      &lt;/Form.Group>
+                    &lt;/div>
+                    &lt;Col>
+                      &lt;Form.Group>
+                        &lt;Form.Control
+                          type="text"
+                          value={presentPinCode}
+                          required
+                          onChange={(e) => setPresentPinCode(e.target.value)}
+                          placeholder={t('pinCode')}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Col>
+                  &lt;/Row>
+                &lt;/fieldset>
+                {isPatient &amp;&amp; (
+                  &lt;fieldset>
+                    &lt;legend>{t('hospitalDetails')}:&lt;/legend>
+                    &lt;Row>
+                      &lt;Col>
+                        &lt;Form.Group controlId="diagnosis">
+                          &lt;Form.Control
+                            value={diagnosis}
+                            required
+                            as={'select'}
+                            onChange={(e) => setDiagnosis(e.target.value)}>
+                            &lt;option value="" hidden>
+                              {t('select-diagnosis')}
+                            &lt;/option>
+                            {masterData?.cancerTypes.map(({id, name}) => (
+                              &lt;option key={id}>{name}&lt;/option>
+                            ))}
+                          &lt;/Form.Control>
+                        &lt;/Form.Group>
+                      &lt;/Col>
+                      &lt;Col>
+                        &lt;Form.Group controlId="Drug-Name">
+                          &lt;Form.Control
+                            required
+                            value={drugId}
+                            as={'select'}
+                            onChange={(e) => setDrugId(e.target.value)}
+                            placeholder={t('drugName')}>
+                            &lt;option value="" hidden>
+                              {t('drugName')}
+                            &lt;/option>
+                            {drugListState &amp;&amp;
+                              drugListState.map((drug) => (
+                                &lt;option value={drug.id} key={drug.id}>
+                                  {drug.brandName}
+                                  {'-'}
+                                  {drug.drugGenericName}
+                                &lt;/option>
+                              ))}
+                          &lt;/Form.Control>
+                        &lt;/Form.Group>
+                      &lt;/Col>
+                      &lt;Col>
+                        &lt;Form.Group controlId="Hospital-Name">
+                          &lt;Form.Control
+                            required
+                            as={'select'}
+                            value={hospitalId}
+                            onChange={(e) => setHospitalId(e.target.value)}
+                            placeholder={t('hospitalName')}>
+                            &lt;option value="" hidden>
+                              {t('selectHospital')}
+                            &lt;/option>
+                            {hospitalList &amp;&amp;
+                              hospitalList.map((hospital) => (
+                                &lt;option value={hospital.id} key={hospital.id}>
+                                  {' '}
+                                  {hospital.hospitalName}{' '}
+                                &lt;/option>
+                              ))}
+                          &lt;/Form.Control>
+                        &lt;/Form.Group>
+                      &lt;/Col>
+                    &lt;/Row>
+                    &lt;Row>
+                      &lt;div className="col-lg-4 col">
+                        &lt;Form.Group controlId="Doctor-Name">
+                          &lt;Form.Control
+                            required
+                            value={doctorId}
+                            as={'select'}
+                            onChange={(e) => setDoctorId(e.target.value)}
+                            placeholder={t('doctorName')}>
+                            &lt;option value="" hidden>
+                              {t('selectDoctor')}
+                            &lt;/option>
+                            {doctorList &amp;&amp;
+                              doctorList.map((doctor) => (
+                                &lt;option value={doctor.id} key={doctor.id}>
+                                  {' '}
+                                  {doctor.name}{' '}
+                                &lt;/option>
+                              ))}
+                          &lt;/Form.Control>
+                        &lt;/Form.Group>
+                      &lt;/div>
+                      &lt;div className="col-lg-4 col">
+                        &lt;Form.Group controlId="medical-record-name">
+                          &lt;Form.Control
+                            required
+                            value={mrn}
+                            type="text"
+                            placeholder={t('medicalRecordName')}
+                            onChange={(e) => setMrn(e.target.value)}
+                          />
+                        &lt;/Form.Group>
+                      &lt;/div>
+                    &lt;/Row>
+                  &lt;/fieldset>
+                )}
+                &lt;fieldset>
+                  &lt;legend>{t('financialInformation')} :&lt;/legend>
+                  &lt;Row>
+                    &lt;div className="col-lg-4 col">
+                      &lt;Form.Group controlId="pan-number">
+                        &lt;Form.Control
+                          isInvalid={panError}
+                          value={panNumber}
+                          type="text"
+                          required={isPatient ? false : true}
+                          onChange={validatePanNumber}
+                          placeholder={t('panNumber')}
+                        />
+                        {panError &amp;&amp; (
+                          &lt;Form.Control.Feedback type="invalid">
+                            Please enter a valid PAN
+                          &lt;/Form.Control.Feedback>
+                        )}
+                      &lt;/Form.Group>
+                    &lt;/div>
+                    &lt;div className="col-lg-4 col">
+                      &lt;>
+                        &lt;div
+                          className={`${
+                            aadharError
+                              ? 'input-normal-custom-error-completeprofile'
+                              : 'input-normal-custom-completeprofile'
+                          }`}>
+                          &lt;NumberFormat
+                            label={t('aadharNumber')}
+                            required={false}
+                            name="aadharNumber"
+                            className="input-sm"
+                            id="aadharNumber"
+                            placeholder="0000-0000-0000"
+                            value={aadharNumber}
+                            onValueChange={validateAadharCardNumber}
+                            format="####-####-####"
+                          />
+                        &lt;/div>
+                        {errors.aadharError &amp;&amp; (
+                          &lt;div className="invalid-feedback-custom-completeprofile">
+                            Please enter valid AADHAAR Number
+                          &lt;/div>
+                        )}
+                      &lt;/>
+                      {/* &lt;Form.Group controlId="aadhar-number">
+                       &lt;Form.Control
+                         value={aadharNumber}
+                         isInvalid={aadharError}
+                         name="aadharNumber"
+                         id="aadharNumber"
+                         type="text"
+                         maxLength={14}
+                         placeholder="0000 0000 0000"
+                         onChange={validateAadharCardNumber}
+                       />
+                       {aadharError &amp;&amp; (
+                         &lt;Form.Control.Feedback type="invalid">
+                           Please enter a valid AADHAAR Number
+                         &lt;/Form.Control.Feedback>
+                       )}
+                     &lt;/Form.Group> */}
+                    &lt;/div>
+                  &lt;/Row>
+                &lt;/fieldset>
+                &lt;p
+                  className="mt-4 text-admin text-decoration-underline read-terms"
+                  onClick={() => settermsModal(true)}>
+                  {t('terms&amp;Conditions')}
+                &lt;/p>
+                &lt;div className="d-flex flex-row align-items-center">
+                  &lt;div className="me-3">
+                    {' '}
+                    &lt;Form.Group controlId="isAccepted">
+                      &lt;Form.Group controlId="formBasicCheckbox">
+                        &lt;Form.Check
+                          type="checkbox"
+                          value={isAccepted}
+                          checked={isAccepted}
+                          onChange={() => setIsAccepted(!isAccepted)}
+                        />
+                      &lt;/Form.Group>
+                    &lt;/Form.Group>
+                  &lt;/div>
+                  &lt;div>
+                    &lt;span className="confirm-text text-dark">
+                      {t('confirmText')}
+                    &lt;/span>
+                  &lt;/div>
+                &lt;/div>
+                &lt;Row>
+                  &lt;Col>
+                    &lt;button
+                      className="mt-4"
+                      title={
+                        panError ||
+                        aadharError ||
+                        mobileWarning ||
+                        emailWarning ||
+                        dobWarning
+                          ? 'Please submit correct information'
+                          : ''
+                      }
+                      disabled={
+                        panError ||
+                        aadharError ||
+                        mobileWarning ||
+                        emailWarning ||
+                        dobWarning
+                      }>
+                      {t('next')}
+                    &lt;/button>
+                  &lt;/Col>
+                  &lt;Col>&lt;/Col>
+                &lt;/Row>
+              &lt;/Form>
+            &lt;/div>
+          &lt;/Container>
+        )}
+      &lt;/div>
+    &lt;/main>
+  );
+};
+CompleteProfile.propTypes = {
+  history: PropTypes.objectOf(PropTypes.any),
+};
+export default CompleteProfile;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#acknowledgeRebatePaid">acknowledgeRebatePaid</a></li><li><a href="global.html#acknowledgeSubventionPaid">acknowledgeSubventionPaid</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#captalizeEveryWordOfSentence">captalizeEveryWordOfSentence</a></li><li><a href="global.html#checkifReportsDataInSync">checkifReportsDataInSync</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkifValueExists">checkifValueExists</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#checkValue">checkValue</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertMedicationName">convertMedicationName</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createHospitalIpConfig">createHospitalIpConfig</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createMobileVersion">createMobileVersion</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteHospitalIpConfig">deleteHospitalIpConfig</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#disableMobileVersion">disableMobileVersion</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getAllApprovalRegPatients">getAllApprovalRegPatients</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getApprovalRegPatients">getApprovalRegPatients</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDocumentName">getDocumentName</a></li><li><a href="global.html#getDocumentType">getDocumentType</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getMonthsDataSorted">getMonthsDataSorted</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getReportSyncFlag">getReportSyncFlag</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#handleRegRequest">handleRegRequest</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#isValueNull">isValueNull</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LabelValue">LabelValue</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readAndroidMobileVersionsList">readAndroidMobileVersionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitalIpConfigList">readHospitalIpConfigList</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readIosMobileVersionsList">readIosMobileVersionsList</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readMobileVersionsList">readMobileVersionsList</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#selectMonthWithData">selectMonthWithData</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryReduxEnhancer">sentryReduxEnhancer</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setNewToken">setNewToken</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setSelectedRole">setSelectedRole</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setupStore">setupStore</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showHospitalIpConfig">showHospitalIpConfig</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#sortObjectKeysByName">sortObjectKeysByName</a></li><li><a href="global.html#splitCamelCaseString">splitCamelCaseString</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateHospitalIpConfig">updateHospitalIpConfig</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMobileVersion">updateMobileVersion</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#updateVersionMapping">updateVersionMapping</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyOtp">verifyOtp</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri May 19 2023 18:39:27 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

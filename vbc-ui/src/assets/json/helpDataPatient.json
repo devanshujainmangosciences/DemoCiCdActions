@@ -1,0 +1,92 @@
+[
+  {
+    "header": "General Queries",
+    "item": 1001,
+    "questionList": [
+      {
+        "questionIndex": "1",
+        "question": "Who decides whether I can participate in the PBP Program?",
+        "answer": "Your ability to participate in the PBP Program is entirely dependent on the prescribing decision made by your Oncologist."
+      },
+      {
+        "questionIndex": "2",
+        "question": "Who decides whether my treatment is working or not?",
+        "answer": "Any decision regarding the success/failure of your treatment will be made by your Oncologist and we will consider their decision to be final."
+      },
+      {
+        "questionIndex": "3",
+        "question": "What is the success rate of the targeted therapy drug prescribed to me?",
+        "answer": "As is the case in any healthcare treatment, the success rate of a drug depends on several factors such as age, cancer stage/grade, patient health, and so on. We recommend you consult your Oncologist to better understand the success rate of your prescribed drug, as well as the clinical endpoint defined for your treatment."
+      },
+      {
+        "questionIndex": "4",
+        "question": "What costs are covered by the PBP Programme? Drugs? Hospital expenses? Travel expenses? Tests?",
+        "answer": "Currently, the PBP Program only covers the costs for your targeted therapy drugs. Hospitalisation costs, doctor's fees, lab/diagnostic test expenses, etc. are not covered under the Program."
+      }
+    ]
+  },
+  {
+    "header": "Patient Paying with Financial Support",
+    "item": 1002,
+    "questionList": [
+      {
+        "questionIndex": "5",
+        "question": "What if my application is unsuccessful during credit assessment?",
+        "answer": "Mango Cancer Care will check with all our lending partners regarding your eligibility requirements and specific credit assessments. If your application is rejected, you will be informed, and another applicant may then apply for credit assessment on your behalf."
+      },
+      {
+        "questionIndex": "6",
+        "question": "What is the loan interest rate that I will have to pay? What is the tenure/timeline of the loan?",
+        "answer": "In order to promote the affordability of novel cancer therapies, we are working with our lending partners to ensure low effective interest rates on loans. These interest rates will be at the sole discretion of our lending partners, while the timelines and tenure of the loan may vary according to the price of each drug. Further details will be provided to you at the time of application."
+      },
+      {
+        "questionIndex": "7",
+        "question": "What if I decide to drop out of the Program mid-way?",
+        "answer": "If you decide to drop out of the Program mid-way due to a non-clinical reason(s), you will not be eligible for any value-based discounts. If, however, your Oncologist decides to stop the treatment due to a clinical reason, you will then be eligible for a predetermined discount on the cost of the drug as defined before the onset of the Program."
+      },
+      {
+        "questionIndex": "8",
+        "question": "How much loan payment will I have to make if the treatment fails, or if the treatment succeeds?",
+        "answer": "Based on the clinical endpoint and duration of treatment defined by your Oncologist for a specific indication and drug combination, a predetermined schedule and discounting regimen will be devised by Mango Cancer Care, for you. All payments and discounts will be governed by this schedule for the entirety of the PBP Program."
+      }
+    ]
+  },
+  {
+    "header": "Patient Paying with Own Funds",
+    "item": 1003,
+    "questionList": [
+      {
+        "questionIndex": "9",
+        "question": "What if I do not want to avail the loan - can I still be eligible for the PBP Program?",
+        "answer": "Yes, under the PBP Program, you can either opt for self-funded or financed payment schemes. If you opt for the self-funded route, you will receive a pre-defined discount on the cost of the drug in the event of treatment failure. Mango Cancer Care will also define a payment schedule for you to procure the drug before every cycle."
+      },
+      {
+        "questionIndex": "10",
+        "question": "Will I still be eligible for discounts if I were to proceed without financial support?",
+        "answer": "Yes, even if you opt for the PBP Program using your own funds, you will be eligible for a discount on the drug price (in the event of treatment failure) as defined before the onset of the Program."
+      }
+    ]
+  },
+  {
+    "header": "Data Usage and Sharing",
+    "item": 1004,
+    "questionList": [
+      {
+        "questionIndex": "11",
+        "question": "How is my medical data used? Who is it shared with and how is it tracked?",
+        "answer": "We use your data to understand your progress and clinical response to the targeted therapy drug prescribed to you, as part of the PBP Program. Additionally, we will use your data (in an anonymised format) to create and train our AI models that will help us derive insights related to personalised medicine and support patients better in the future."
+      }
+    ]
+  },
+  {
+    "header": "Additional Information",
+    "item": 1005,
+    "questionList": [
+      {
+        "questionIndex": "12",
+        "question": "Where can I find more information about targeted cancer therapies and other knowledge resources?",
+        "answer": "You can log in to Mango's Querent PBP App to get access to various resources related to targeted cancer therapy. Alternatively, you can also speak to your healthcare advisor regarding any additional print resources available for your reference."
+      }
+    ]
+  }
+]

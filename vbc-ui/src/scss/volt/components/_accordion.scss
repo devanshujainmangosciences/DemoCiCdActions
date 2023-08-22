@@ -1,0 +1,32 @@
+.catagory {
+  font: normal normal bold 14px/16px Roboto;
+}
+.accordion-minus {
+  background: $patient 0% 0% no-repeat padding-box;
+  border-radius: 4px;
+  border: none;
+  outline: none;
+}
+.accordion-plus {
+  background: $white 0% 0% no-repeat padding-box;
+  border: 1px solid $table-border-primary;
+  border-radius: 4px;
+  outline: none;
+}
+.accordion-toggle {
+  background: $nav-pills-link-active-bg 0% 0% no-repeat padding-box;
+}
+.accordion-table {
+  background: #fcfcfc 0% 0% no-repeat padding-box;
+  h6 {
+    font: normal normal bold 16px/21px Roboto;
+    letter-spacing: 0px;
+    color: $text-muted;
+  }
+  p {
+    white-space: pre-line;
+    font: normal normal normal 14px/21px Roboto;
+    letter-spacing: 0px;
+    color: #4f4d53;
+  }
+}

@@ -1,0 +1,163 @@
+export const tableHeadersVbcSchedule = [
+  {
+    keyName: 'Cycle #',
+    keyValue: 'id',
+    className: '',
+    showColumn: true,
+    key: 0,
+  },
+  {
+    keyName: 'Rebate',
+    keyValue: 'payout',
+    className: '',
+    showColumn: false,
+    key: 1,
+  },
+  {
+    keyName: 'Rebate %',
+    keyValue: 'percentageOfRebate',
+    className: '',
+    showColumn: true,
+    key: 2,
+  },
+];
+export const tableHeadersPatientDetailVbcSchedule = [
+  {
+    keyName: 'Cycle #',
+    keyValue: 'cycleNo',
+    className: '',
+    showColumn: true,
+    key: 0,
+  },
+  {
+    keyName: 'Market Price of Medication',
+    keyValue: 'marketPrice',
+    className: '',
+    showColumn: true,
+    key: 1,
+  },
+  {
+    keyName: 'Cumulative Amount',
+    keyValue: 'cumulativeAmount',
+    className: '',
+    showColumn: false,
+    key: 2,
+  },
+  {
+    keyName: 'Rebate',
+    keyValue: 'payout',
+    className: '',
+    showColumn: false,
+    key: 3,
+  },
+  {
+    keyName: 'Rebate %',
+    keyValue: 'percentageOfRebate',
+    className: '',
+    showColumn: true,
+    key: 4,
+  },
+];
+export const tableHeadersDrugSchedule = [
+  {
+    keyName: 'Cycle #',
+    keyValue: 'cycleNo',
+    className: '',
+    showColumn: true,
+    key: 0,
+  },
+  {
+    keyName: 'Payment Type Opted',
+    keyValue: 'paymentTypeOpted',
+    className: '',
+    showColumn: true,
+    key: 1.2,
+  },
+  {
+    keyName: 'Mango Grant',
+    keyValue: 'mangoGrantAmount',
+    className: '',
+    showColumn: true,
+    key: 1,
+  },
+  {
+    keyName: 'Grant Transfer Date',
+    keyValue: 'mangoGrantDate',
+    className: '',
+    showColumn: true,
+    key: 3,
+  },
+  {
+    keyName: 'Receipt of Medication Purchase',
+    keyValue: 'drugReceiptUploadDate',
+    className: '',
+    showColumn: true,
+    key: 4,
+  },
+
+  {
+    keyName: 'Cost incurred by patient',
+    keyValue: 'costIncurredByPatient',
+    className: '',
+    showColumn: true,
+    key: 6,
+  },
+  {
+    keyName: 'Paid Cycle',
+    keyValue: 'paidCycleHtml',
+    className: '',
+    showColumn: true,
+    key: 7,
+  },
+  {
+    keyName: 'Upload/Reupload',
+    keyValue: 'uploadAction',
+    className: '',
+    showColumn: true,
+    key: 5,
+  },
+];
+export const tableHeadersDrugScheduleSelfPay = [
+  {
+    keyName: 'Cycle #',
+    keyValue: 'cycleNo',
+    className: '',
+    showColumn: true,
+    key: 0,
+  },
+  {
+    keyName: 'Payment Type Opted',
+    keyValue: 'paymentTypeOpted',
+    className: '',
+    showColumn: true,
+    key: 1.2,
+  },
+  {
+    keyName: 'Receipt of Medication Purchase',
+    keyValue: 'drugReceiptUploadDate',
+    className: '',
+    showColumn: true,
+    key: 2,
+  },
+  {
+    keyName: 'Cost incurred by patient',
+    keyValue: 'costIncurredByPatient',
+    className: '',
+    showColumn: true,
+    key: 4,
+  },
+  {
+    keyName: 'Paid Cycle',
+    keyValue: 'paidCycleHtml',
+    className: '',
+    showColumn: true,
+    key: 5,
+  },
+  {
+    keyName: 'Upload/Reupload',
+    keyValue: 'uploadAction',
+    className: '',
+    showColumn: true,
+    key: 3,
+  },
+];

@@ -1,0 +1,10 @@
+{
+  "confirmStartApplication": "Please confirm to start application.",
+  "confirmDeleteApplicant": "Please confirm to delete the selected applicant.",
+  "confirmDeleteDocument": "Please confirm to delete the selected document.",
+  "confirm": "Confirm",
+  "reapplyApplication": "Please confirm to reapply application ",
+  "cancelApplication": "Please confirm to cancel application ",
+  "reuploadCheque": "Please confirm to reupload the blank cheque.",
+  "quit": "Quit"
+}

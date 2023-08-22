@@ -1,0 +1,10 @@
+{
+  "register": "Register",
+  "name": "Name",
+  "mobile": "Mobile",
+  "email": "Email",
+  "next": "NEXT",
+  "haveAnAccount": "Have an Account? Login here",
+  "loginHere": "Login Here",
+  "continue": "Continue"
+}

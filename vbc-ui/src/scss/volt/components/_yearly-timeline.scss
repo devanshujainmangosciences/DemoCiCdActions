@@ -1,0 +1,136 @@
+.carousel-container {
+  width: 90%;
+  scroll-behavior: smooth;
+  height: 54px;
+  margin: 0 auto;
+  white-space: nowrap;
+  border-radius: 8px;
+  // border: 1px solid $gray-450;
+  // box-shadow: 0px 4px 8px #00000008;
+
+  .carousel-wrapper {
+    display: flex;
+    width: 100%;
+    height: 54px;
+    position: relative;
+    justify-content: center;
+
+    .carousel-content-wrapper {
+      overflow: hidden;
+      border-radius: 8px;
+      // width: 100%;
+      height: 100%;
+      box-shadow: 0px 4px 8px #00000008;
+      // border: 1px solid $gray-450;
+      border-radius: 8px;
+    }
+
+    .carousel-content {
+      display: flex;
+      transition: all 250ms linear;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .carousel-content::-webkit-scrollbar,
+    .carousel-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .carousel-content > * {
+      width: 100%;
+      flex-shrink: 0;
+      flex-grow: 1;
+    }
+
+    .carousel-content.show-2 > * {
+      width: 50%;
+    }
+
+    .carousel-content.show-3 > * {
+      width: calc(100% / 3);
+    }
+
+    .carousel-content.show-4 > * {
+      width: calc(100% / 4);
+    }
+
+    .carousel-content.show-5 > * {
+      width: calc(100% / 5);
+    }
+
+    .carousel-content.show-6 > * {
+      width: calc(100% / 6);
+    }
+
+    .year-items {
+      :first-child {
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
+      }
+    }
+
+    .item {
+      min-width: 120px;
+      max-width: 120px;
+      height: 54px;
+      margin: auto;
+      font-family: $font-family-roboto;
+      letter-spacing: 0px;
+      font-size: 1rem;
+      color: $text-muted;
+      cursor: pointer;
+      border-top-left-radius: 0px;
+      border-bottom-left-radius: 0px;
+      border-top-right-radius: 0px;
+      border-bottom-right-radius: 0px;
+      border-right: 0.3px solid $patient;
+      background-color: $white;
+      @include display-flex();
+      @include justify-content(center);
+      @include align-items(center);
+      &.active {
+        background-color: $patient;
+        color: $white;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+      &:nth-last-child(1) {
+        border-right: none;
+      }
+    }
+
+    .left-arrow,
+    .right-arrow {
+      position: absolute;
+      z-index: 999;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 25px;
+      height: 25px;
+      border-radius: 25px;
+      color: $white;
+      background-color: $patient;
+      border: 1px solid #ddd;
+    }
+
+    .left-arrow {
+      left: 175px;
+    }
+    .active {
+      color: $patient;
+      background-color: $white;
+    }
+
+    .right-arrow {
+      right: 175px;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .left-arrow,
+      .right-arrow {
+        display: none;
+      }
+    }
+  }
+}

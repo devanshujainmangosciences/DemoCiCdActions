@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/vbc-program/VbcProgram.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/vbc-program/VbcProgram.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Screen component for PBP program
+ */
+import React, {useState, useCallback, useEffect} from 'react';
+import {View, Image} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useSelector, useDispatch} from 'react-redux';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {application} from 'assets/icons';
+import {Container, AppText, Loader} from 'components';
+import {
+  getDrugScheduleApiCall,
+  getMasterDataApiCall,
+  getVbcProgramEnrollmentApiCall,
+  getVbcScheduleApiCall,
+} from 'apis';
+import {VBCProgramPaymentFramework} from 'constants';
+import {
+  saveVbcProgramDataAction,
+  getVbcProgramVbcScheduleAction,
+  getVbcProgramDrugScheduleAction,
+} from 'actions';
+import {transformGetVbcProgramEnrollmentApiData} from './formatter';
+import {vbcProgramOptions} from './vbcProgramOptions';
+import styles from './styles';
+import {MASTER_DATA_FINANCE_PATIENT} from 'constants';
+
+const VbcProgram = () => {
+  const dispatch = useDispatch();
+  const vbcProgramState = useSelector((state) => state.vbcProgram);
+  const {
+    vbcProgramVbcScheduleData: vbcScheduleData,
+    vbcProgramDrugScheduleData: drugScheduleData,
+    vbcProgramUserCurrentStep,
+    vbcProgramStepAddApplicant,
+    vbcProgramStep1,
+  } = vbcProgramState;
+  const {loginData} = useSelector((state) => state.login);
+  const {navigate} = useNavigation();
+  const [loading, setLoading] = useState(true);
+
+  const {t} = useTranslation(['sidebar']);
+
+  useEffect(() => {
+    fetchMasterDataService();
+  }, []);
+
+  /** Fetch vbc program data whenever vbc program screen is focussed */
+  useFocusEffect(
+    useCallback(() => {
+      fetchVbcProgramService();
+    }, [])
+  );
+
+  // fetch master data based on if we jave states in master data as My Profile has dependency on states
+  const fetchMasterDataService = async () => {
+    const {apiResponse: masterDataApiResponse} = await getMasterDataApiCall(
+      MASTER_DATA_FINANCE_PATIENT
+    );
+    return masterDataApiResponse;
+  };
+
+  /** calling api to fetch vbc program details */
+  const fetchVbcProgramService = async () => {
+    const {access_token} = loginData;
+    setLoading(true);
+    const {apiResponse, apiError} = await getVbcProgramEnrollmentApiCall(
+      access_token
+    );
+    if (apiResponse) {
+      const transformedData = transformGetVbcProgramEnrollmentApiData(
+        apiResponse.data?.data
+      );
+      /** saving the api data to redux store */
+      dispatch(saveVbcProgramDataAction(transformedData));
+      fetchVbcScheduleService(transformedData.drugId);
+    } else if (apiError) {
+      setLoading(false);
+    }
+  };
+
+  /** calling api to fetch vbc schedule */
+  const fetchVbcScheduleService = async (drugId) => {
+    const {access_token} = loginData;
+    const {apiResponse, apiError} = await getVbcScheduleApiCall(
+      drugId,
+      access_token
+    );
+    if (apiResponse) {
+      /** saving the api data to redux store */
+      dispatch(
+        getVbcProgramVbcScheduleAction(
+          apiResponse.data?.data.sort((a, b) => a.id - b.id)
+        )
+      );
+      fetchDrugScheduleService();
+    } else if (apiError) {
+      setLoading(false);
+    }
+  };
+
+  /** calling api to fetch drug schedule */
+  const fetchDrugScheduleService = async () => {
+    const {access_token} = loginData;
+    const {apiResponse, apiError} = await getDrugScheduleApiCall(access_token);
+    if (apiResponse) {
+      /** saving the api data to redux store */
+      dispatch(getVbcProgramDrugScheduleAction(apiResponse.data?.data));
+      setLoading(false);
+    } else if (apiError) {
+      setLoading(false);
+    }
+  };
+
+  /** handling navigation */
+  const handleNavigation = (type) => () => {
+    if (type === 'application') {
+      const stepToBeNavigated = vbcProgramUserCurrentStep;
+      let routeToBeNavigated;
+      switch (stepToBeNavigated) {
+        case 0: {
+          routeToBeNavigated = 'VbcProgramTerms';
+          break;
+        }
+        case 1: {
+          routeToBeNavigated = 'VbcProgramStep2';
+          break;
+        }
+        case 2: {
+          if (
+            vbcProgramStep1 ===
+              VBCProgramPaymentFramework.LOAN_WITH_FINANCIAL_ASSISTANCE ||
+            vbcProgramStep1 ===
+              VBCProgramPaymentFramework.LOAN_AGAINST_CAREGIVER_FD
+          ) {
+            routeToBeNavigated = 'VbcProgramAddApplicant';
+          } else {
+            routeToBeNavigated = 'VbcProgramStep3';
+          }
+          break;
+        }
+        case 3: {
+          routeToBeNavigated = 'VbcProgramStep4';
+          break;
+        }
+        default: {
+          routeToBeNavigated = 'VbcProgramStep4';
+          break;
+        }
+      }
+      navigate(routeToBeNavigated);
+    } else if (type === 'applicants') {
+      navigate('Applicants');
+    } else if (type === 'VbcSchedule') {
+      navigate('VbcSchedule');
+    } else if (type === 'DrugSchedule') {
+      navigate('DrugSchedule');
+    }
+  };
+
+  const renderSubTitle = (label) => {
+    const totalApplicants =
+      vbcProgramUserCurrentStep === 4 &amp;&amp; vbcProgramStepAddApplicant
+        ? vbcProgramStepAddApplicant.length
+        : 0;
+    switch (label) {
+      case 'application': {
+        const applicationNote =
+          vbcProgramUserCurrentStep === 4
+            ? t('checkDetails')
+            : t('startApplication');
+        return applicationNote;
+      }
+      case 'patient-applicant': {
+        const applicantNote = `${totalApplicants} ${t('applicantsAdded')}`;
+        return applicantNote;
+      }
+      case 'vbc-schedule': {
+        const vbcScheduleNote =
+          vbcScheduleData?.length > 0
+            ? t('viewDetails')
+            : t('noSchedulesToDisplay');
+        return vbcScheduleNote;
+      }
+      case 'drug-schedule': {
+        const drugScheduleNote =
+          drugScheduleData?.content?.length > 0
+            ? t('viewDetails')
+            : t('noSchedulesToDisplay');
+        return drugScheduleNote;
+      }
+      default: {
+        return '';
+      }
+    }
+  };
+
+  //renders pbp program options
+  const renderOptions = (item) => {
+    return (
+      &lt;Container
+        style={styles.containerContainer}
+        onPressEvent={handleNavigation(item.navigationKey)}>
+        &lt;View style={styles.containerInner}>
+          &lt;View style={styles.textContainerInner}>
+            &lt;AppText style={styles.heading}>{t(item.label)}&lt;/AppText>
+            &lt;AppText style={styles.desc}>{renderSubTitle(item.label)}&lt;/AppText>
+          &lt;/View>
+          &lt;View style={styles.iconContainerInner}>
+            &lt;View style={styles.iconContainer}>
+              &lt;Image
+                source={application}
+                resizeMode={'contain'}
+                style={styles.icon}
+              />
+            &lt;/View>
+          &lt;/View>
+        &lt;/View>
+      &lt;/Container>
+    );
+  };
+
+  if (loading) {
+    return (
+      &lt;View style={styles.loaderContainer}>
+        &lt;Loader />
+      &lt;/View>
+    );
+  }
+
+  return (
+    &lt;View style={styles.container}>
+      {vbcProgramOptions.map((item) => renderOptions(item))}
+    &lt;/View>
+  );
+};
+
+export default VbcProgram;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

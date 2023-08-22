@@ -1,0 +1,10 @@
+{
+  "login": "Login",
+  "email": "Email",
+  "userName": "Username",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "continue": "Continue",
+  "newUser": "New User? Register Now",
+  "forgotPasswordInfo": "Once you enter your email id, and click on Submit button, we will send you an email for further actions."
+}

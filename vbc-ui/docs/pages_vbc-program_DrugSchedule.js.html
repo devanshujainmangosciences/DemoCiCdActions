@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/vbc-program/DrugSchedule.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/vbc-program/DrugSchedule.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This component renders the Drug Schedule table for the Patient.
+ * On component load it checks if drugSchedlue is avaliable or not, if its avaliable it created the data in required table format
+ */
+import React, {useCallback, useEffect, useState} from 'react';
+import {Col, Form, Row} from '@themesberg/react-bootstrap';
+import {DoctorNotesIcon} from 'assets/icons';
+import TableComponent from 'components/Tables';
+import {
+  tableHeadersDrugSchedule,
+  tableHeadersDrugScheduleSelfPay,
+} from 'config';
+import {useTranslation} from 'react-i18next';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  acknowledgeFirstGrant,
+  getEnrollForVbc,
+  getVbcDrugSchedule,
+  setToast,
+  uploadDocumentForPatient,
+} from 'actions';
+import {CustomModal} from 'components';
+import {fileSizeValidator, fileTypeValidator} from 'services/utility';
+import {
+  ALERT_MESSAGE,
+  DateFormat,
+  PAYMENT_FRAMEWORK,
+  Symbols,
+} from '../../constants';
+import format from 'date-fns/format';
+const DrugSchedule = () => {
+  const {t} = useTranslation(['drugSchedule', 'documents']);
+  const [data, setData] = useState([]);
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [isInvalid, setIsInvalid] = useState(false);
+  const [yesOrNo, setYesorNo] = useState(false);
+  const [showFirstMangoGrant, setShowFirstMangoGrant] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState('');
+  const [selectedDrugId, setSelectedDrugId] = useState('');
+  const [documentType] = useState('Drug Receipt');
+  const userPermissions = useSelector((state) => state.app.userPermissions);
+
+  const [fileName, setFileName] = useState('');
+  const treatmentTerminated = useSelector(
+    (state) => state.app.userPermissions?.flags?.treatmentTerminated
+  );
+  const [isSelfPay, setisSelfPay] = useState(false);
+  const enrolledData = useSelector(
+    (state) => state.loanApplication?.enrollForVbc
+  );
+
+  const dispatch = useDispatch();
+
+  const drugScheduleList = useSelector(
+    (state) => state.loanApplication.drugSchedule
+  );
+  const payGrantToLender = useSelector(
+    (state) => state.loanApplication.drugSchedule?.data?.payGrantToLender
+  );
+
+  const handleClickUpload = useCallback(
+    (id) => {
+      setIsShowModal(!isShowModal);
+      setSelectedDrugId(id);
+    },
+    [isShowModal]
+  );
+
+  // console.log('treatmentTerminated=>', treatmentTerminated);
+  useEffect(() => {
+    if (!drugScheduleList) {
+      dispatch(getVbcDrugSchedule());
+    } else {
+      if (drugScheduleList.data?.content)
+        setShowFirstMangoGrant(
+          drugScheduleList.data?.content.find((item) => item.cycleNo === 1)
+            ?.mangoGrantReceivedFlag === false
+            ? true
+            : false
+        );
+      setData(
+        drugScheduleList.data?.content?.map((item, index, items) => ({
+          id: item.id,
+          cycleNo: item.cycleNo,
+          mangoGrantAmount: `${Symbols.INDIAN_RUPEE} ${item.mangoGrantAmount}`,
+          mangoGrantDate: format(
+            new Date(item.mangoGrantDate),
+            DateFormat.DD_MM_YYYY_SLASH
+          ),
+          drugReceiptUploadDate:
+            item.drugReceiptId &amp;&amp;
+            `Uploaded on ${format(
+              new Date(item.drugReceiptUploadDate),
+              DateFormat.DD_MM_YYYY_SLASH
+            )}
+            `,
+          receiptAmount: item?.receiptAmount
+            ? `${Symbols.INDIAN_RUPEE} ${item?.receiptAmount}`
+            : '',
+          costIncurredByPatient: item?.costIncurredByPatient,
+          drugReceiptId: item?.drugReceiptId,
+          cumulativeAmount: item?.cumulativeAmount,
+          uploadAction: (
+            &lt;button
+              onClick={() => handleClickUpload(item.cycleNo)}
+              disabled={checkIfDisabled(index, items)}
+              className={`btn-patient-theme-${
+                checkIfDisabled(index, items) ? 'disabled' : 'grid '
+              }`}>
+              {item.drugReceiptId &amp;&amp; !treatmentTerminated
+                ? t('documents:re-upload')
+                : t('documents:upload')}
+            &lt;/button>
+          ),
+        }))
+      );
+    }
+  }, [dispatch, drugScheduleList, handleClickUpload, t]);
+
+  /**
+   * Checks if the upload button is disable
+   * @param {Number} index
+   * @param {Array} items
+   * @returns {Boolean}
+   */
+  const checkIfDisabled = (index, items) => {
+    if (treatmentTerminated) {
+      const completedCycle = userPermissions?.user?.completedCycles;
+      if (
+        completedCycle &amp;&amp;
+        completedCycle >= index + 1 &amp;&amp;
+        !items[index]?.drugReceiptId
+      )
+        return false;
+      else return true;
+    }
+    if (index === 0) return false;
+    const recievedItems = [...items];
+    const prevItem = recievedItems[index - 1];
+    if (prevItem?.drugReceiptId) return false;
+    else return true;
+  };
+
+  // console.log('DATA=>', drugScheduleList);
+  // console.log('isSelfPay=>', isSelfPay);
+  useEffect(() => {
+    if (!enrolledData) dispatch(getEnrollForVbc());
+    else
+      setisSelfPay(
+        enrolledData?.paymentTypeOpted === PAYMENT_FRAMEWORK.SELF_PAY
+      );
+  }, [enrolledData]);
+
+  const handleCloseModal = (e) => {
+    setIsInvalid(false);
+    setIsShowModal(false);
+    clearAll(e);
+  };
+
+  const handleChange = (event) => {
+    const file = event.target.files[0];
+    const sizeValidation = fileSizeValidator(15, file.size);
+    const fileValidation = fileTypeValidator(file.type);
+    if (sizeValidation || fileValidation) {
+      dispatch(setToast(ALERT_MESSAGE.FILE_UPLOAD_ERROR, true, 'warning'));
+      return setIsInvalid(true);
+    } else {
+      setIsInvalid(false);
+    }
+    setFileName(event.target.files[0].name);
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const clearAll = (e) => {
+    e.preventDefault();
+    setSelectedFile('');
+    setFileName('');
+    setSelectedFile('');
+  };
+
+  const handleUpload = (e) => {
+    e.preventDefault();
+    if (selectedFile) {
+      const file = new FormData();
+      file.append('file', selectedFile);
+      file.append('cycleNo', selectedDrugId);
+      file.append('documentType', documentType);
+
+      const onSuccess = (response) => {
+        if (response.message) {
+          dispatch(setToast(response.message, true, 'success'));
+        }
+        handleCloseModal(e);
+        dispatch(getVbcDrugSchedule());
+      };
+      dispatch(uploadDocumentForPatient(file, onSuccess));
+    }
+  };
+  const handleConfirmModalClose = () => {
+    setShowConfirmModal(false);
+  };
+  const handleClickYesorNo = (value) => {
+    const onSuccess = () => {
+      setYesorNo(value);
+      dispatch(getVbcDrugSchedule());
+      handleConfirmModalClose();
+    };
+    dispatch(acknowledgeFirstGrant(onSuccess));
+  };
+  const handleClickOpenConfirmModal = () => {
+    if (!yesOrNo) {
+      setShowConfirmModal(true);
+    }
+  };
+
+  return (
+    &lt;div>
+      &lt;CustomModal
+        Show={isShowModal}
+        title={'Upload Drug Reciept'}
+        handleClose={handleCloseModal}>
+        &lt;div className="mt-4">
+          &lt;Form className="p-4 pt-0 document-form">
+            &lt;Row className="mb-3">
+              &lt;Col className="p-0 m-0">
+                &lt;Form.Label>{t('documents:selectFile')}&lt;/Form.Label>
+                &lt;div className="upload ">
+                  &lt;input
+                    type="file"
+                    id="doc"
+                    className="d-none"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={(e) => handleChange(e)}
+                  />
+                  &lt;div className="input-box p-1 ps-2">
+                    {fileName
+                      ? `Chosen File : ${fileName}`
+                      : 'Please Select a File'}
+                  &lt;/div>
+                  &lt;label htmlFor="doc" className="browse">
+                    {t('documents:browse')}
+                  &lt;/label>
+                &lt;/div>
+              &lt;/Col>
+              {isInvalid &amp;&amp; (
+                &lt;p className="text-danger p-0 m-0 mt-2">
+                  File size exceed&amp;apos;s the limit
+                &lt;/p>
+              )}
+            &lt;/Row>
+            &lt;Row className="border-bottom mb-3">
+              &lt;p>{t('documents:note')}&lt;/p>
+            &lt;/Row>
+            &lt;Row>
+              &lt;Col className="d-flex flex-row m-0 p-0 mt-2 justify-content-center">
+                &lt;button
+                  onClick={handleCloseModal}
+                  className="btn-patient-theme bg-dark px-4">
+                  {t('documents:cancel')}
+                &lt;/button>
+                &lt;button
+                  className=" btn-patient-theme fw-normal ms-2 px-4"
+                  onClick={handleUpload}
+                  disabled={!selectedFile}>
+                  {t('documents:upload')}
+                &lt;/button>
+              &lt;/Col>
+            &lt;/Row>
+          &lt;/Form>
+        &lt;/div>
+      &lt;/CustomModal>{' '}
+      &lt;CustomModal
+        cssClass="confirm-modal"
+        Show={showConfirmModal}
+        handleClose={handleConfirmModalClose}>
+        &lt;div className="p-4 px-6">
+          &lt;span className="close" onClick={handleConfirmModalClose} />
+          &lt;div className="d-flex justify-content-center">
+            &lt;h5>Are you Sure &lt;/h5>
+          &lt;/div>
+          &lt;div className="d-flex flex-row justify-content-between mt-4">
+            &lt;button
+              onClick={handleConfirmModalClose}
+              className="btn-patient-theme bg-dark w-100">
+              {t('cancel')}
+            &lt;/button>
+            &lt;button
+              onClick={handleClickYesorNo}
+              className="btn-patient-theme bg-patient w-100 ms-2">
+              {t('yes')}
+            &lt;/button>
+          &lt;/div>
+        &lt;/div>
+      &lt;/CustomModal>
+      &lt;div className="item p-4 mt-4 ">
+        &lt;div className="title-container ">
+          &lt;DoctorNotesIcon fill="#28252e" />
+          &lt;h4 className="page-title ps-2">{t('drugSchedule')}&lt;/h4>
+        &lt;/div>
+        &lt;div className="note  mt-3 ">
+          &lt;p className="text-muted m-0">
+            {t(data &amp;&amp; data?.length > 0 ? 'note' : 'noteForEmptyData')}
+          &lt;/p>
+        &lt;/div>
+      &lt;/div>
+      {showFirstMangoGrant &amp;&amp; !isSelfPay &amp;&amp; !payGrantToLender &amp;&amp; (
+        &lt;div className="item px-4 py-2 mt-4">
+          &lt;div className="my-3 d-flex gap-2 flex-wrap">
+            &lt;div className="align-self-end">
+              &lt;p className="p-0 m-0 fw-medium text-muted">
+                {t('haveYouRecievedYourFirstMangoGrant')}
+              &lt;/p>
+            &lt;/div>
+            &lt;div
+              className={`toggle-container mt-2 ${yesOrNo ? 'bg-patient' : ''}`}
+              onClick={() => handleClickOpenConfirmModal(true)}>
+              &lt;p className="float-end p-0 m-0 text-white left">
+                {' '}
+                {!yesOrNo &amp;&amp; 'No'}
+              &lt;/p>
+              &lt;div
+                className={`dialog-button ${yesOrNo ? '' : 'disabled'}`}>&lt;/div>
+              &lt;p className="float-start text-white p-0 m-0 right">
+                {' '}
+                {yesOrNo &amp;&amp; 'Yes'}
+              &lt;/p>
+            &lt;/div>
+          &lt;/div>
+        &lt;/div>
+      )}
+      &lt;div className="item p-4 mt-4 ">
+        &lt;div className="cost-incured">
+          &lt;div>
+            &lt;h5>{t('totalCostIncured')}:&lt;/h5>
+          &lt;/div>
+          &lt;div>
+            &lt;h5 className="text-patient">
+              {Symbols.INDIAN_RUPEE} {drugScheduleList?.data?.cumulativeAmount}
+            &lt;/h5>
+          &lt;/div>
+        &lt;/div>
+      &lt;/div>
+      {data &amp;&amp; data.length > 0 &amp;&amp; (
+        &lt;div className="item p-4 mt-4 py-3">
+          &lt;TableComponent
+            component={'drug-schedule-listing'}
+            tableHeadersData={
+              !isSelfPay &amp;&amp; !payGrantToLender
+                ? tableHeadersDrugSchedule
+                : tableHeadersDrugScheduleSelfPay
+            }
+            tableData={data}
+            classes={`${
+              !isSelfPay &amp;&amp; !payGrantToLender
+                ? 'drug-schedule-table'
+                : 'drug-schedule-patient-table-self-pay'
+            } align-items-center`}
+            noCheck
+            headerClasses=""
+          />
+        &lt;/div>
+      )}
+    &lt;/div>
+  );
+};
+
+export default DrugSchedule;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addationSelect">addationSelect</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#SidebarDrugIcon">SidebarDrugIcon</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri Nov 04 2022 12:59:13 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

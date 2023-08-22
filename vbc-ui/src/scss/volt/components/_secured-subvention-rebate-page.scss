@@ -1,0 +1,70 @@
+.secured-page {
+  margin-top: 35px;
+
+  .card {
+    background: white;
+    padding: 60px;
+    border-radius: 4px;
+    box-shadow: 0 2px 3px #c8d0d8;
+  }
+  .card-success {
+    h1 {
+      color: #88b04b;
+      font-family: $font-family-roboto;
+      font-weight: 900;
+      font-size: 40px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    p {
+      color: #404f5e;
+      font-family: $font-family-roboto;
+      font-size: 20px;
+      margin: 0;
+      text-align: center;
+    }
+    i {
+      color: #9abc66;
+      font-size: 100px;
+      line-height: 200px;
+      margin-left: -15px;
+    }
+    .icon {
+      border-radius: 200px;
+      height: 200px;
+      width: 200px;
+      background: #f8faf5;
+      margin: 0 auto;
+    }
+  }
+  .card-failure {
+    h1 {
+      color: #ff8d89;
+      font-family: $font-family-roboto;
+      font-weight: 900;
+      font-size: 40px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    p {
+      color: #404f5e;
+      font-family: $font-family-roboto;
+      font-size: 20px;
+      margin: 0;
+      text-align: center;
+    }
+    i {
+      color: #ff8d89;
+      font-size: 100px;
+      line-height: 200px;
+      margin-left: -15px;
+    }
+    .icon {
+      border-radius: 200px;
+      height: 200px;
+      width: 200px;
+      background: #f8faf5;
+      margin: 0 auto;
+    }
+  }
+}

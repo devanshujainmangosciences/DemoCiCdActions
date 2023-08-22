@@ -1,0 +1,17 @@
+{
+  "dataVariables": "InsuranceCompaniesDataVariables",
+  "readListAction": "readCities",
+  "deleteDataAction": "deleteInsuranceCompany",
+  "reduxDataListState": "state.template?.masterData?.insuranceCompanies",
+  "reduxPaginationData": "state.template?.masterData?.insuranceCompanies?.pagination",
+  "tableHeadersPath": "tableHeadersInsuranceCompanies",
+  "filterConfig": "incuranceCompaniesFilter",
+  "updateData": "updateInsuranceCompany",
+  "createData": "createInsuranceCompany",
+  "showData": "showInsuranceCompany",
+  "newPath": "NewInsuranceCompany",
+  "viewPath": "ViewInsuranceCompany",
+  "updatePath": "UpdateInsuranceCompany",
+  "listPath": "InsuranceCompanies",
+  "reduxSelectedData": "state.state.selectedInsuranceCompany"
+}

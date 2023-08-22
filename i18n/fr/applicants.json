@@ -1,0 +1,15 @@
+{
+  "applicants": "Applicants",
+  "addApplicant": "Add Applicant",
+  "addApplicantsUpToFive": "Add Applicants(upto 5)",
+  "submitToMangoExcecutive": "Submit Application",
+  "back": "Back",
+  "edit": "Edit",
+  "save": "Save",
+  "vbcProgram": "PBP program",
+  "notEnrolledMessage": "You are not able to see any applicants since you haven't applied for the PBP programme or have enrolled using the self-pay route or loan against own FD.",
+  "startLoanApplicant": "Start Loan Applicant",
+  "startLoanApplication": "Start Loan Application",
+  "status": "Status",
+  "update": "Update"
+}

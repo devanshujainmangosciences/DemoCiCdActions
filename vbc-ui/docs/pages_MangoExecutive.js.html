@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/MangoExecutive.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/MangoExecutive.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This comonent is the landing page for the ME login, it displays the list of patients that re present in the system
+ */
+import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {useDispatch, useSelector} from 'react-redux';
+import {Row, Col, Form, Card} from '@themesberg/react-bootstrap';
+import {
+  getMangoPatientList,
+  mangoExecutiveAddPatient,
+} from 'actions/mangoExecutiveActions';
+import {ProfilePageIcon} from 'assets/icons';
+import {mangoExecutivefilters, tableHeadersMangoPatient} from 'config';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faPlus} from '@fortawesome/free-solid-svg-icons';
+// import {Multiselect} from 'multiselect-react-dropdown';
+import {
+  Filter,
+  TableComponent,
+  CustomPagination,
+  TitleContainer,
+  Can,
+} from 'components';
+import {
+  drugsList,
+  hospitalsList,
+  hospitalsGroupList,
+  getMasterData,
+  doctorsList as doctorsListAction,
+  setToast,
+} from 'actions';
+// import {useNavigate} from 'react-router';
+// import {Routes} from 'routes';
+import InputForm from './profile/children/InputForm';
+import PatientDetails from './PatientDetails';
+import CustomReactSelect from 'components/CustomReactSelect';
+import {ALERT_MESSAGE, MASTER_DATA_ME, VALIDATE_DATE_TYPE} from '../constants';
+import {dateValidator} from 'services/utility';
+import {conforms} from 'lodash';
+
+const MangoExecutive = () => {
+  const {t} = useTranslation(['mangoExecutive']);
+  const dispatch = useDispatch();
+  // const history = useNavigate();
+  const [patientsList, setPatientsList] = useState([]);
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [drugList, setDrugList] = useState([]);
+  const [hospitalList, setHospitalList] = useState([]);
+  const [hospitalGroupsList, setHospitalsGroupList] = useState([]);
+  const [activePage, setActivePage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [filtersAppliedState, setfiltersAppliedState] = useState({});
+  const [hospitalGroup, setHospitalGroup] = useState('');
+  const [statuses, setStatuses] = useState('');
+  const [mrn, setMrn] = useState('');
+  const [doctor, setDoctor] = useState('');
+  const [vbcDrug, setVbcDrug] = useState('');
+  const [identifiedDate, setIdentifiedDate] = useState('');
+  const [isShowPatientDetails, setIsShowPatientDetails] = useState(false);
+  const [selectedPatientId, setselectedPatientId] = useState(null);
+  const [isAddPatient, setIsAddPatient] = useState(false);
+  const patients = useSelector((state) => state.mangoExecutive.patientsList);
+  const pagination = useSelector((state) => state.mangoExecutive.pagination);
+  const doctors = useSelector((state) => state.template.doctorList);
+  const drugs = useSelector((state) => state.template.drugList);
+  const hospitals = useSelector((state) => state.template.hospitalList);
+  const routeClicked = useSelector((state) => state.route.routeClicked);
+  const [identifiedDateWarning, setidentifiedDateWarning] = useState(false);
+  const [selectedColumns, setselectedColumns] = useState(
+    tableHeadersMangoPatient
+  );
+  const patientStatuses = useSelector(
+    (state) => state.template.masterData?.patientStatuses
+  );
+  const hospitalsGroup = useSelector(
+    (state) => state.template.hospitalGroupList
+  );
+
+  // console.log('filtersAppliedState=>', filtersAppliedState);
+
+  useEffect(() => {
+    if (patients) {
+      const reqPatientList = patients.map((patient) => {
+        return {
+          ...patient,
+          uniqueId: (
+            &lt;span
+              onClick={() => handleClickEdit(patient?.id)}
+              className="drug-link cursor-pointer">
+              {patient?.uniqueId}
+            &lt;/span>
+          ),
+          hospitalGroupName: (
+            &lt;span title={patient.hospitalGroupName}>
+              {patient.hospitalGroupName}
+            &lt;/span>
+          ),
+          hospitalUnitName: (
+            &lt;span title={patient.hospitalUnitName}>
+              {patient.hospitalUnitName}
+            &lt;/span>
+          ),
+          doctorName: (
+            &lt;span title={patient.doctorName}>{patient.doctorName}&lt;/span>
+          ),
+          drugName: &lt;span title={patient.drugName}>{patient.drugName}&lt;/span>,
+          edit: (
+            &lt;button
+              className="btn-patient-theme-grid bg-admin"
+              onClick={() => handleClickEdit(patient?.id)}>
+              Edit
+            &lt;/button>
+          ),
+        };
+      });
+      setPatientsList(reqPatientList);
+    }
+  }, [activePage, dispatch, pageSize, patients]);
+
+  // console.log("ACTIVE PAGES=>", activePage);
+
+  useEffect(() => {
+    dispatch(
+      getMangoPatientList(activePage - 1, pageSize, filtersAppliedState)
+    );
+  }, [activePage, pageSize, dispatch]);
+
+  useEffect(() => {
+    if (!drugs) {
+      dispatch(drugsList(false));
+    } else {
+      setDrugList(
+        drugs.map((drug) => ({
+          id: drug.id,
+          label: `${drug.brandName}-${drug.drugGenericName}`,
+          value: drug.id,
+        }))
+      );
+    }
+  }, [dispatch, drugs]);
+
+  useEffect(() => {
+    if (!hospitals) {
+      dispatch(hospitalsList(false));
+    } else {
+      setHospitalList(
+        hospitals.map((hospital) => ({
+          id: hospital.id,
+          label: hospital.hospitalName,
+          value: hospital.id,
+        }))
+      );
+    }
+  }, [dispatch, hospitals]);
+  useEffect(() => {
+    if (!hospitalsGroup) {
+      dispatch(hospitalsGroupList(false));
+    } else {
+      setHospitalsGroupList(
+        hospitalsGroup.map((hospitalGrp, index) => ({
+          id: index,
+          label: hospitalGrp,
+          value: hospitalGrp,
+        }))
+      );
+    }
+  }, [dispatch, hospitalsGroup]);
+  useEffect(() => {
+    if (!patientStatuses) dispatch(getMasterData(MASTER_DATA_ME, false));
+    else
+      setStatuses(
+        patientStatuses.map((status) => ({
+          id: status?.index,
+          label: status?.name,
+          value: status?.name,
+        }))
+      );
+  }, [dispatch, patientStatuses]);
+
+  useEffect(() => {
+    if (doctors) {
+      setDoctorsList(
+        doctors.map((doctor) => ({
+          id: doctor.id,
+          label: doctor?.name,
+          value: doctor.id,
+        }))
+      );
+    }
+  }, [dispatch, doctors]);
+
+  useEffect(() => {
+    if (routeClicked?.Patients >= 0 &amp;&amp; isShowPatientDetails) {
+      setfiltersAppliedState({});
+      onBackButtonClick();
+    }
+    if (routeClicked?.Patients >= 0 &amp;&amp; isAddPatient) {
+      setIsAddPatient(false);
+      // console.log('EXECUTED IN ADD PATIENT=>', routeClicked);
+    }
+  }, [routeClicked]);
+
+  /**
+   * When patient edit button is clicked
+   * @param {PatientId} id
+   */
+  const handleClickEdit = (id) => {
+    setselectedPatientId(id);
+    setIsShowPatientDetails(true);
+    // const patientRoute = Routes.PatientDetails.path;
+    // const correctRoute = patientRoute.replace(':id', id);
+    // history(correctRoute);
+  };
+  /**
+   * Function triggred when New Patient is added
+   * @param {*} e
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      firstName,
+      middleName,
+      lastName,
+      hospitalId: parseInt(hospitalGroup),
+      mrn,
+      doctorId: parseInt(doctor),
+      drugId: parseInt(vbcDrug),
+      identifiedDate,
+    };
+    const onSuccess = () => {
+      setFirstName('');
+      setMiddleName('');
+      setLastName('');
+      setHospitalGroup('');
+      setMrn('');
+      setDoctor('');
+      setVbcDrug('');
+      setIdentifiedDate('');
+      dispatch(
+        getMangoPatientList(activePage - 1, pageSize, filtersAppliedState)
+      );
+    };
+    dispatch(mangoExecutiveAddPatient(data, onSuccess));
+  };
+  /**
+   * Function trigger when back button is clicked to route to Patient list page and fetch the patients
+   */
+  const onBackButtonClick = () => {
+    setIsShowPatientDetails(false);
+    dispatch(getMangoPatientList(activePage - 1, pageSize));
+  };
+  /**
+   * When doctor is selected while creating patient
+   * @param {*} e
+   */
+  const onDoctorSelect = (e) => {
+    if (hospitalGroup) setDoctor(e.target.value);
+    else dispatch(setToast(t('errorOnDoc'), true, 'warning'));
+  };
+  /**
+   * When Hospital is selected while creating the patient
+   * @param {*} e
+   */
+  const onHospitalSelect = (e) => {
+    const value = e.target.value;
+    setHospitalGroup(value);
+    dispatch(doctorsListAction(value));
+  };
+  /**
+   * This function is saved when filter are set
+   * @param {Object} filters
+   */
+  const filtersApplied = (filters) => {
+    // console.log("FILTERS=>", filters);
+    setfiltersAppliedState(filters);
+    setActivePage(1);
+  };
+  // console.log('FILTERS=>', filtersAppliedState);
+  // /**
+  //  * When the hide/show input is selected the function triggers and set the state to latest value
+  //  * @param {Array} data
+  //  */
+  // const onSelectComponent = (data) => {
+  //   setselectedColumns(data.sort((a, b) => a.key - b.key));
+  // };
+  // /**
+  //  * When the hide/show input is removed the function triggers and set the state latest value
+  //  * @param {Array} data
+  //  */
+  // const onRemoveComponent = (data) => {
+  //   setselectedColumns(data.sort((a, b) => a.key - b.key));
+  // };
+
+  /**
+   * This data will change when the data in multi select input will change
+   * @param {Array} data
+   */
+  const onMultiSelectInputChange = (data) => {
+    setselectedColumns(data.sort((a, b) => a.key - b.key));
+  };
+
+  const onIdentifiedDateChange = (e) => {
+    const value = e.target.value;
+    setIdentifiedDate(value);
+    if (dateValidator(value, VALIDATE_DATE_TYPE.RESTRICT_FUTURE_DATE)) {
+      dispatch(
+        setToast(ALERT_MESSAGE.DATE_CANNOT_BE_IN_FUTURE, true, 'warning')
+      );
+      setidentifiedDateWarning(true);
+    } else setidentifiedDateWarning(false);
+  };
+
+  if (isShowPatientDetails) {
+    return &lt;PatientDetails patientId={selectedPatientId} />;
+  } else
+    return (
+      &lt;div className="mt-4">
+        &lt;React.Fragment>
+          {!isAddPatient ? (
+            &lt;React.Fragment>
+              &lt;div>
+                &lt;div className="mango-filter mt-4">
+                  &lt;Filter
+                    filters={mangoExecutivefilters}
+                    data={{
+                      hospitalList,
+                      doctorsList,
+                      drugList,
+                      hospitalGroupsList,
+                      statuses,
+                    }}
+                    filterBody={true}
+                    filterAppliedState={filtersAppliedState}
+                    callback={getMangoPatientList}
+                    filtersApplied={filtersApplied}
+                    activePage={activePage - 1}
+                    pageSize={pageSize}
+                    type="mango-executive"
+                    classes="ms-1-7 h-100">
+                    &lt;>
+                      &lt;div className="add-patient">
+                        &lt;Can
+                          performingAction={{
+                            component: 'mango-exe-add-patient',
+                            action: 'can view details',
+                          }}>
+                          &lt;button
+                            onClick={() => setIsAddPatient(true)}
+                            className="btn-patient-theme bg-white text-dark">
+                            &lt;FontAwesomeIcon icon={faPlus} className="me-2" />{' '}
+                            {t('addPatient')}
+                          &lt;/button>
+                        &lt;/Can>
+                      &lt;/div>
+                      &lt;div className="show-entries">
+                        &lt;select
+                          value={pageSize}
+                          onChange={(e) => setPageSize(e.target.value)}>
+                          &lt;option value="" hidden>
+                            {t('selectOne')}
+                          &lt;/option>
+                          &lt;option value={10}>{t('showTenEntries')}&lt;/option>
+                          &lt;option value={20}>{t('showTwentyEntries')}&lt;/option>
+                          &lt;option value={30}>{t('showThirtyEntries')}&lt;/option>
+                        &lt;/select>
+                      &lt;/div>
+                    &lt;/>
+                  &lt;/Filter>
+                &lt;/div>
+                &lt;div className="mt-3 d-flex align-items-center hide-columns">
+                  &lt;div>Hide Columns:&lt;/div>
+                  &lt;div className="ms-3">
+                    &lt;CustomReactSelect
+                      onInputChange={onMultiSelectInputChange}
+                      optionData={tableHeadersMangoPatient}
+                      defaultData={selectedColumns}
+                      backgroundColor="#09a6e0"
+                    />
+                    {/* &lt;Multiselect
+                      options={tableHeadersMangoPatient}
+                      selectedValues={selectedColumns}
+                      onSelect={onSelectComponent} // Function will trigger on select event
+                      onRemove={onRemoveComponent}
+                      displayValue="keyName" // Property name to display in the dropdown options
+                      showCheckbox={true}
+                      placeholder=""
+                    /> */}
+                  &lt;/div>
+                &lt;/div>
+              &lt;/div>
+              {patientsList &amp;&amp; (
+                &lt;div className="page-container mt-3 p-4 pb-1">
+                  &lt;TableComponent
+                    component={'mango-patient-listing'}
+                    tableHeadersData={selectedColumns}
+                    tableData={patientsList}
+                    classes={'mango-executive-patient align-items-center'}
+                    noCheck
+                    headerClasses="border-0"
+                  />
+                  {pagination &amp;&amp; (
+                    &lt;CustomPagination
+                      paginationDetail={pagination}
+                      activePage={activePage}
+                      setActivePage={setActivePage}
+                    />
+                  )}
+                &lt;/div>
+              )}
+            &lt;/React.Fragment>
+          ) : (
+            &lt;React.Fragment>
+              &lt;Form
+                onSubmit={handleSubmit}
+                className="mt-4 myprofile-container">
+                &lt;div className="page-container p-4 pb-2">
+                  &lt;TitleContainer
+                    icon={&lt;ProfilePageIcon fill="#28252e" />}
+                    title={t('addNewPatient')}
+                    noBg={true}
+                  />
+                  &lt;div className="mt-3">
+                    &lt;Row className="row-cols-sm-2 row-cols-md-3 row-cols-lg-3">
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('firstName')}
+                              type="text"
+                              placeholder={t('firstName')}
+                              required
+                              isView={false}
+                              ipValue={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('middleName')}
+                              type="text"
+                              placeholder={t('middleName')}
+                              required={false}
+                              isView={false}
+                              ipValue={middleName}
+                              onChange={(e) => setMiddleName(e.target.value)}
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('lastName')}
+                              type="text"
+                              placeholder={t('lastName')}
+                              required
+                              isView={false}
+                              ipValue={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('hospital')}
+                              type="select"
+                              placeholder="Select Hospital"
+                              required
+                              isView={false}
+                              ipValue={hospitalGroup}
+                              onChange={onHospitalSelect}
+                              options={
+                                hospitalList.length > 0 &amp;&amp;
+                                hospitalList.map(({label, value}) => {
+                                  return {label, value};
+                                })
+                              }
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('mrn')}
+                              type="text"
+                              placeholder="MRN"
+                              required
+                              isView={false}
+                              ipValue={mrn}
+                              onChange={(e) => setMrn(e.target.value)}
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('doctor')}
+                              type="select"
+                              placeholder="Select Doctor"
+                              required
+                              isView={false}
+                              ipValue={doctor}
+                              onChange={onDoctorSelect}
+                              options={
+                                doctorsList.length > 0
+                                  ? doctorsList.map(({label, value}) => {
+                                      return {label, value};
+                                    })
+                                  : !hospitalGroup
+                                  ? [
+                                      {
+                                        label: 'Select Hospital First',
+                                        value: '',
+                                      },
+                                    ]
+                                  : [{label: 'No Doctors Avaliable', value: ''}]
+                              }
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('vbcDrug')}
+                              type="select"
+                              placeholder="Select PBP Medication"
+                              required
+                              isView={false}
+                              ipValue={vbcDrug}
+                              onChange={(e) => setVbcDrug(e.target.value)}
+                              options={
+                                drugList.length > 0 &amp;&amp;
+                                drugList.map(({label, value}) => {
+                                  return {label, value};
+                                })
+                              }
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+
+                      &lt;Col>
+                        &lt;Card className="border-0">
+                          &lt;Card.Body>
+                            &lt;InputForm
+                              label={t('identifiedDate')}
+                              type="date"
+                              placeholder="Identified Date"
+                              required
+                              isView={false}
+                              ipValue={identifiedDate}
+                              isInvalid={identifiedDateWarning}
+                              warningText={t('invalidIdentifiedDate')}
+                              onChange={onIdentifiedDateChange}
+                            />
+                          &lt;/Card.Body>
+                        &lt;/Card>
+                      &lt;/Col>
+                    &lt;/Row>{' '}
+                  &lt;/div>
+                &lt;/div>
+                &lt;div className="d-flex flex-row mt-4 ">
+                  &lt;button
+                    className="btn-patient-theme bg-dark px-5"
+                    onClick={() => setIsAddPatient(false)}>
+                    {t('back')}
+                  &lt;/button>
+                  &lt;button
+                    type="submit"
+                    disabled={identifiedDateWarning}
+                    className="btn-patient-theme bg-admin ms-3 px-5">
+                    {t('save')}
+                  &lt;/button>
+                &lt;/div>
+              &lt;/Form>
+            &lt;/React.Fragment>
+          )}
+        &lt;/React.Fragment>
+      &lt;/div>
+    );
+};
+
+export default MangoExecutive;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addationSelect">addationSelect</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#SidebarDrugIcon">SidebarDrugIcon</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri Nov 04 2022 12:59:13 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

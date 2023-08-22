@@ -1,0 +1,20 @@
+{
+  "home": "Home",
+  "lenders": "Lenders",
+  "name": "Name",
+  "enterName": "Enter Name",
+  "address": "Address",
+  "enterAddress": "Enter Address",
+  "city": "City",
+  "enterCity": "Enter City",
+  "state": "State",
+  "enterState": "Enter State",
+  "country": "Country",
+  "enterCountry": "Enter Country",
+  "lenderRole": "Lender Role",
+  "update": "Update",
+  "new": "New",
+  "add": "Add",
+  "createLender": "Create Lender",
+  "updateLender": "Update Lender"
+}

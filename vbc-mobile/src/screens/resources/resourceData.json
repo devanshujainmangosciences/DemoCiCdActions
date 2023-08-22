@@ -1,0 +1,1125 @@
+[
+  {
+    "id": 11,
+    "main_title": "About Cancer",
+    "sideData": [
+      {
+        "sideHeader": "Is Cancer Hereditary?",
+        "sideDesc": "Is Cancer Hereditary?",
+        "subs": [
+          {
+            "sub_head": "Overview",
+            "init_para": [
+              "When we hear the word ‘cancer’, it instantly triggers a sense of panic and fear. Did you know cancer is a group of over 100 diseases and can occur in any part of the body? While there are a few cancers that occur very commonly, some cancer types are very rare. But, what exactly is ‘cancer’?",
+              "Cancer is a term given to describe the development of abnormal cells that divide uncontrollably, tend to spread to other parts of the body and destroy normal, healthy cells and tissues. Cancer is the second-most common cause of death in the world. Genetic changes along with environmental changes can trigger this uncontrollable division of cells that results in cancer."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Types",
+            "init_para": [
+              "Cancer can be divided into different types based on its nature of spread and origin."
+            ],
+            "sub_head_types": [
+              {
+                "sub_head": "Based on the nature of the spread",
+                "highlights": [
+                  {
+                    "title": "Benign",
+                    "desc": "Not all uncontrollably dividing cells spread to other parts of the body. These cancers are localised and are said to be benign."
+                  },
+                  {
+                    "title": "Malignant",
+                    "desc": "Cancers that tend to spread to other parts of the body are called malignant."
+                  }
+                ]
+              },
+              {
+                "sub_head": "Based on origin",
+                "init_para": [
+                  "Depending on the type of tissue that cancer begins or originates in, cancers can be of the following types:"
+                ],
+                "highlights": [
+                  {
+                    "title": "Carcinomas",
+                    "desc": "These cancers begin in tissues that line organs and glands, including the skin. Carcinomas are the most commonly occurring cancers and include breast cancer, lung cancer, prostate cancers, etc."
+                  },
+                  {
+                    "title": "Sarcomas",
+                    "desc": "Sarcoma is a type of cancer that originates in connective tissues of the body such as fat cells, nerves, muscles, bones, ligaments, blood vessels, lymph, and cartilage."
+                  },
+                  {
+                    "title": "Leukaemias",
+                    "desc": "Leukaemia, also called blood cancer, affects blood cells. There are four types of leukaemia– acute lymphocytic, chronic lymphocytic, acute myeloid and chronic myeloid based on the duration of occurrence of the leukaemia and the type of blood cell it originates in."
+                  },
+                  {
+                    "title": "Lymphomas",
+                    "desc": "As the name suggests, lymphomas originate within the lymphatic system that comprises a network of lymph nodes, and vessels. The two common types of lymphomas are Hodgkin and Non-Hodgkin lymphomas."
+                  },
+                  {
+                    "title": "Multiple myeloma",
+                    "desc": "Multiple myeloma is a term given to cancers that originate in a type of immune cell called plasma cells. In this cancer type, the abnormal plasma cells grow and begin building up in the bone marrow."
+                  },
+                  {
+                    "title": "Melanoma",
+                    "desc": "This type of cancer begins from the skin’s pigment-forming cells called melanocytes."
+                  },
+                  {
+                    "title": "Brain and spinal cord tumours",
+                    "desc": "Brain and spinal cord cancers originate in the central nervous system cells like the nerve cells. These cancers can be benign or malignant."
+                  }
+                ],
+                "hr_break": true
+              }
+            ]
+          },
+
+          {
+            "sub_head": "Causes",
+            "init_para": [
+              "As we now know, cancer arises in cells when they have some genetic changes or mutations that occur in their DNA. These gene mutations stimulate rapid and uncontrolled growth and multiplication of cells while making mistakes in DNA formation. Many risk factors increase the chances of developing cancer. Some of the most common risk factors include:"
+            ],
+            "highlights": [
+              {
+                "title": "Family history",
+                "desc": "Genes for some types of cancer like breast cancer, prostate cancer, breast cancer, etc., can be inherited and people with a family history of the same are at an increased risk of developing it. However, just because you have a family history or an abnormal gene for a particular type of cancer does not mean you will develop cancer."
+              },
+              {
+                "title": "Age",
+                "desc": "Cancers usually take time to develop and so most people are over 65 years of age when they are diagnosed with it. However, this does not mean that cancer is only observed in people who are old. Some types of cancers are more common in younger individuals."
+              },
+              {
+                "title": "Smoking and tobacco chewing",
+                "desc": "Tobacco products like cigarettes, cigars, pipes, etc., contain harmful chemicals like nicotine, hydrogen cyanide, lead, arsenic, etc., many of which are carcinogenic in nature (or cancer-causing). People who use tobacco products have a higher risk of developing cancer of the mouth, lungs"
+              },
+              {
+                "title": "Diet and exercise",
+                "desc": "Being overweight increases the chances of cancer. Controlling your weight with a healthy diet and exercise can help you maintain optimum weight and may reduce your chances of developing cancer. You must eat a diet that is rich in vitamins, minerals, and other essential nutrients"
+              },
+              {
+                "title": "Exposure to sun rays and other types of radiation",
+                "desc": "Exposure to the sun’s UV rays can increase your risk for skin cancer. In addition to this, exposure to high-energy radiation like x-rays and gamma rays can increase your cancer risk."
+              }
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Common Symptoms of Cancer",
+            "init_para": [
+              "The signs and symptoms of cancer depend upon the type of cancer and the part of the body it affects. However, some common/general symptoms of cancer include:"
+            ],
+            "bullets": [
+              "A lump or nodule-like growth that can be felt under the skin in the affected area",
+              "Unexplained weight loss",
+              "Changes in skin colour– it can darken, turn yellow or reddish",
+              "Non-healing wound or sore",
+              "Fatigue or tiredness",
+              "Change in bowel movements",
+              "Difficulty in swallowing",
+              "Persistent cough",
+              "Difficulty in breathing",
+              "Changes observed in existing moles (increase in size, crusting or bleeding)",
+              "Hoarseness in the voice",
+              "Persistent indigestion",
+              "Random bruising on the skin"
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Treatment Options",
+            "init_para": [
+              "There are multiple treatment options available for cancer today. The treatment option for a type of cancer depends upon multiple factors like– type of cancer, stage of cancer, patient’s age, and overall health. ",
+              "Cancer treatment can have a different goal for each patient– from a complete cure, to remove cancer from the body or kill cancer cells, as an adjuvant treatment, and as palliative treatment.",
+              "The different types of cancer treatments available today include:"
+            ],
+            "highlights": [
+              {
+                "title": "Surgery",
+                "desc": "Surgery is used to remove cancer in its entirety, as much as possible."
+              },
+              {
+                "title": "Chemotherapy",
+                "desc": "Drugs are used to kill cancer cells and may be used before or after surgery."
+              },
+              {
+                "title": "Radiation Therapy",
+                "desc": "This treatment involves the use of high-beam radiations to kill cancer cells. The radiation can be applied from an external source (called external radiation therapy) or internally in the body (called internal radiation therapy)."
+              },
+              {
+                "title": "Bone marrow Transplant",
+                "desc": "This treatment option is used to treat leukaemias or lymphomas."
+              },
+              {
+                "title": "Hormone Therapy",
+                "desc": "Some cancers such as breast cancer and prostate cancer are influenced by hormones like progesterone, estrogen and testosterone. Reducing these hormones can help in treating these cancers."
+              },
+              {
+                "title": "Targeted Drug Therapy",
+                "desc": "This treatment option uses drugs that target specific cancer cells and kill them."
+              },
+              {
+                "title": "Immunotherapy",
+                "desc": "In this type of treatment, your immune system is trained to attack and fight cancer."
+              }
+            ],
+            "last_para": [
+              "Cancer can frighten even the bravest of people. However, with timely diagnosis, and advanced treatment options we all have the power to beat the big ‘C’ and reclaim our lives!"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "Cancer:",
+        "sideDesc": "Cancer: All you need to know",
+        "subs": [
+          {
+            "sub_head": "Overview",
+            "init_para": [
+              "When we hear the word ‘cancer’, it instantly triggers a sense of panic and fear. Did you know cancer is a group of over 100 diseases and can occur in any part of the body? While there are a few cancers that occur very commonly, some cancer types are very rare. But, what exactly is ‘cancer’?",
+              "Cancer is a term given to describe the development of abnormal cells that divide uncontrollably, tend to spread to other parts of the body and destroy normal, healthy cells and tissues. Cancer is the second-most common cause of death in the world. Genetic changes along with environmental changes can trigger this uncontrollable division of cells that results in cancer."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Types",
+            "init_para": [
+              "Cancer can be divided into different types based on its nature of spread and origin."
+            ],
+            "sub_head_types": [
+              {
+                "sub_head": "Based on the nature of the spread",
+                "highlights": [
+                  {
+                    "title": "Benign",
+                    "desc": "Not all uncontrollably dividing cells spread to other parts of the body. These cancers are localised and are said to be benign."
+                  },
+                  {
+                    "title": "Malignant",
+                    "desc": "Cancers that tend to spread to other parts of the body are called malignant."
+                  }
+                ]
+              },
+              {
+                "sub_head": "Based on origin",
+                "init_para": [
+                  "Depending on the type of tissue that cancer begins or originates in, cancers can be of the following types:"
+                ],
+                "highlights": [
+                  {
+                    "title": "Carcinomas",
+                    "desc": "These cancers begin in tissues that line organs and glands, including the skin. Carcinomas are the most commonly occurring cancers and include breast cancer, lung cancer, prostate cancers, etc."
+                  },
+                  {
+                    "title": "Sarcomas",
+                    "desc": "Sarcoma is a type of cancer that originates in connective tissues of the body such as fat cells, nerves, muscles, bones, ligaments, blood vessels, lymph, and cartilage."
+                  },
+                  {
+                    "title": "Leukaemias",
+                    "desc": "Leukaemia, also called blood cancer, affects blood cells. There are four types of leukaemia– acute lymphocytic, chronic lymphocytic, acute myeloid and chronic myeloid based on the duration of occurrence of the leukaemia and the type of blood cell it originates in."
+                  },
+                  {
+                    "title": "Lymphomas",
+                    "desc": "As the name suggests, lymphomas originate within the lymphatic system that comprises a network of lymph nodes, and vessels. The two common types of lymphomas are Hodgkin and Non-Hodgkin lymphomas."
+                  },
+                  {
+                    "title": "Multiple myeloma",
+                    "desc": "Multiple myeloma is a term given to cancers that originate in a type of immune cell called plasma cells. In this cancer type, the abnormal plasma cells grow and begin building up in the bone marrow."
+                  },
+                  {
+                    "title": "Melanoma",
+                    "desc": "This type of cancer begins from the skin’s pigment-forming cells called melanocytes."
+                  },
+                  {
+                    "title": "Brain and spinal cord tumours",
+                    "desc": "Brain and spinal cord cancers originate in the central nervous system cells like the nerve cells. These cancers can be benign or malignant."
+                  }
+                ],
+                "hr_break": true
+              }
+            ]
+          },
+
+          {
+            "sub_head": "Causes",
+            "init_para": [
+              "As we now know, cancer arises in cells when they have some genetic changes or mutations that occur in their DNA. These gene mutations stimulate rapid and uncontrolled growth and multiplication of cells while making mistakes in DNA formation. Many risk factors increase the chances of developing cancer. Some of the most common risk factors include:"
+            ],
+            "highlights": [
+              {
+                "title": "Family history",
+                "desc": "Genes for some types of cancer like breast cancer, prostate cancer, breast cancer, etc., can be inherited and people with a family history of the same are at an increased risk of developing it. However, just because you have a family history or an abnormal gene for a particular type of cancer does not mean you will develop cancer."
+              },
+              {
+                "title": "Age",
+                "desc": "Cancers usually take time to develop and so most people are over 65 years of age when they are diagnosed with it. However, this does not mean that cancer is only observed in people who are old. Some types of cancers are more common in younger individuals."
+              },
+              {
+                "title": "Smoking and tobacco chewing",
+                "desc": "Tobacco products like cigarettes, cigars, pipes, etc., contain harmful chemicals like nicotine, hydrogen cyanide, lead, arsenic, etc., many of which are carcinogenic in nature (or cancer-causing). People who use tobacco products have a higher risk of developing cancer of the mouth, lungs"
+              },
+              {
+                "title": "Diet and exercise",
+                "desc": "Being overweight increases the chances of cancer. Controlling your weight with a healthy diet and exercise can help you maintain optimum weight and may reduce your chances of developing cancer. You must eat a diet that is rich in vitamins, minerals, and other essential nutrients"
+              },
+              {
+                "title": "Exposure to sun rays and other types of radiation",
+                "desc": "Exposure to the sun’s UV rays can increase your risk for skin cancer. In addition to this, exposure to high-energy radiation like x-rays and gamma rays can increase your cancer risk."
+              }
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Common Symptoms of Cancer",
+            "init_para": [
+              "The signs and symptoms of cancer depend upon the type of cancer and the part of the body it affects. However, some common/general symptoms of cancer include:"
+            ],
+            "bullets": [
+              "A lump or nodule-like growth that can be felt under the skin in the affected area",
+              "Unexplained weight loss",
+              "Changes in skin colour– it can darken, turn yellow or reddish",
+              "Non-healing wound or sore",
+              "Fatigue or tiredness",
+              "Change in bowel movements",
+              "Difficulty in swallowing",
+              "Persistent cough",
+              "Difficulty in breathing",
+              "Changes observed in existing moles (increase in size, crusting or bleeding)",
+              "Hoarseness in the voice",
+              "Persistent indigestion",
+              "Random bruising on the skin"
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Treatment Options",
+            "init_para": [
+              "There are multiple treatment options available for cancer today. The treatment option for a type of cancer depends upon multiple factors like– type of cancer, stage of cancer, patient’s age, and overall health. ",
+              "Cancer treatment can have a different goal for each patient– from a complete cure, to remove cancer from the body or kill cancer cells, as an adjuvant treatment, and as palliative treatment.",
+              "The different types of cancer treatments available today include:"
+            ],
+            "highlights": [
+              {
+                "title": "Surgery",
+                "desc": "Surgery is used to remove cancer in its entirety, as much as possible."
+              },
+              {
+                "title": "Chemotherapy",
+                "desc": "Drugs are used to kill cancer cells and may be used before or after surgery."
+              },
+              {
+                "title": "Radiation Therapy",
+                "desc": "This treatment involves the use of high-beam radiations to kill cancer cells. The radiation can be applied from an external source (called external radiation therapy) or internally in the body (called internal radiation therapy)."
+              },
+              {
+                "title": "Bone marrow Transplant",
+                "desc": "This treatment option is used to treat leukaemias or lymphomas."
+              },
+              {
+                "title": "Hormone Therapy",
+                "desc": "Some cancers such as breast cancer and prostate cancer are influenced by hormones like progesterone, estrogen and testosterone. Reducing these hormones can help in treating these cancers."
+              },
+              {
+                "title": "Targeted Drug Therapy",
+                "desc": "This treatment option uses drugs that target specific cancer cells and kill them."
+              },
+              {
+                "title": "Immunotherapy",
+                "desc": "In this type of treatment, your immune system is trained to attack and fight cancer."
+              }
+            ],
+            "last_para": [
+              "Cancer can frighten even the bravest of people. However, with timely diagnosis, and advanced treatment options we all have the power to beat the big ‘C’ and reclaim our lives!"
+            ]
+          },
+          {
+            "sub_head": "References and further reading",
+            "links": [
+              "https://www.mayoclinic.org/diseases-conditions/cancer/symptoms-causes/syc-20370588",
+              "https://www.cancer.gov/about-cancer/understanding/what-is-cancer",
+              "https://www.cancer.net/navigating-cancer-care/cancer-basics/what-cancer"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "Breast Cancer:",
+        "sideDesc": "Breast Cancer: An Overview",
+        "subs": [
+          {
+            "sub_head": "Overview",
+            "init_para": [
+              "Breast cancer is one of the most common cancers diagnosed in women after skin cancer. While breast cancer can develop in women and men, women are far more vulnerable than men.",
+              "Cancer occurs when your body cells grow out of control. These rapidly growing cells form tumours that can be felt as a lump or seen after imaging studies.",
+              "It is essential to know that in most cases, tumours are benign, and their growth is limited to the breasts. Only cancerous tumours can spread, needing prompt treatment to curb their growth and prevent complications.",
+              "This article talks about breast cancer in women, its causes, presentation, and treatment options."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Causes",
+            "init_para": [
+              "The exact cause of breast cancer is still unknown. But several factors may put you at risk of developing breast cancer. Research has identified lifestyle, genetic, hormonal, and environmental factors to increase the risk of breast cancer. Experts also believe that the cause of breast cancer is a complex interlinkage of the factors mentioned below."
+            ]
+          },
+          {
+            "sub_head": "Risk Factors",
+            "init_para": [
+              "In contrast to the usual belief, the majority of breast cancer cases are not inherited. Factors that may increase the risk of developing breast cancer factors include:"
+            ],
+            "bullets": [
+              "Age (above 45 years)",
+              "Drinking alcohol ",
+              "Obesity ",
+              "Dense breast tissue",
+              "Radiation exposure",
+              "Smoking / Tobacco usage ",
+              "Hormonal therapy (postmenopausal)",
+              "Conceiving a child after 30 years of age ",
+              "Never being pregnant",
+              "Family history of breast cancer",
+              "Consumption of birth pills",
+              "Atypical hyperplasia of the breast",
+              "Early and late onset of menstruation",
+              "Genetics"
+            ],
+            "last_para": [
+              "However, having a single or several risk factors does not necessarily mean that you are likely to develop breast cancer. Besides, breast cancer may even occur when there are no known risk factors. "
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Types ",
+            "init_para": [
+              "Breast cancer may develop at various sites in the breast, such as the lobules that produce milk, ducts that transmit milk to the nipple, or the tissue in between. The following are the most common types of breast cancer:"
+            ],
+            "bullets": [
+              "Lobular carcinoma in situ (cancer of cells lining the lobules)",
+              "Ductal carcinoma in situ (cancer of cells lining the duct)",
+              "Infiltrating ductal carcinoma (cancer that starts in the duct and invades the tissue outside the duct) ",
+              "Infiltrating lobular carcinoma (cancer that starts in the lobules and invades the cells outside lobules)",
+              "Inflammatory breast cancer",
+              "Recurrent breast cancer"
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "",
+            "init_para": [
+              "Breast cancer may also be classified as invasive, non-invasive, or metastatic breast cancer. "
+            ],
+            "bullets": [
+              "Invasive breast cancer is when cancer cells spread beyond the ducts or lobules.",
+              "Non-invasive breast cancer is when cancer cells are confined to the ducts or lobules.",
+              "Metastatic breast cancer is when cancer spreads to other parts of the body."
+            ]
+          },
+          {
+            "sub_head": "Clinical Presentation",
+            "init_para": [
+              "Most of the time, women present with no signs and symptoms of breast cancer. When present, signs and symptoms may include:"
+            ],
+            "bullets": [
+              "Thickening in or around the breast or a lump (the lump is usually as small as a pea)",
+              "Change in size, appearance, or shape of a breast",
+              "A newly inverted nipple or soreness in the nipple ",
+              "Nipple discharge that occurs suddenly is bloody or occurs in one breast",
+              "Skin changes like dimpling, puckering, scaliness, or new creases",
+              "Skin irritation",
+              "Swollen breast (warm and red), with or without rash",
+              "Pain in the breast, which does not disappear"
+            ],
+            "last_para": [
+              "If you experience any changes mentioned above or other changes that concern you, please consult your doctor immediately. These signs and symptoms may resemble an infection, but it is vital to get it promptly checked by the doctor to avoid its spread or complications. "
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Self-Inspection/Early Detection Techniques ",
+            "init_para": [
+              "If you are 40 or above, it is highly recommended to examine your breast regularly. You may get an annual physical breast examination done by a doctor or a mammogram.",
+              "A mammogram is the most widely used screening test for the identification of breast cancer. It provides a picture of the inside of the breast and helps identify tumours too small to feel. Any cancer, if diagnosed early, improves the chances of survival. "
+            ],
+
+            "hr_break": true
+          },
+          {
+            "sub_head": "Treatment Options - In brief",
+            "init_para": [
+              "After being diagnosed with breast cancer, your treating physician will discuss the treatment options with you to destroy cancer or curb the spread or progression of the disease and even reduce the chance of its recurrence.",
+              "The type of treatment depends on factors such as the tumour’s location, size, stage of the disease. Moreover, your general health and age will also be important criteria while selecting the treatment. ",
+              "The following are the standard types of treatment options available for breast cancer:"
+            ],
+            "highlights": [
+              {
+                "title": "Chemotherapy",
+                "desc": " This therapy uses medications to kill cancer cells. They either kill the cancer cells or prevent their growth, division, and multiplication. Chemotherapy can even be taken before surgery to reduce the size of the tumour and make the surgery easy. The treatment involves administering drugs (mainly in combination) for a specific number of cycles set over a period of time (usually two or three, or four weeks). "
+              },
+              {
+                "title": "Surgery",
+                "desc": " Surgical procedures involve the removal of the breast tumour cells and surrounding healthy tissues during an operation. Patients who are diagnosed early and have small tumours are the ideal candidate for this form of treatment. "
+              },
+              {
+                "title": "Immunotherapy",
+                "desc": "Immunotherapy is a type of biological therapy. It involves activating the patient’s immune system to fight cancer."
+              },
+              {
+                "title": "Radiation therapy",
+                "desc": "This treatment approach involves the use of high-energy x-rays or other particles to kill cancer cells. The therapy consists of a specific number of treatments that are given over a specific time."
+              },
+              {
+                "title": "Hormone therapy",
+                "desc": "Hormone therapy is an effective treatment option for altering or blocking the action of the hormones that promote growth and multiplication of the cancer cells. Hormonal therapy is often used along with chemotherapy. It may also be given before surgery to reduce the size of the tumour or after the surgery to reduce the risk of recurrence."
+              },
+              {
+                "title": "Targeted therapy",
+                "desc": "It involves using drugs that target the cancer-specific molecules that are responsible for its growth and survival."
+              }
+            ],
+
+            "hr_break": true
+          },
+          {
+            "sub_head": "Prognosis",
+            "init_para": [
+              "The incidence of breast cancer is growing each year. The prognosis for the disease varies from person to person, and there are various factors such as age, grade, size, and type of cancer that affect it. ",
+              "The median age for women diagnosed with breast cancer is 62 years.",
+              "National cancer institute reports that 90% of the women with breast cancer survive for at least 5 years after diagnosis. American cancer society reports that 84% of women survive for 10 years after diagnosis. At the same time, 80% of the women survive for at least 15 years after being diagnosed with breast cancer."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Other Information",
+            "init_para": [
+              "If you notice having symptoms that concern you, it’s a good idea to have your doctor do a breast exam.",
+              "When you first find out about being diagnosed with breast cancer, you may feel overwhelmed. You may have many questions about the new issues you may face, how to adjust to the changes and questions about treatment. It is essential that you describe and discuss all your concerns with your treating doctor.",
+              "You may also join breast cancer support groups. It helps to be with people who are undergoing a similar journey and share experiences with them. Research suggests that joining a support group improves the quality of life and survival."
+            ],
+            "hr_break": false
+          },
+          {
+            "sub_head": "References and further reading",
+            "links": [
+              "https://www.mayoclinic.org/diseases-conditions/breast-cancer/symptoms-causes/syc-20352470",
+              "https://www.cancer.gov/types/breast",
+              "https://my.clevelandclinic.org/health/diseases/3986-breast-cancer",
+              "https://www.cancer.net/cancer-types/breast-cancer",
+              "https://www.breastcancer.org/",
+              "https://www.who.int/news-room/fact-sheets/detail/breast-cancer",
+              "https://www.healthline.com/health/breast-cancer/survival-facts-statistics#by-time",
+              "https://www.cancer.net/cancer-types/breast-cancer"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "Lung Cancer:",
+        "sideDesc": "Lung Cancer: An overview",
+        "subs": [
+          {
+            "sub_head": "",
+            "init_para": [
+              "Cancer is a condition where abnormal body cells grow out of control. When cancer growth begins in the lungs, it is called lung cancer. Any part of the lungs or airways or part of the breathing system may be affected. The breathing system includes the following: "
+            ],
+            "bullets": [
+              "Lungs ",
+              "Airways to each lung",
+              "The nose ",
+              "The mouth",
+              "Windpipe (trachea)"
+            ],
+            "last_para": [
+              "Lung cancer beings in the lungs and may spread to lymph nodes or other parts of the body. Cancer from other organs may also spread to the lungs. When the spread occurs from one organ to another, it is called metastatic cancer."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Causes",
+            "init_para": [
+              "Majority of the lung cancers are caused by smoking. Smoking cigarettes is the single most significant risk factor for lung cancer. However, people who have not smoked may also develop lung cancer. Tobacco smoke contains substances that are known to have a carcinogenic effect (cancer-producing). Hence, passive smoking is also harmful. Furthermoire, everyone who smokes does not get lung cancer. Other factors also play a role. Other causes of lung cancer include:"
+            ],
+            "bullets": [
+              "Exposure to certain chemicals in the workplace (asbestos or diesel exhaust)",
+              "Exposure to radon gas ",
+              "Exposure to chemo-/radiotherapy for other types of cancer ",
+              "Family history of lung cancer ",
+              "Exposure to a certain type of air pollutants "
+            ]
+          },
+          {
+            "sub_head": "Risk Factors ",
+            "init_para": [
+              "Research indicates that several factors may increase the chances of getting lung cancer they are:"
+            ],
+            "bullets": [
+              "Smoking",
+              "Secondhand smoke (passive smoking)",
+              "Exposure to radon ",
+              "Age ",
+              "Genetics",
+              "Radiation Therapy ",
+              "Dietary supplements ",
+              "Exposure to certain chemicals or carcinogens at the workplace ",
+              "Air pollution",
+              "Smoking marijuana",
+              "History or current use of tobacco",
+              "E-cigarettes"
+            ]
+          },
+          {
+            "sub_head": "Types",
+            "init_para": [
+              "There are different types of lung cancer. The type of lung cancer is one of the key factors that determine your treatment options and your clinical outcome. Oncologists divide lung cancer into two main categories: "
+            ],
+            "highlights": [
+              {
+                "title": "Small cell lung cancer (SCLC)",
+                "desc": "SCLC is a comparatively rare type of lung cancer. Approximately 15-20% of the patients diagnosed with lung cancer have SCLC. Smoking is the primary cause. This type of cancer spreads quite early. SCLC grows and spreads more quickly than NSCLC. However, people with SCLC respond well to treatments (chemotherapy and radiation) but are susceptible to relapse or recurrence.It is further categorized into two main subtypes:",
+                "bullets": [
+                  {"desc": "Small cell carcinoma (oat-cell cancer)"},
+                  {"desc": "Combined small cell carcinoma"}
+                ]
+              },
+              {
+                "title": "Non-small cell lung cancer (NSCLC)",
+                "desc": "It is the most common type of lung cancer. Approximately 80-85% of the patients diagnosed with lung cancer fall into NSCLC. NSCLC grows slower than SCLC and shows no or fewer symptoms until it has reached an advanced stage. NSCLC is further categorized into 3 main subtypes:",
+                "bullets": [
+                  {
+                    "title": "Adenocarcinoma:",
+                    "desc": "Adenocarcinoma: It is the most common type of lung cancer. It accounts for 30% of lung cancer cases and 40% of NSCLC type of cancer. It is commonly found in patients who are current and former smokers. It is also highly prevalent cancer in people who do not smoke. Women and young people are more prone to develop this type of cancer."
+                  },
+                  {
+                    "title": "Squamous cell carcinoma:",
+                    "desc": "Squamous cell carcinoma: It is centrally found in the lung. Approximately 30% of the cases of NSCLC belong to this type. This type of cancer is linked to smoking. It occurs in conjunction with larger bronchi and trachea of the lung or one of the primary airway branches."
+                  },
+                  {
+                    "title": "Large cell carcinoma: ",
+                    "desc": "Large cell carcinoma: It accounts for 10-15% of the cases of NSCLC. It can be found anywhere in the lung. It spreads and grows more quickly, thus making it difficult to treat."
+                  }
+                ]
+              }
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Clinical Presentation ",
+            "init_para": [
+              "In most cases, signs and symptoms may be absent in the early stages of lung cancer. Symptoms usually appear as the disease progresses. The main sign and symptoms of lung cancer include: "
+            ],
+            "bullets": [
+              "Cough (persistent cough for 2 to 3 weeks), which usually gets worse",
+              "Recurring chest infections",
+              "Coughing up blood",
+              "Pain while breathing or coughing",
+              "Persistent breathlessness ",
+              "Weight loss or loss of appetite ",
+              "Persistent tiredness ",
+              "Wheezing"
+            ]
+          },
+          {
+            "sub_head": "",
+            "init_para": ["Less common symptoms may include:"],
+            "bullets": [
+              "Difficulty or pain while swallowing",
+              "Changes in the appearance of fingers (fingers become long or curvy)",
+              "Swelling in face or neck ",
+              "Hoarse voice ",
+              "Shoulder pain "
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Early Detection Techniques",
+            "init_para": [
+              "Screening involves looking for the possibility of cancer in a person before the appearance of any symptoms. Early detection may make the treatment easier. Screening tests are conducted when you have no cancer symptoms. If the results in the screening test are abnormal, your physician may advise you to undergo more tests to determine the possibility of lung cancer.",
+              "Low-dose CT (LDCT) scan can help find abnormal areas of the lung that could be cancer. LDCT scans help to screen patients that are at a higher risk, thus helping in saving lives."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Treatment Options - Surgery, Radiation, Chemotherapy, Immunotherapy, and Palliative ",
+            "init_para": [
+              "There are multiple treatment options for lung cancer. However, the type of treatment you will receive on several factors such as:"
+            ],
+            "bullets": [
+              "The overall health of the patient ",
+              "Stage of the cancer ",
+              "Type of lung cancer ",
+              "Size and position of the cancer"
+            ]
+          },
+          {
+            "sub_head": "",
+            "init_para": [
+              "The various treatment options for lung cancer include the following:"
+            ],
+            "highlights": [
+              {
+                "title": "Surgery",
+                "desc": "There are three types of lung surgery that your surgeon may choose:",
+                "bullets": [
+                  {
+                    "title": "Lobectomy:",
+                    "desc": "Lobectomy: In this surgery, one or more significant parts of the lung are removed This procedure may be advised if the cancer is present in one section of one lung."
+                  },
+                  {
+                    "title": "Segmentectomy:",
+                    "desc": "Segmentectomy: This type of surgery is suitable for a small population and is used only when the cancer is small and limited to one lung area and in a very early stage. In this procedure, the doctor will remove a small portion of the lung."
+                  },
+                  {
+                    "title": "Pneumonectomy:",
+                    "desc": "Pneumonectomy: This surgical procedure involves the removal of an entire lung. It is used when the cancer is in the middle of the lung or when it has spread throughout the lung."
+                  }
+                ]
+              },
+              {
+                "title": "Radiotherapy",
+                "desc": "Radiotherapy is often used to treat non-small cell lung cancer. It is mainly used if a person is not healthy and cancer cannot be removed by surgery. Radiotherapy involves using pulses to destroy cancer cells. Radiotherapy may also be used to control the symptoms of lung cancer. It can also slow the cancer spread when a complete cure is not possible."
+              },
+              {
+                "title": "Chemotherapy",
+                "desc": "The treatment uses drugs to destroy abnormal cancer cells. The chemotherapy is usually administered in cycles. The body recovers and the therapy shows its effect. The number of cycles will depend on the type and grade of cancer. Usually, 4 to 6 cycles are administered. Chemotherapy is usually given to reduce the size of the tumour before surgery or given after the surgery. It is also given to reduce, slow, or kill the spread of cancer. "
+              },
+              {
+                "title": "Immunotherapy",
+                "desc": "It involves the usage of medications that stimulate your immune system. These agents help the immune system by identifying, targeting, and killing cancer. Immunotherapy may be combined with other treatments."
+              },
+              {
+                "title": "Palliative treatment",
+                "desc": "This treatment aims to manage the symptoms. It can be used at any stage of advanced lung cancer. The primary aim of palliative treatment is to improve the quality of life and not give up hope. Palliative treatment aims to meet the patient's physical, emotional, spiritual, cultural, and social needs."
+              }
+            ],
+            "last_para": [
+              "Depending on your condition (the type and stage of cancer), you may receive a combination of these treatments. "
+            ]
+          },
+          {
+            "sub_head": "Prognosis ",
+            "init_para": [
+              "Lung cancer can be a difficult diagnosis. The prognosis depends upon several factors such as your age, type/ spread of cancer, spread and overall health. If you are diagnosed with lung cancer, speak to your doctor to learn more about the prognosis for your disease and the treatment options available to you."
+            ]
+          },
+          {
+            "sub_head": "Other Information",
+            "init_para": [
+              "Lung cancer can alter your life in various ways, depending on age, overall health, type and stage of cancer, and your response to the treatment. Having cancer can lead to emotions such as shock, anxiety, depression, relief, and sadness. There are several ways on how you can find support during such difficult times, such as:"
+            ],
+            "bullets": [
+              "Knowing about your condition",
+              "Joining support groups and talking to people having a similar situation",
+              "Taking to your family and friends",
+              "Making time for yourself"
+            ]
+          },
+          {
+            "sub_head": "References: ",
+            "links": [
+              "https://www.nhs.uk/conditions/lung-cancer/",
+              "https://www.cancerresearchuk.org/about-cancer/lung-cancer",
+              "https://www.cancer.org/cancer/lung-cancer.html",
+              "https://www.cdc.gov/cancer/lung/",
+              "https://www.cancer.gov/types/lung",
+              "https://www.mayoclinic.org/diseases-conditions/lung-cancer/symptoms-causes/syc-20374620",
+              "https://www.mdanderson.org/cancer-types/lung-cancer.html",
+              "https://www.cancercenter.com/cancer-types/lung-cancer/treatments",
+              "https://www.cancercouncil.com.au/lung-cancer/treatment/palliative-treatment/",
+              "https://www.healthline.com/health/lung-cancer-stages-survival-rates#outlook"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "Myths About Cancer Care, Debunked",
+        "sideDesc": "Myths About Cancer Care, Debunked",
+        "subs": [
+          {
+            "sub_head": "",
+            "init_para": [
+              "You will find plenty of information about cancer care, treatment, diagnosis and more all over the internet and in books. But, do you know how much of this information is reliable or scientifically proven? A plethora of myths and misconceptions surrounding cancer create unnecessary panic, anxiety and worry among people and prompt them to follow wrong advice, which can potentially be harmful and even fatal to some.",
+              "To put you at ease, we’ve got you some myth busters and fact revealers surrounding cancer care!"
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Top 9 Cancer Myths Debunked!",
+            "numbered_order": [
+              {
+                "title": "Cancer is a death sentence",
+                "para": [
+                  "One of the most common myths around cancer care is that it can only end in death! This is, as you have guessed, completely false. Due to the advancement in medical and surgical care, cancer treatments and drugs, the 5-year survival rates for all cancers combined stands at a whopping 67%!",
+                  "Due to this prevailing misconception, most people panic when they are diagnosed with cancer. You must, however, remember that cancer is not a death sentence and depending on multiple factors, many effective treatments are available today that can help improve your prognosis."
+                ]
+              },
+              {
+                "title": "Eating sugar causes cancer to grow",
+                "para": [
+                  "If you have been looking up cancer diets, chances are that you may have come across information like ‘eating sugar causes cancer to grow.’ Though research is still underway to study the relationship between cancer growth and sugar, preliminary research states that sugar does not cause cancer.",
+                  "It is true that all cells in the body, including cancer cells require sugar to grow and multiply, eating a high-sugar diet does not cause them to grow faster nor does depriving them of sugar causes them to grow slowly. ",
+                  "However, it is also important to note that increased sugar consumption can put you at risk for certain types of cancers like oesophagal cancer and other lifestyle conditions like diabetes and obesity."
+                ]
+              },
+              {
+                "title": "A lump in your breast is always breast cancer",
+                "para": [
+                  "There are lots of breast cancer awareness campaigns running across the world. One of the first things you think of when you read ‘breast cancer’ is ‘lump’, isn’t it? Well, you are not alone! A large majority of the population associates breast lump with breast cancer. But, here’s what you should know– not all breast lumps are cancer. In fact, only a very small percentage of breast lumps turn out to be cancerous. Other breast lumps are usually cysts or benign growths."
+                ]
+              },
+              {
+                "title": "Pregnant women can't get cancer treatment",
+                "para": [
+                  "In today’s world and time, there is cancer treatment available for everyone, including pregnant women! Yes, you read that right. Don’t believe if someone tells you pregnant women cannot get cancer treatment. There are many treatment options that can be offered to pregnant women who need cancer treatment and care.",
+                  "Pregnant women who are experiencing signs and symptoms of suspected cancer must consult their doctor immediately since prompt and early medical care can ensure better outcomes."
+                ]
+              },
+              {
+                "title": "Cancer is contagious",
+                "para": [
+                  "A very prevalent misconception about cancer is that it is contagious i.e., it can spread from one person to the other. Well, here’s a fact check: Cancer is not contagious. Touching someone or coming in close contact with someone who has cancer cannot cause the disease to spread to you. ",
+                  "Cancer is a term given to abnormal and uncontrolled growth and multiplication of cells in the body. Some viruses like the Human Papilloma Virus (HPV) and Hepatitis B and C increase one’s risk of developing cancer. These viruses, however, are contagious. For example:"
+                ],
+                "bullets": [
+                  {
+                    "desc": "Human Papilloma Virus (HPV) is transmitted sexually and is a known cause of cervical cancer."
+                  },
+                  {
+                    "desc": "Hepatitis B or C is also transmitted via sexual intercourse or the use of infected needles and is a known contributing factor for liver cancer."
+                  }
+                ]
+              },
+              {
+                "title": "Herbal medicines can cure cancer",
+                "para": [
+                  "Many alternative treatments, including herbal medicines, claim that they can cure cancer. However, it is dangerous to believe these claims as many herbal products can interfere with cancer treatment, chemotherapy drugs and affect the prognosis of your ongoing cancer treatment.",
+                  "If you have any queries regarding herbal medicines and their effect on cancer treatment, speak with your doctor about it. Do not take any herbal medicines or alternative treatments without discussing them with your healthcare team."
+                ]
+              },
+              {
+                "title": "I have no family history of cancer, so I won't get cancer",
+                "para": [
+                  "Having a family history of cancer surely puts you at a greater risk for developing cancer during your lifetime. However, this in no way means that having a family member guarantees you will get cancer in your lifetime. ",
+                  "Similarly, not having a family history of cancer does not mean that you will not get the disease. According to the latest studies, around 38% of people get diagnosed with cancer in their lifetime, and this is primarily due to genetic changes that occur during one’s life due to exposure to environmental factors, stress, diet, lifestyle, and habits."
+                ]
+              },
+              {
+                "title": "Superfoods can prevent cancer",
+                "para": [
+                  "Diet plays an important role in cancer development as well as prevention. Superfoods are a group of foods that are rich in antioxidants and are believed to prevent diseases like cancer. However, this has not been proved yet. While a healthy, balanced diet can help reduce your cancer risk, no single food or group of nutrients can stop cancer development."
+                ]
+              },
+              {
+                "title": "Cosmetics cause cancer",
+                "para": [
+                  "The cosmetics industry is an ever-growing one and every day you come across lots of information about how to take care of your skin, hair and more. A common myth that you may have come across is that using cosmetics causes cancer. Let’s get this straight– using cosmetics does not cause cancer. This is because cosmetics are made from safe ingredients and undergo a large number of safety tests before they are sold in the market.",
+                  "Common cosmetic products that are blamed for being carcinogenic include deodorants,  sunscreen and hair dye. This myth came along due to the ingredients used in these products. Be rest assured that cosmetic products from trusted brands sold in your country undergo safety tests. Always use a cosmetic product as per the manufacturer’s instructions. Before you pick a cosmetic product, always check for the presence of carcinogenic ingredients in them."
+                ]
+              }
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Key Takeaway!",
+            "init_para": [
+              "It is natural for people to look for information about their cancer. While it is good to stay informed and up-to-date, you must be careful about what you believe. Believing myths and following wrong practices can be dangerous to your health and affect your ongoing cancer treatment. If you have any queries, it is best to speak with your doctor and healthcare team."
+            ]
+          },
+          {
+            "sub_head": "References:",
+            "links": [
+              "https://www.cancerresearchuk.org/about-cancer/causes-of-cancer/cosmetics-and-toiletries",
+              "https://www.mayoclinic.org/diseases-conditions/cancer/in-depth/cancer-causes/art-20044714",
+              "https://www.cancercenter.com/community/blog/2019/02/11-cancer-myths-busted",
+              "https://www.cancer.gov/about-cancer/causes-prevention/risk/myths",
+              "https://www.cancerresearchuk.org/about-cancer/causes-of-cancer/diet-and-cancer/food-controversies"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "main_title": "Cancer treatment and diagnosis",
+    "sideData": [
+      {
+        "sideHeader": "Cancer Treatment: Know Your Options",
+        "sideDesc": "Cancer Treatment: Know Your Options",
+        "subs": [
+          {
+            "sub_head": "",
+            "init_para": [
+              "Once the cancer diagnosis is confirmed, your oncologist (a qualified clinician who provides medical treatment and care to cancer patients) will discuss various treatment options that will help treat or prevent the spread of cancer. ",
+              "The type of cancer treatment recommended depends on various factors such as type of cancer, location, size, spread of the disease, patient's age, and overall health. Also, other factors may affect the treatment, such as the patient’s financial ability and belief.",
+              "This article will talk about various options that are offered as part of cancer treatment. Oncologists may use one or a combination of these treatments depending on the clinical status of the patient.",
+              "Let’s understand more!"
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "Chemotherapy",
+            "init_para": [
+              "Chemotherapy involves using a single drug or a combination of drugs to kill the cancer cells, hinder their growth, or relieve disease-related symptoms. Your oncologist will select the drugs based on the type of cancer and its growth rate.",
+              "It may be used alone or in combination with other forms of treatment such as surgery, radiation therapy, hormonal therapy, or target therapy. At times you may receive chemotherapy before surgery to reduce the size of the tumour for ease of operation or after the surgery to treat any residual disease.",
+              "Chemotherapeutic drugs can be administered via different routes. These drugs can be administered intravenously (the drug is directly administered into a vein), orally (tablet, capsule, or liquid form), or intramuscularly (given directly into the muscles).",
+              "A few drugs may be administered through the intrathecal route (administered directly into the cerebrospinal fluid), while some others may be given topically (applied as a cream on the skin's surface)."
+            ]
+          },
+          {
+            "sub_head": "Radiotherapy ",
+            "init_para": [
+              "Radiotherapy, also known as radiation therapy, involves using high-energy x-rays or other particles to destroy cancer cells. This treatment modality is often combined with other treatments (chemotherapy or surgery, targeted, or hormonal therapy). However, radiation therapy can also be used as a lone treatment option. Research suggests that more than half of cancer patients may need radiotherapy.",
+              "A single dose of radiation is known as a fraction. In the majority of the cases, several fractions are used for treatment. Usually, radiotherapy involves the administration of several fractions a week, and the treatment duration is about four to six weeks.",
+              "There are two main types of radiation therapy: external beam radiation (teletherapy) and internal radiation therapy (brachytherapy). Your oncologist will choose an appropriate option for you. "
+            ]
+          },
+          {
+            "sub_head": "Hormone Therapy ",
+            "init_para": [
+              "Different glands or organs produce various hormones, and some cancers thrive on these hormones to grow. ",
+              "Hormone therapy, hormonal therapy, or endocrine therapy is a form of treatment that helps in slowing or stopping the growth of cancer or manage the symptoms of the disease.",
+              "Hormonal therapy works in different ways. It either works by stopping the body from making the hormone, altering it, preventing the hormone from performing its usual functions, or blocking it from attaching to the cancer cells.",
+              "This option is mainly used to treat prostate cancer or breast cancer, as a portion of these cancers depends on the specific hormones to grow. "
+            ]
+          },
+          {
+            "sub_head": "Hyperthermia ",
+            "init_para": [
+              "Hyperthermia refers to heat treatment, which involves the controlled use of heat for medical purposes.",
+              "When cells are exposed to a higher temperature, it leads to changes inside the cells. These changes are shown to improve the results of other treatments such as chemotherapy or radiation therapy. Exposure to very high temperatures can kill cancer cells; however, it can also kill or injure normal cells and tissues.",
+              "Hyperthermia treatment can be local, regional, or whole-body, depending on the type and spread of cancer The process of hyperthermia should be carefully controlled and done by experienced doctors."
+            ]
+          },
+          {
+            "sub_head": "Immunotherapy ",
+            "init_para": [
+              "Immunotherapy is a type of cancer treatment that helps the body’s immune system to eliminate cancer. It may boost or alter the way of the immune system so it can attack the cancer cells. Immunotherapy is a type of biological therapy.",
+              "Usually, the body’s immune system can destroy abnormal cells and prevent the growth of cancer. However, cancer cells often evade and outsmart the immune system.",
+              "Immunotherapy works by stimulating the person’s natural immune system or cells that resemble natural immune components are synthesized in the laboratory, which helps restore or improve the immune system.",
+              "There are various types of immunotherapy treatment available. Your oncologist will choose the right type for you depending on your overall health and the type of cancer."
+            ]
+          },
+          {
+            "sub_head": "Photodynamic Therapy",
+            "init_para": [
+              "Photodynamic therapy involves using a drug activated by light to kill the cancer cells or relieve some cancer symptoms. The source of light can be a laser or LEDs. Photodynamic therapy is mainly used to treat a specific part of the body. ",
+              "When the cells have absorbed the activated drug, it produces free oxygen radicals to kill cancer cells in the body. ",
+              "Photodynamic therapy may damage blood vessels in the tumour that prevents it from receiving blood, required for its growth. Also, it may activate the immune system to attack the tumour cells."
+            ]
+          },
+          {
+            "sub_head": "Stem Cell Transplant ",
+            "init_para": [
+              "Stem cell transplant is also known as bone marrow transplant. It is used for treating certain types of cancer such as leukaemia and lymphoma. This treatment involves replacing the defective or cancerous bone marrow with healthy bone marrow.",
+              "The bone marrow is harvested from the patient or a donor. Following treatment with chemotherapy or radiotherapy, the harvested marrow is transplanted into the patient, to start producing healthy blood cells. ",
+              "A bone marrow transplant can also help recover the patient from the cancer treatment or increase their tolerance to the treatment. "
+            ]
+          },
+          {
+            "sub_head": "Surgery ",
+            "init_para": [
+              "Surgery is a procedure that involves removing cancer-producing cells from the body. It can be used to prevent, diagnose, stage, or treat cancer. Surgery can also help to provide relief from cancer-related problems. Surgery may be combined with chemotherapy or radiation. ",
+              "There are various types of surgical procedures. Your oncologist will select the best type of procedure depending upon the purpose of the surgery, part of the body that requires surgery, or the amount of the tissue to be removed.  "
+            ]
+          },
+          {
+            "sub_head": "Targeted Therapy",
+            "init_para": [
+              "Target therapy involves using drugs that interfere with specific proteins that control cancer growth and spread. In some cases, the medicine will attach itself to a target molecule within cancer cells, thus inhibiting it from executing its function. Other times, the drug may block the site where the protein binds itself, thereby altering the functions of the protein and slowing or stopping cancer’s growth.",
+              "Doctors usually may perform a genomic or proteomic test that helps them to determine the abnormalities within specific molecules that can be targeted. Targeted therapy can be given via oral route (pill form) or infusion (intravenous) along with chemotherapy or immunotherapy. "
+            ]
+          },
+          {
+            "sub_head": "In Conclusion",
+            "init_para": [
+              "The modern era of cancer treatment is constantly evolving, with several new breakthroughs and discoveries. It is vital to speak to turn to your doctor at every stage of your cancer to discuss options that are best for you."
+            ]
+          },
+          {
+            "sub_head": "References and further reading",
+            "links": [
+              "https://www.cancer.gov/about-cancer/treatment/types",
+              "https://www.cancer.org/treatment/treatments-and-side-effects/treatment-types.html",
+              "https://www.mdanderson.org/patients-family/diagnosis-treatment/treatment-options.html"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "How Immunotherapy Is Used to Treat Cancer:",
+        "sideDesc": "How Immunotherapy Is Used to Treat Cancer",
+        "subs": []
+      },
+      {
+        "sideHeader": "Biomarker Testing for Cancer Treatment",
+        "sideDesc": "Biomarker Testing for Cancer Treatment",
+        "subs": []
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "main_title": "Health and wellness",
+    "sideData": [
+      {
+        "sideHeader": "Maintaining Sound Mental Health during Your Cancer Treatment",
+        "sideDesc": "Maintaining Sound Mental Health during Your Cancer Treatment",
+        "subs": [
+          {
+            "sub_head": "",
+            "init_para": [
+              "Cancer – the word itself spells anxiety, stress and panic in most people. This is because cancer does not just affect the body physically but also affects one emotionally, mentally and psychologically. It is not just the patient but also the patient’s families and caregivers who may be affected mentally due to anxiety, distress, fear, panic, and depression that come with a cancer diagnosis. While cancer detection can be done using diagnostic tests, it may be difficult to spot any emotional and psychological effects that cancer patients and their families may be undergoing during cancer treatment.",
+              "Research states that nearly 1/3rd of cancer patients in hospitals develop a common mental health condition and between 8 to 24% of people with cancer may be living with depression. Another study states that eight out of ten women with breast cancer were never told about the impact that breast cancer may have on their mental health."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "How Does Cancer Impact Mental Health?",
+            "init_para": [
+              "Cancer diagnosis and treatment affect the mental health of patients in several ways. This is primarily attributed to strong emotions such as panic, anxiety, anger, fear, and sometimes, even in the form of post-traumatic stress disorder. Also, many a time, mental health issues in cancer patients like helplessness, hopelessness, too much worrying, feeling depressed or lonely, etc., are wrongly identified as a normal emotional response to cancer diagnosis.",
+              "Due to this, many patients do not realise why they are feeling what they are feeling and are less likely to seek treatment for the same. Also, undetected mental health illness and late diagnosis in cancer patients can have a significant impact on the overall health of patients and their cancer journey. In fact, multiple studies have demonstrated that the mortality rates in cancer patients are higher in those who develop a psychiatric disorder following their cancer diagnosis."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "How to Maintain Sound Mental Health During Cancer Treatment?",
+
+            "init_para": [
+              "Some mental health issues that patients and their families experience during cancer treatment include – anxiety, distress, exhaustion, mental numbness and even depression. Here are a few ways by which you and your loved ones can cope with mental health issues during cancer treatment include:"
+            ],
+            "highlights": [
+              {
+                "title": "Accept and give yourself time",
+                "desc": "One of the first things to do after your cancer diagnosis is – accept it! It may seem unfair and questions like “Why me?”, “Why only me?”, “What did I do to deserve this?” might crop up in your mind frequently. Trying to shun these thoughts away will only cause them to return more frequently and create a sense of despair and frustration. So, the best thing to do is to give yourself the time and space to accept the diagnosis and your emotions. This will help you move on easily"
+              },
+              {
+                "title": "Build a strong support system",
+                "desc": "Your family, friends and loved ones form the strong foundation or support system that can help you sail through your cancer journey smoothly. Your family and friends know you and understand you. So, finding support in them can help you cope with your emotions, allowing you to maintain sound mental health during your cancer treatment."
+              },
+              {
+                "title": "Monitor your health",
+                "desc": "During your cancer treatment, continue to monitor your health. Monitoring your progress and regularly updating medical information gives you control of your life. It may be a great idea to write down your fitness and health goals and track your progress through it all. Remember– there are times when you fall short of your goals and it is absolutely okay! Leave yourself a motivating note to try again!"
+              },
+              {
+                "title": "Spend time with your loved ones",
+                "desc": "A cancer diagnosis or treatment does not steal the time you can spend with your loved ones. Living a normal life may seem like a far-fetched tale during your cancer journey but you must try your best to do all that you would before your diagnosis."
+              }
+            ]
+          },
+          {
+            "sub_head": "",
+            "init_para": [
+              "Spending time with loved ones helps improve your mood, keeps you in a good mental space– both of which can help improve your physical health and provide the strength you need to go through your cancer journey."
+            ],
+            "highlights": [
+              {
+                "title": "Pursue your passion",
+                "desc": "A great way to keep yourself mentally strong and healthy is to do things that you love and enjoy. If you have hobbies, it may be a good idea to take them up. Doing something you love has a positive effect on your overall health, and this positive state of mind helps you sail through your cancer journey better."
+              },
+              {
+                "title": "Practice mindfulness",
+                "desc": "Cancer is stressful. Period. This is a well-accepted fact and the best way to deal with it is to find ways to bust this stress. Mindfulness and relaxation techniques are useful during cancer treatment in the following ways:",
+                "bullets": [
+                  {
+                    "desc": "Reduce the tsunami of emotions like anxiety, panic, fear, and stress that you may be experiencing "
+                  },
+                  {
+                    "desc": "Create some space in your mind for positive emotions that improve your quality of life "
+                  },
+                  {
+                    "desc": "Encourage a better lifestyle and eating habits"
+                  },
+                  {
+                    "desc": "Improve relationships"
+                  }
+                ]
+              },
+              {
+                "title": "Maintain a journal",
+                "desc": "There have been many studies that have shown how effective journaling during cancer treatment can be for patients, their loved ones and caregivers. If you are undergoing cancer treatment or are caring for someone who is, it may be a good idea to maintain a cancer journal. Here’s why:",
+                "bullets": [
+                  {
+                    "desc": "Journalling helps you express and vent out your emotions, which in turn can help you stay mentally strong and positive"
+                  },
+                  {
+                    "desc": "Cancer treatments like chemotherapy can lead to issues with short-term memory (a condition known as chemobrain)"
+                  },
+                  {
+                    "desc": "It helps strengthen relationships"
+                  }
+                ]
+              },
+              {
+                "title": "Find support groups",
+                "desc": "There are many support groups for cancer patients that help bring people with similar situations together. These groups are extremely helpful as they provide an opportunity for people to share their experiences, concerns and feelings, thereby enabling them to cope with their cancer journey better than they would’ve alone."
+              },
+              {
+                "title": "Adopt a healthy lifestyle",
+                "desc": "Living a healthy lifestyle is very important during your cancer treatment. Apart from your physical health, eating a healthy diet and exercising regularly also keeps you optimistic and mentally upbeat and healthy. A healthy mind ensures a healthy body and vice-versa."
+              }
+            ]
+          },
+          {
+            "sub_head": "Mental Health Screening Among Cancer Patients",
+            "init_para": [
+              "Oncology today includes psychosocial oncology, a multidisciplinary field that includes social, emotional, and behavioural aspects of cancer. The basic goal of this discipline is to improve the quality of life of cancer patients who are undergoing treatment or have recently completed their treatment. It has been found that timely intervention has helped improve not just their quality of life but also their prognosis. ",
+              "Doctors use multiple tools and diagnostic assessments to determine the mental state of a cancer patient, and use this information to guide them through their cancer journey to ensure their sound mental health."
+            ],
+
+            "hr_break": true
+          },
+          {
+            "sub_head": "Key Takeaway!",
+            "init_para": [
+              "Despite the importance and need for screening for mental health conditions in cancer patients, it is rare to see this happen. In an attempt to improve the quality of cancer care, all stakeholders must commit to working towards educating cancer patients about the possible impact of their diagnosis and treatment on their mental health status."
+            ],
+            "hr_break": true
+          },
+          {
+            "sub_head": "References:",
+            "links": [
+              "https://www.cancer.net/coping-with-cancer/managing-emotions/managing-stress ",
+              "https://www.cancer.gov/news-events/cancer-currents-blog/2020/cancer-survivors-managing-anxiety-distress ",
+              "https://www.cancer.org/treatment/treatments-and-side-effects/physical-side-effects/emotional-mood-changes.html ",
+              "https://www.cancerresearchuk.org/about-cancer/cancer-in-general/treatment/prehabilitation/look-after-mental-wellbeing",
+              "https://www.mdanderson.org/cancerwise/caring-for-your-mental-health-after-a-new-cancer-diagnosis.h00-159464790.html",
+              "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4285729/",
+              "https://www.cancer.org/treatment/survivorship-during-and-after-treatment/coping/self-management.html",
+              "https://www.cancer.org/treatment/survivorship-during-and-after-treatment/coping/practice-mindfulness-and-relaxation.html",
+              "https://www.mdanderson.org/cancerwise/3-benefits-of-journaling-for-cancer-patients-and-caregivers.h00-159379578.html"
+            ]
+          }
+        ]
+      },
+      {
+        "sideHeader": "COVID-19 and Cancer",
+        "sideDesc": "COVID-19 and Cancer",
+        "subs": []
+      },
+      {
+        "sideHeader": "Lifestyle Changes to Improve Cancer Care",
+        "sideDesc": "Lifestyle Changes to Improve Cancer Care",
+        "subs": []
+      },
+      {
+        "sideHeader": "Nutrition During Cancer Treatment",
+        "sideDesc": "Nutrition During Cancer Treatment",
+        "subs": []
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "main_title": "Caregiver Support",
+    "sideData": [
+      {
+        "sideHeader": "Tips for Being a Successful Caregiver To A Cancer Patient",
+        "sideDesc": "Tips for Being a Successful Caregiver To A Cancer Patient",
+        "subs": []
+      },
+      {
+        "sideHeader": "Caregiver Support groups in India",
+        "sideDesc": "Caregiver Support groups in India",
+        "subs": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: screens/vbc-program/step4/VbcProgramStep4.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: screens/vbc-program/step4/VbcProgramStep4.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Screen component for PBP program step 4
+ */
+import React, {useState, useEffect} from 'react';
+import {View, ScrollView, Image} from 'react-native';
+import {useTranslation} from 'react-i18next';
+import {useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import {AuthContext} from 'src/App';
+
+import {
+  reviewApplicationIcon,
+  financialInformationIcon,
+  professionalOtherFIIcon,
+} from 'assets/icons';
+import {
+  cancelVbcProgramApiCall,
+  reapplyVbcProgramApiCall,
+  storeVbcProgramStep4ApiCall,
+} from 'apis';
+import {
+  Container,
+  Button,
+  AppText,
+  HorizontalTimeline,
+  Loader,
+} from 'components';
+import {Theme, VBCProgramPaymentFramework} from 'constants';
+import {resetVbcProgramData, saveVbcProgramDataAction} from 'actions';
+import Applicant from '../add-applicant/Applicant';
+import {transformGetVbcProgramEnrollmentApiData} from '../formatter';
+import {transformAllStepsDataToSendToVbcEnrollApi} from './formatter';
+import {financialInfoFields, professionalInfoFields} from './formFields';
+import styles from './styles';
+
+const VbcProgramStep4 = () => {
+  const dispatch = useDispatch();
+  const {navigate, reset} = useNavigation();
+  const {t} = useTranslation(['loanApplication', 'confirmationModal']);
+  const {loginData} = useSelector((state) => state.login);
+  const vbcProgram = useSelector((state) => state.vbcProgram);
+  const {vbcProgramStep1} = useSelector((state) => state.vbcProgram);
+  const [loading, setLoading] = useState(false);
+  const [reapplyLoading, setReapplyLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [apiSuccessMessage, setApiSuccessMessage] = useState(null);
+  const {
+    toggleConfirmationModal,
+    isConfirmed,
+    resetConfirmationValue,
+    confirmationModalTitle,
+  } = React.useContext(AuthContext);
+
+  /** When user presses edit button */
+  const handlePressEdit = (stepToBeNavigated) => () => {
+    resetConfirmationValue();
+
+    if (stepToBeNavigated === 'step2') {
+      /**
+       * if program has already started -
+       * we navigate the user to Others stack - Financial Info screen
+       */
+      if (showStartApplicationButton) {
+        navigate('VbcProgramStep2');
+        return;
+      }
+      navigate('VbcProgramStep2');
+      return;
+    } else if (stepToBeNavigated === 'step1') {
+      navigate('VbcProgramStep1');
+      return;
+    } else if (stepToBeNavigated === 'addApplicant') {
+      navigate('VbcProgramAddApplicant');
+      return;
+    }
+  };
+
+  /**
+   * PBP Program post service -
+   * that sends user's all steps data
+   */
+  const callVBCEnrollService = async () => {
+    const {access_token} = loginData;
+    const apiBody = transformAllStepsDataToSendToVbcEnrollApi(vbcProgram);
+    const data = await storeVbcProgramStep4ApiCall(apiBody, access_token);
+    return data;
+  };
+
+  /**
+   * Reapply PBP Program service -
+   */
+  const callVBCReapplyService = async () => {
+    const {access_token} = loginData;
+    const data = await reapplyVbcProgramApiCall(access_token);
+    return data;
+  };
+
+  /**
+   * Cancel PBP Program service -
+   */
+  const callVBCCancelService = async () => {
+    const {access_token} = loginData;
+    const data = await cancelVbcProgramApiCall(access_token);
+    return data;
+  };
+
+  // called when user confirms to start application
+  const handleStartApplication = async () => {
+    setLoading(true);
+    setApiSuccessMessage(null);
+    setApiError(null);
+    const {apiResponse, apiError} = await callVBCEnrollService();
+    if (apiError) {
+      setApiError(apiError?.localizedMessage);
+      setLoading(false);
+      resetConfirmationValue();
+      return;
+    } else if (apiResponse) {
+      const transformedData = transformGetVbcProgramEnrollmentApiData(
+        apiResponse.data?.data
+      );
+      /** saving the api data to redux store */
+      dispatch(saveVbcProgramDataAction(transformedData));
+      // reset({
+      //   index: 1,
+      //   routes: [{name: 'VbcProgramStep4'}],
+      // });
+      resetConfirmationValue();
+      navigate('VbcProgram');
+    }
+  };
+
+  // called when user confirms to reapply application
+  const handleReapplyApplication = async () => {
+    setReapplyLoading(true);
+    setApiSuccessMessage(null);
+    setApiError(null);
+    const {apiResponse, apiError} = await callVBCReapplyService();
+    if (apiError) {
+      setApiError(apiError?.localizedMessage);
+      setReapplyLoading(false);
+      resetConfirmationValue();
+      return;
+    } else if (apiResponse) {
+      setReapplyLoading(false);
+      dispatch(resetVbcProgramData());
+      resetConfirmationValue();
+      reset({
+        index: 1,
+        routes: [{name: 'VbcProgram'}],
+      });
+    }
+  };
+
+  // called when user confirms to cancel application
+  const handleCancelApplication = async () => {
+    setLoading(true);
+    setApiSuccessMessage(null);
+    setApiError(null);
+    const {apiResponse, apiError} = await callVBCCancelService();
+    if (apiError) {
+      setApiError(apiError?.localizedMessage);
+      setLoading(false);
+      resetConfirmationValue();
+      return;
+    } else if (apiResponse) {
+      dispatch(resetVbcProgramData());
+      resetConfirmationValue();
+      reset({
+        index: 1,
+        routes: [{name: 'VbcProgram'}],
+      });
+    }
+  };
+
+  /**
+   * when user presses reapply application
+   */
+  const handlePressReapplyApplication = async () => {
+    toggleConfirmationModal(t('confirmationModal:reapplyApplication'));
+  };
+
+  /**
+   * when user presses cancel application
+   */
+  const handlePressCancelApplication = async () => {
+    toggleConfirmationModal(t('confirmationModal:cancelApplication'));
+  };
+
+  /**
+   * when user presses start application
+   * we call post api to submit all steps data
+   */
+  const handlePressStartApplication = async () => {
+    toggleConfirmationModal(t('confirmationModal:confirmStartApplication'));
+  };
+
+  // navigates user to PBP Schedule
+  const handleNavigateToVbcSchedule = () => {
+    resetConfirmationValue();
+    navigate('VbcSchedule');
+  };
+  // To be called when user clicked on the confirm button of the confirmation modal
+  useEffect(() => {
+    if (
+      isConfirmed &amp;&amp;
+      confirmationModalTitle === t('confirmationModal:reapplyApplication')
+    ) {
+      handleReapplyApplication();
+    } else if (
+      isConfirmed &amp;&amp;
+      confirmationModalTitle === t('confirmationModal:confirmStartApplication')
+    ) {
+      handleStartApplication();
+    } else if (
+      isConfirmed &amp;&amp;
+      confirmationModalTitle === t('confirmationModal:cancelApplication')
+    ) {
+      handleCancelApplication();
+    }
+  }, [isConfirmed]);
+
+  // const {step1, step2, step3, stepAddApplicants} = vbcProgramData;
+  const {
+    vbcProgramTotalPayableAmount,
+    vbcProgramStep1: step1,
+    vbcProgramStep2: step2,
+    vbcProgramStep3: step3,
+    vbcProgramStepAddApplicant,
+    vbcProgramUserCurrentStep,
+    vbcProgramAllowCancel,
+  } = vbcProgram;
+
+  /** shows whether the vbc program is already started or not */
+  const showStartApplicationButton = vbcProgramUserCurrentStep !== 4;
+
+  return (
+    &lt;ScrollView>
+      &lt;View style={styles.container}>
+        &lt;View style={styles.horizontalTimelineContainer}>
+          &lt;HorizontalTimeline totalCycleCount={4} presentCycleCount={4} />
+        &lt;/View>
+        &lt;View style={styles.pageHeading}>
+          &lt;Image
+            source={reviewApplicationIcon}
+            resizeMode={'contain'}
+            style={styles.reviewIcon}
+          />
+          &lt;AppText style={styles.reviewText}>
+            {t('reviewApplicationandConfirm')}
+          &lt;/AppText>
+        &lt;/View>
+
+        &lt;Container style={styles.paymentContainer}>
+          &lt;View
+            style={[
+              styles.accountDetailsContainerHeadingContainer,
+              !showStartApplicationButton &amp;&amp; {alignSelf: 'center'},
+            ]}>
+            &lt;AppText style={styles.accountDetailsContainerHeading}>
+              {t('paymentFramework')}
+            &lt;/AppText>
+            {showStartApplicationButton &amp;&amp; (
+              &lt;Button
+                onPressEvent={handlePressEdit('step1')}
+                style={styles.accountDetailsContainerEditButton}
+                label={t('edit')}
+                labelStyle={styles.accountDetailsContainerEditButtonText}
+              />
+            )}
+          &lt;/View>
+          &lt;AppText
+            numberOfLines={1}
+            style={[
+              styles.paymentContainerDesc,
+              !showStartApplicationButton &amp;&amp; {alignSelf: 'center'},
+            ]}>
+            {t(step1)}
+          &lt;/AppText>
+        &lt;/Container>
+
+        &lt;Container style={styles.accountDetailsContainer}>
+          &lt;View style={styles.accountDetailsContainerHeadingContainer}>
+            &lt;AppText style={styles.accountDetailsContainerHeading}>
+              {t('accountDetails')}
+            &lt;/AppText>
+            &lt;Button
+              onPressEvent={handlePressEdit('step2')}
+              style={styles.accountDetailsContainerEditButton}
+              label={t('edit')}
+              labelStyle={styles.accountDetailsContainerEditButtonText}
+            />
+          &lt;/View>
+          &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+            &lt;Image
+              source={financialInformationIcon}
+              resizeMode={'contain'}
+              style={styles.reviewIcon}
+            />
+            &lt;AppText style={styles.financialInfo}>
+              {t('financialInformation')}
+            &lt;/AppText>
+          &lt;/View>
+          {financialInfoFields.map((financialInfoItem) =>
+            step2 ? (
+              &lt;View style={styles.valuesContainer}>
+                &lt;AppText style={styles.valueHeadingText}>
+                  {t(financialInfoItem?.heading)}:
+                &lt;/AppText>
+                &lt;AppText style={styles.valueText}>
+                  {financialInfoItem?.valueKey === 'cancelledChequeDocument'
+                    ? step2[financialInfoItem?.valueKey]?.documentName || '-'
+                    : step2[financialInfoItem?.valueKey] || '-'}
+                &lt;/AppText>
+              &lt;/View>
+            ) : null
+          )}
+
+          &lt;View style={styles.accountDetailsContainerSubHeadingContainer}>
+            &lt;Image
+              source={professionalOtherFIIcon}
+              resizeMode={'contain'}
+              style={styles.reviewIcon}
+            />
+            &lt;AppText style={styles.financialInfo}>
+              {t('professionalandotherfinancialinformation')}
+            &lt;/AppText>
+          &lt;/View>
+          {professionalInfoFields.map((professionalInfoItem) =>
+            step2 ? (
+              &lt;View style={styles.valuesContainer}>
+                &lt;AppText style={styles.valueHeadingText}>
+                  {t(professionalInfoItem.heading)}:
+                &lt;/AppText>
+                &lt;AppText style={styles.valueText}>
+                  {professionalInfoItem.valueKey === 'insurance'
+                    ? step2?.insurance
+                      ? 'Yes'
+                      : 'No'
+                    : step2[professionalInfoItem.valueKey] || '-'}
+                &lt;/AppText>
+              &lt;/View>
+            ) : null
+          )}
+        &lt;/Container>
+
+        &lt;View style={styles.applicantContainer}>
+          &lt;Applicant
+            applicantData={vbcProgramStepAddApplicant}
+            hideDeleteButton
+            addEditButton={showStartApplicationButton}
+            onEditButtonPress={handlePressEdit('addApplicant')}
+          />
+        &lt;/View>
+
+        &lt;Container style={styles.programCostContainer}>
+          &lt;View style={{alignItems: 'center'}}>
+            &lt;AppText style={styles.totalCostHeading}>
+              {t('totalMedicationCost')}
+            &lt;/AppText>
+            &lt;AppText style={styles.totalCostDesc}>
+              {`₹ ${vbcProgramTotalPayableAmount || '-'} *`}
+            &lt;/AppText>
+            {vbcProgramStep1 === VBCProgramPaymentFramework.SELF_PAY ? (
+              &lt;AppText style={styles.footNote}>{t('selfPayFootNote')}&lt;/AppText>
+            ) : (
+              &lt;AppText style={styles.footNote}>{t('loanFootNote')}&lt;/AppText>
+            )}
+          &lt;/View>
+          {vbcProgramStep1 ===
+            VBCProgramPaymentFramework.LOAN_AGAINST_OWN_FD &amp;&amp; (
+            &lt;View style={styles.additionalContainer}>
+              &lt;AppText style={styles.currentBankFdText}>
+                {t('currentBankFd')}
+              &lt;/AppText>
+              &lt;AppText style={styles.step3Text}>{step3}&lt;/AppText>
+            &lt;/View>
+          )}
+
+          &lt;Button
+            style={styles.scheduleButton}
+            onPressEvent={handleNavigateToVbcSchedule}
+            label={t('viewVBCschedule')}
+          />
+        &lt;/Container>
+
+        {showStartApplicationButton &amp;&amp; (
+          &lt;Button
+            style={styles.startApplicationButton}
+            onPressEvent={handlePressStartApplication}
+            label={t('startApplication')}
+            isLoading={loading}
+          />
+        )}
+        {!showStartApplicationButton &amp;&amp; vbcProgramAllowCancel &amp;&amp; (
+          &lt;View style={styles.reapplyView}>
+            &lt;Button
+              style={styles.reapplyButton}
+              onPressEvent={handlePressCancelApplication}
+              label={t('cancel')}
+              isLoading={loading}
+            />
+            &lt;Button
+              style={styles.reapplyButton}
+              onPressEvent={handlePressReapplyApplication}
+              label={t('reapply')}
+              isLoading={reapplyLoading}
+            />
+          &lt;/View>
+        )}
+
+        &lt;View>
+          &lt;AppText
+            style={[
+              styles.apiErrorText,
+              {color: apiError ? Theme.error : Theme.success},
+            ]}>
+            {apiError || apiSuccessMessage}
+          &lt;/AppText>
+        &lt;/View>
+      &lt;/View>
+    &lt;/ScrollView>
+  );
+};
+
+export default VbcProgramStep4;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#AndroidStorageConfig">AndroidStorageConfig</a></li><li><a href="global.html#AppNavigator">AppNavigator</a></li><li><a href="global.html#AuthContext">AuthContext</a></li><li><a href="global.html#AuthNavigator">AuthNavigator</a></li><li><a href="global.html#BottomNavigator">BottomNavigator</a></li><li><a href="global.html#CardStackNavigator">CardStackNavigator</a></li><li><a href="global.html#IosStorageConfig">IosStorageConfig</a></li><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#acknowledgeFirstGrantApiCall">acknowledgeFirstGrantApiCall</a></li><li><a href="global.html#addApplicantApiCall">addApplicantApiCall</a></li><li><a href="global.html#addDevice">addDevice</a></li><li><a href="global.html#apiCall">apiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep1ApiCall">applicantCompleteApplicationStep1ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep2ApiCall">applicantCompleteApplicationStep2ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep3ApiCall">applicantCompleteApplicationStep3ApiCall</a></li><li><a href="global.html#applicantCompleteApplicationStep4ApiCall">applicantCompleteApplicationStep4ApiCall</a></li><li><a href="global.html#caculateCodePushProgress">caculateCodePushProgress</a></li><li><a href="global.html#cancelVbcProgramApiCall">cancelVbcProgramApiCall</a></li><li><a href="global.html#changePasswordApiCall">changePasswordApiCall</a></li><li><a href="global.html#checkPermissionHelperFunction">checkPermissionHelperFunction</a></li><li><a href="global.html#checkRequiredFieldsValidation">checkRequiredFieldsValidation</a></li><li><a href="global.html#clearAsyncStorage">clearAsyncStorage</a></li><li><a href="global.html#clearEncryptedStorage">clearEncryptedStorage</a></li><li><a href="global.html#contactSupportApiCall">contactSupportApiCall</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicantApiCall">deleteApplicantApiCall</a></li><li><a href="global.html#deleteDocumentApiCall">deleteDocumentApiCall</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#downloadApiCall">downloadApiCall</a></li><li><a href="global.html#downloadDocumentApiCall">downloadDocumentApiCall</a></li><li><a href="global.html#dynamicFontSize">dynamicFontSize</a></li><li><a href="global.html#dynamicSize">dynamicSize</a></li><li><a href="global.html#dynamicSizeByOs">dynamicSizeByOs</a></li><li><a href="global.html#editFinancialInformationApiCall">editFinancialInformationApiCall</a></li><li><a href="global.html#errorTypes">errorTypes</a></li><li><a href="global.html#fetchAlertsApiCall">fetchAlertsApiCall</a></li><li><a href="global.html#fetchApplicantFinancialInformationDataApiCall">fetchApplicantFinancialInformationDataApiCall</a></li><li><a href="global.html#fetchApplicantLoanApplicationDataApiCall">fetchApplicantLoanApplicationDataApiCall</a></li><li><a href="global.html#fetchApplicantOverviewDataApiCall">fetchApplicantOverviewDataApiCall</a></li><li><a href="global.html#fetchApplicantsDataApiCall">fetchApplicantsDataApiCall</a></li><li><a href="global.html#fetchCityListApiCall">fetchCityListApiCall</a></li><li><a href="global.html#fetchDoctorsApiCall">fetchDoctorsApiCall</a></li><li><a href="global.html#fetchDocumentTypesApiCall">fetchDocumentTypesApiCall</a></li><li><a href="global.html#fetchDrugsApiCall">fetchDrugsApiCall</a></li><li><a href="global.html#fetchFinancialInformationApiCall">fetchFinancialInformationApiCall</a></li><li><a href="global.html#fetchHospitalsApiCall">fetchHospitalsApiCall</a></li><li><a href="global.html#fetchRequiredDocumentsApiCall">fetchRequiredDocumentsApiCall</a></li><li><a href="global.html#fetchUploadedDocumentsApiCall">fetchUploadedDocumentsApiCall</a></li><li><a href="global.html#financialInfoFields">financialInfoFields</a></li><li><a href="global.html#forgotPasswordApiCall">forgotPasswordApiCall</a></li><li><a href="global.html#formatterForCompleteProfile">formatterForCompleteProfile</a></li><li><a href="global.html#formatterForGetCompleteProfile">formatterForGetCompleteProfile</a></li><li><a href="global.html#genderTypes">genderTypes</a></li><li><a href="global.html#getCurrentDateInDateObject">getCurrentDateInDateObject</a></li><li><a href="global.html#getCurrentFormattedDate">getCurrentFormattedDate</a></li><li><a href="global.html#getDateInDMYHyphenFormat">getDateInDMYHyphenFormat</a></li><li><a href="global.html#getDateInDateObject">getDateInDateObject</a></li><li><a href="global.html#getDateInYMDFormat">getDateInYMDFormat</a></li><li><a href="global.html#getDropdownValueId">getDropdownValueId</a></li><li><a href="global.html#getDropdownValueItemId">getDropdownValueItemId</a></li><li><a href="global.html#getDropdownValueItemName">getDropdownValueItemName</a></li><li><a href="global.html#getDropdownValueItemValue">getDropdownValueItemValue</a></li><li><a href="global.html#getDrugScheduleApiCall">getDrugScheduleApiCall</a></li><li><a href="global.html#getDrugScheduleOverviewApiCall">getDrugScheduleOverviewApiCall</a></li><li><a href="global.html#getFormattedDate">getFormattedDate</a></li><li><a href="global.html#getFormattedDateInMonthWordFormat">getFormattedDateInMonthWordFormat</a></li><li><a href="global.html#getFormattedDateInSlashFormat">getFormattedDateInSlashFormat</a></li><li><a href="global.html#getFromAsyncStorage">getFromAsyncStorage</a></li><li><a href="global.html#getFromEncryptedStorage">getFromEncryptedStorage</a></li><li><a href="global.html#getLoggedInUserData">getLoggedInUserData</a></li><li><a href="global.html#getMasterDataAction">getMasterDataAction</a></li><li><a href="global.html#getMasterDataApiCall">getMasterDataApiCall</a></li><li><a href="global.html#getOtpApiCall">getOtpApiCall</a></li><li><a href="global.html#getPermissionsApiCall">getPermissionsApiCall</a></li><li><a href="global.html#getRegistrationCompleteProfileApiCall">getRegistrationCompleteProfileApiCall</a></li><li><a href="global.html#getReportsApiCall">getReportsApiCall</a></li><li><a href="global.html#getReportsSyncStatusApiCall">getReportsSyncStatusApiCall</a></li><li><a href="global.html#getRequiredDocumentStatus">getRequiredDocumentStatus</a></li><li><a href="global.html#getRequiredFields">getRequiredFields</a></li><li><a href="global.html#getUserInfoApiCall">getUserInfoApiCall</a></li><li><a href="global.html#getUserPermissionsAction">getUserPermissionsAction</a></li><li><a href="global.html#getUserRole">getUserRole</a></li><li><a href="global.html#getVbcLoanAmountApiCall">getVbcLoanAmountApiCall</a></li><li><a href="global.html#getVbcProgramDrugScheduleAction">getVbcProgramDrugScheduleAction</a></li><li><a href="global.html#getVbcProgramEnrollmentApiCall">getVbcProgramEnrollmentApiCall</a></li><li><a href="global.html#getVbcProgramVbcScheduleAction">getVbcProgramVbcScheduleAction</a></li><li><a href="global.html#getVbcScheduleApiCall">getVbcScheduleApiCall</a></li><li><a href="global.html#getVersionApiCall">getVersionApiCall</a></li><li><a href="global.html#initialFormFields">initialFormFields</a></li><li><a href="global.html#initialFormFieldsState">initialFormFieldsState</a></li><li><a href="global.html#logout">logout</a></li><li><a href="global.html#logoutApiCall">logoutApiCall</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#personalDetailFields">personalDetailFields</a></li><li><a href="global.html#readAlertApiCall">readAlertApiCall</a></li><li><a href="global.html#reapplyVbcProgramApiCall">reapplyVbcProgramApiCall</a></li><li><a href="global.html#registerationApiCall">registerationApiCall</a></li><li><a href="global.html#registrationCompleteProfileApiCall">registrationCompleteProfileApiCall</a></li><li><a href="global.html#removeKeyFromAsyncStorage">removeKeyFromAsyncStorage</a></li><li><a href="global.html#removeKeyFromEncryptedStorage">removeKeyFromEncryptedStorage</a></li><li><a href="global.html#requestPermissionHelperFunction">requestPermissionHelperFunction</a></li><li><a href="global.html#requiredFields">requiredFields</a></li><li><a href="global.html#requiredFieldsForApplicant">requiredFieldsForApplicant</a></li><li><a href="global.html#resendOtpApiCall">resendOtpApiCall</a></li><li><a href="global.html#resetPasswordApiCall">resetPasswordApiCall</a></li><li><a href="global.html#resetVbcProgramData">resetVbcProgramData</a></li><li><a href="global.html#saveApplicantLoanApplicationAction">saveApplicantLoanApplicationAction</a></li><li><a href="global.html#saveVbcProgramDataAction">saveVbcProgramDataAction</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#storeInAsyncStorage">storeInAsyncStorage</a></li><li><a href="global.html#storeInEncryptedStorage">storeInEncryptedStorage</a></li><li><a href="global.html#storeVbcProgramStep1ApiCall">storeVbcProgramStep1ApiCall</a></li><li><a href="global.html#storeVbcProgramStep2ApiCall">storeVbcProgramStep2ApiCall</a></li><li><a href="global.html#storeVbcProgramStep3ApiCall">storeVbcProgramStep3ApiCall</a></li><li><a href="global.html#storeVbcProgramStep4ApiCall">storeVbcProgramStep4ApiCall</a></li><li><a href="global.html#submitToMangoExecutiveApiCall">submitToMangoExecutiveApiCall</a></li><li><a href="global.html#transformAllStepsDataToSendToVbcEnrollApi">transformAllStepsDataToSendToVbcEnrollApi</a></li><li><a href="global.html#transformApiRequest">transformApiRequest</a></li><li><a href="global.html#transformApiResponse">transformApiResponse</a></li><li><a href="global.html#transformApiResponseForRenderingFields">transformApiResponseForRenderingFields</a></li><li><a href="global.html#transformApplicantData">transformApplicantData</a></li><li><a href="global.html#transfromAddApplicantRequest">transfromAddApplicantRequest</a></li><li><a href="global.html#uploadDocumentApiCall">uploadDocumentApiCall</a></li><li><a href="global.html#uploadDocumentForPatientApiCall">uploadDocumentForPatientApiCall</a></li><li><a href="global.html#validateEmailMobile">validateEmailMobile</a></li><li><a href="global.html#validatePassword">validatePassword</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#vbcProgramAddApplicantAction">vbcProgramAddApplicantAction</a></li><li><a href="global.html#vbcProgramStep1Action">vbcProgramStep1Action</a></li><li><a href="global.html#vbcProgramStep2Action">vbcProgramStep2Action</a></li><li><a href="global.html#verifyContactDetailsApiCall">verifyContactDetailsApiCall</a></li><li><a href="global.html#verifyOTPApiCall">verifyOTPApiCall</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Mon May 22 2023 20:26:04 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: pages/roles/NewRole.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: pages/roles/NewRole.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * This Component renders a Form to Create a new Lender or Update a existing Lender.
+ * This Component gets showLender, Lender, manufacturersList, readManufacturers
+ * from Redux as props and  match, history is mapped to props
+ * which is used to navigate and get url details.
+ * This component reads the Lender id if it is present in url and retrieve the Lender
+ * details with Lender id and allow the user to edit
+ */
+import React, {useState, useEffect} from 'react';
+// import {Multiselect} from 'multiselect-react-dropdown';
+import {Col, Row, Form, Button, Container} from '@themesberg/react-bootstrap';
+import {useTranslation} from 'react-i18next';
+import {connect, useDispatch} from 'react-redux';
+import PropTypes from 'prop-types';
+import {Routes} from 'routes';
+import {
+  createRole,
+  updateRole,
+  showRole,
+  routesList,
+  modulesList,
+  readResourcePermissionList,
+  readRoleList,
+} from '../../actions';
+import {setToast} from 'actions/appActions';
+import {actionTypes} from 'constants/actionTypes';
+import {ROLE_NAME_REGEX} from '../../constants';
+import {
+  addationSelect,
+  // onRemoveItem,
+  // onSelectItem,
+} from 'services/utility';
+import GoBack from 'components/GoBack';
+import {useNavigate, useParams} from 'react-router-dom';
+import CustomReactSelect from 'components/CustomReactSelect';
+import {useLocation} from 'react-router-dom';
+import {Can} from 'components';
+import RoutePage from 'components/RoutePage';
+const {SET_CREATE_ROLE, SET_UPDATE_ROLE} = actionTypes;
+
+const NewRole = (props) => {
+  const {t} = useTranslation(['newRole']);
+
+  const {
+    createRole,
+    updateRole,
+    showRole,
+    role,
+    routesList,
+    modulesList,
+    resourcePermissions,
+    routeList,
+    moduleList,
+    readResourcePermissionList,
+  } = props;
+  const history = useNavigate();
+  const urlParams = useParams();
+  const dispatch = useDispatch();
+  const [name, setName] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [isView, setisView] = useState(false);
+  const [description, setDescription] = useState('');
+  const [defaultRoute, setDefaultRoute] = useState('');
+  const [assignedRoutes, setAssignedRoutes] = useState(null);
+  const [resourcePermission, setResourcePermission] = useState(null);
+  const [availableRoutes, setAvailableRoutes] = useState(null);
+  const [module, setModule] = useState('');
+  const [modules, setModules] = useState([]);
+  const [roleNameWarning, setroleNameWarning] = useState('');
+  const [availableResourcePermission, setAvailableResourcePermission] =
+    useState([]);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const location = useLocation();
+  const role_id = urlParams.id;
+  const stateRecieved = location?.state;
+  // const addationSelect = [
+  //   {
+  //     value: 'all',
+  //     label: 'Select All',
+  //   },
+  // ];
+
+  /**
+   * Dispatches readResourcePermissionList when resourcePermissions is empty
+   */
+  useEffect(() => {
+    if (!resourcePermissions) {
+      readResourcePermissionList(0, 999);
+    }
+  }, [readResourcePermissionList, resourcePermissions]);
+
+  /**
+   * Dispatches routesList when routeList is empty
+   */
+  useEffect(() => {
+    if (!moduleList) {
+      modulesList();
+    }
+  }, [modulesList, moduleList]);
+
+  useEffect(() => {
+    if (!routeList) {
+      routesList();
+    }
+  }, [routesList, routeList]);
+
+  /**
+   * Set the converted routeList to the state when route has value in it
+   */
+  useEffect(() => {
+    if (routeList) {
+      const converted = routeList.map((object) => ({
+        value: object.id,
+        label: object.component,
+      }));
+      converted.unshift(...addationSelect);
+      setAvailableRoutes(converted);
+    }
+  }, [routeList]);
+
+  /**
+   * Set the converted resourcePermissions to the state when resourcePermissions has value in it
+   */
+  useEffect(() => {
+    if (moduleList) {
+      const converted = moduleList.map((object) => ({
+        value: object.id,
+        label: object.name,
+      }));
+      setModules(converted);
+    }
+  }, [moduleList]);
+
+  useEffect(() => {
+    if (resourcePermissions) {
+      const converted = resourcePermissions.map((object) => ({
+        value: object.id,
+        label: object.describe,
+      }));
+      // console.log('CONVERTED=>', converted);
+      converted.unshift(...addationSelect);
+      setAvailableResourcePermission(converted);
+    }
+  }, [resourcePermissions]);
+
+  /**
+   * Set role properties to corresponding states if role and role_id has value
+   * else it will clear all the state
+   */
+  useEffect(() => {
+    if (stateRecieved &amp;&amp; stateRecieved === 'View Details') setisView(true);
+    if (role &amp;&amp; role_id) {
+      setName(role.name);
+      setIsActive(role.active);
+      setDescription(role.description);
+      setDefaultRoute(role.defaultRoute.id);
+      setModule(role.moduleId);
+      if (parseInt(role_id) === parseInt(role.id)) {
+        setAssignedRoutes(
+          role.assignedRoutes.map((a) => {
+            return {
+              label: a.component,
+              value: a.id,
+              disabled: true,
+            };
+          })
+        );
+
+        setResourcePermission(
+          Object.keys(role.permissions).map((a) => {
+            return {
+              label: role.permissions[a],
+              value: a,
+              disabled: true,
+            };
+          })
+        );
+      }
+    } else {
+      setIsDisabled(false);
+      setName('');
+      setIsActive(true);
+      setDescription('');
+      setDefaultRoute('');
+      setAssignedRoutes([]);
+      setResourcePermission([]);
+    }
+  }, [role, role_id, stateRecieved]);
+
+  /**
+   * Dispatches showRole when role_id have value in it
+   */
+  useEffect(() => {
+    if (role_id) {
+      showRole(role_id);
+    }
+  }, [role_id, showRole]);
+
+  /**
+   * Handle submit pass the user enter data to updateRole and dispatch it when role_id have value in it
+   * else it will pass the data to createRole and dispatch
+   * @param {any} e
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const data = {
+      name: name,
+      active: isActive,
+      description: description,
+      defaultRouteId: parseInt(defaultRoute),
+      moduleId: parseInt(module),
+      assignedRoutes: assignedRoutes
+        .map((item) => parseInt(item.value))
+        .filter((item) => !isNaN(item)),
+      resourcePermissionIds: resourcePermission
+        .map((item) => parseInt(item.value))
+        .filter((item) => !isNaN(item)),
+    };
+    if (role_id) {
+      const onSuccess = (response) => {
+        if (response.message) {
+          dispatch(setToast(response.message, true, 'success'));
+        }
+        history(Routes.Roles.path);
+        readRoleList();
+        return {type: SET_UPDATE_ROLE, payload: response.data};
+      };
+      updateRole(role_id, data, onSuccess);
+    } else {
+      const onSuccess = (response) => {
+        if (response.message) {
+          dispatch(setToast(response.message, true, 'success'));
+        }
+        history(Routes.Roles.path);
+        readRoleList();
+        return {type: SET_CREATE_ROLE, payload: response.data};
+      };
+      createRole(data, onSuccess);
+    }
+  };
+
+  /**
+   * Validates the Role name string and set warning if
+   * regex test fails
+   * @param {String} value
+   */
+  const roleNameValidator = (value) => {
+    // const regex = new RegExp(ROLE_NAME_REGEX).test(value);
+    const regex = value.match(ROLE_NAME_REGEX);
+    if (regex || value === '') {
+      setroleNameWarning(false);
+      setName(value);
+    } else {
+      setroleNameWarning(true);
+    }
+  };
+
+  // console.log('assignedRoutes=>', assignedRoutes);
+  const onMultiSelectRouteChange = (data, singleData) => {
+    if (singleData?.option?.value === 'all') {
+      // console.log('YAHA AAYA');
+      const newRoutes = [...availableRoutes];
+      newRoutes.shift();
+      setAssignedRoutes(newRoutes);
+    } else {
+      setAssignedRoutes(data);
+    }
+  };
+  const onMultiSelectResourceChange = (data, singleData) => {
+    if (singleData?.option?.value === 'all') {
+      // console.log('YAHA AAYA');
+
+      const newResources = [...availableResourcePermission];
+      newResources.shift();
+      setResourcePermission(newResources);
+    } else {
+      setResourcePermission(data);
+    }
+  };
+
+  return (
+    &lt;>
+      &lt;Container className="bg-white p-4 rounded mt-4">
+        &lt;h3>
+          {role_id ? 'Update' : 'Create'} {t('role')}
+        &lt;/h3>
+        &lt;Form className="add-user" onSubmit={handleSubmit}>
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group controlId="name">
+                &lt;Form.Label>{t('name')}&lt;/Form.Label>
+                &lt;Form.Control
+                  required
+                  type="text"
+                  isInvalid={roleNameWarning}
+                  placeholder={t('name')}
+                  disabled={isDisabled}
+                  readOnly={isView}
+                  value={name}
+                  onChange={(e) => roleNameValidator(e.target.value)}
+                />
+                {roleNameWarning &amp;&amp; (
+                  &lt;Form.Control.Feedback type="invalid">
+                    {t('invalidRole')}
+                  &lt;/Form.Control.Feedback>
+                )}
+              &lt;/Form.Group>
+            &lt;/Col>
+            &lt;Col>
+              &lt;Form.Group controlId="isActive">
+                &lt;Form.Label>{t('status')}&lt;/Form.Label>
+                &lt;Form.Group controlId="formBasicCheckbox">
+                  &lt;Form.Check
+                    type="checkbox"
+                    value={isActive}
+                    disabled={isDisabled}
+                    readOnly={isView}
+                    checked={isActive}
+                    onChange={() => setIsActive(!isActive)}
+                    label="Active"
+                  />
+                &lt;/Form.Group>
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group controlId="description">
+                &lt;Form.Label>{t('description')}&lt;/Form.Label>
+                &lt;Form.Control
+                  value={description}
+                  disabled={isDisabled}
+                  readOnly={isView}
+                  onChange={(e) => setDescription(e.target.value)}
+                  as="textarea"
+                  rows={3}
+                />
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group controlId="defaultRouteId">
+                &lt;Form.Label>{t('defaultRoute')}&lt;/Form.Label>
+                {availableRoutes &amp;&amp; (
+                  &lt;Form.Select
+                    required
+                    disabled={isDisabled}
+                    value={defaultRoute}
+                    readOnly={isView}
+                    onChange={(e) => setDefaultRoute(e.target.value)}>
+                    &lt;option value="" hidden>
+                      {t('selectDefaultRoute')}
+                    &lt;/option>
+                    {availableRoutes.map((route) => (
+                      &lt;option value={route.value} key={route.label}>
+                        {' '}
+                        {route.label}
+                      &lt;/option>
+                    ))}
+                  &lt;/Form.Select>
+                )}
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group controlId="defaultModule">
+                &lt;Form.Label>Default Module&lt;/Form.Label>
+                {modules &amp;&amp; (
+                  &lt;Form.Select
+                    required
+                    readOnly={isView}
+                    disabled={isDisabled}
+                    value={module}
+                    onChange={(e) => setModule(e.target.value)}>
+                    &lt;option value="" hidden>
+                      select default module
+                    &lt;/option>
+                    {modules.map((module) => (
+                      &lt;option value={module.value} key={module.label}>
+                        {module.label}
+                      &lt;/option>
+                    ))}
+                  &lt;/Form.Select>
+                )}
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group as={Col} controlId="resourcePermissionId">
+                &lt;Form.Label>{t('resourcePermission')}&lt;/Form.Label>
+
+                &lt;CustomReactSelect
+                  isDisabled={isView}
+                  onInputChange={onMultiSelectResourceChange}
+                  optionData={availableResourcePermission}
+                  defaultData={resourcePermission}
+                  backgroundColor="#09a6e0"
+                  classes="remove-seperator-span-padding modified-settings"
+                />
+
+                {/* &lt;Multiselect
+                  options={availableResourcePermission} // Options to display in the dropdown
+                  selectedValues={resourcePermission} // Preselected value to persist in dropdown
+                  closeOnSelect={false} // false will not close the drop down after selecting
+                  onSelect={(data) =>
+                    onSelectItem(
+                      data,
+                      availableResourcePermission,
+                      setResourcePermission
+                    )
+                  } // Function will trigger on select event
+                  onRemove={(data) =>
+                    onRemoveItem(
+                      data,
+                      availableResourcePermission,
+                      setResourcePermission
+                    )
+                  } // Function will trigger on remove event
+                  displayValue="label" // Property name to display in the dropdown options
+                  showCheckbox={true}
+                /> */}
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+
+          &lt;Row>
+            &lt;Col>
+              &lt;Form.Group as={Col} controlId="assignRouteId">
+                &lt;Form.Label>{t('assignedRoutes')}&lt;/Form.Label>
+
+                &lt;CustomReactSelect
+                  isDisabled={isView}
+                  onInputChange={onMultiSelectRouteChange}
+                  optionData={availableRoutes}
+                  defaultData={assignedRoutes}
+                  backgroundColor="#09a6e0"
+                  classes="remove-seperator-span-padding modified-settings"
+                />
+
+                {/* &lt;Multiselect
+                  options={availableRoutes} // Options to display in the dropdown
+                  selectedValues={assignedRoutes} // Preselected value to persist in dropdown
+                  closeOnSelect={false}
+                  onSelect={(data) =>
+                    onSelectItem(data, availableRoutes, setAssignedRoutes)
+                  } // Function will trigger on select event
+                  onRemove={(data) =>
+                    onRemoveItem(data, availableRoutes, setAssignedRoutes)
+                  } // Function will trigger on remove event
+                  displayValue="label" // Property name to display in the dropdown options
+                  showCheckbox={true}
+                /> */}
+              &lt;/Form.Group>
+            &lt;/Col>
+          &lt;/Row>
+
+          &lt;div className="d-flex gap-2 mt-3">
+            &lt;GoBack>
+              &lt;button
+                className="btn-patient-theme-small bg-dark px-4"
+                type="button">
+                {t('Back')}
+              &lt;/button>
+            &lt;/GoBack>
+            {isView ? (
+              &lt;Can
+                performingAction={{
+                  component: 'role-listing',
+                  action: 'can view editDetails',
+                }}>
+                &lt;RoutePage url={Routes.UpdateRole.path} id={role_id}>
+                  &lt;button
+                    className="btn-patient-theme-small bg-dark px-4"
+                    type="button"
+                    onClick={() => setisView(false)}>
+                    Edit
+                  &lt;/button>
+                &lt;/RoutePage>
+              &lt;/Can>
+            ) : (
+              &lt;button
+                className="btn-patient-theme-small bg-dark px-4"
+                type="submit"
+                onSubmit={handleSubmit}>
+                {role_id ? 'Update' : 'Add'}
+              &lt;/button>
+            )}
+          &lt;/div>
+        &lt;/Form>
+      &lt;/Container>
+    &lt;/>
+  );
+};
+
+const mapStateToProps = (state) => ({
+  role: state.role.selectedRole,
+  routeList: state.template.routesList,
+  moduleList: state.template.modulesList,
+  resourcePermissions: state.role.resourcePermissions,
+});
+
+const mapDispatchToProps = {
+  createRole,
+  updateRole,
+  showRole,
+  routesList,
+  modulesList,
+  readResourcePermissionList,
+};
+NewRole.propTypes = {
+  role: PropTypes.object,
+  routeList: PropTypes.array,
+  resourcePermissions: PropTypes.array,
+  createRole: PropTypes.func,
+  updateRole: PropTypes.func,
+  showRole: PropTypes.func,
+  routesList: PropTypes.func,
+  readResourcePermissionList: PropTypes.func,
+};
+export default connect(mapStateToProps, mapDispatchToProps)(NewRole);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#aadharValidator">aadharValidator</a></li><li><a href="global.html#accessDenied">accessDenied</a></li><li><a href="global.html#acknowledgeFirstGrant">acknowledgeFirstGrant</a></li><li><a href="global.html#actionTypes">actionTypes</a></li><li><a href="global.html#addationSelect">addationSelect</a></li><li><a href="global.html#addDrugReceiptAmount">addDrugReceiptAmount</a></li><li><a href="global.html#addHoliday">addHoliday</a></li><li><a href="global.html#adminEndPoint">adminEndPoint</a></li><li><a href="global.html#allManufacturers">allManufacturers</a></li><li><a href="global.html#apiEnd">apiEnd</a></li><li><a href="global.html#apiError">apiError</a></li><li><a href="global.html#apiErrorReport">apiErrorReport</a></li><li><a href="global.html#apiStart">apiStart</a></li><li><a href="global.html#approveLoanForPatient">approveLoanForPatient</a></li><li><a href="global.html#areEqual">areEqual</a></li><li><a href="global.html#assignDoctorToPatient">assignDoctorToPatient</a></li><li><a href="global.html#assignLenderToPatient">assignLenderToPatient</a></li><li><a href="global.html#assignTreatmentInitiationDateToPatient">assignTreatmentInitiationDateToPatient</a></li><li><a href="global.html#cancelApplication">cancelApplication</a></li><li><a href="global.html#capitalizeFirstLetter">capitalizeFirstLetter</a></li><li><a href="global.html#checkIfRouteIsProtected">checkIfRouteIsProtected</a></li><li><a href="global.html#checkMasterValue">checkMasterValue</a></li><li><a href="global.html#checkMinMaxValue">checkMinMaxValue</a></li><li><a href="global.html#checkStrongPassword">checkStrongPassword</a></li><li><a href="global.html#clearPatientTimelineUrl">clearPatientTimelineUrl</a></li><li><a href="global.html#completeProfile">completeProfile</a></li><li><a href="global.html#contactSupport">contactSupport</a></li><li><a href="global.html#convertTimeToLocal">convertTimeToLocal</a></li><li><a href="global.html#convertToCorrectDataType">convertToCorrectDataType</a></li><li><a href="global.html#createApplicant">createApplicant</a></li><li><a href="global.html#createBulkDoctor">createBulkDoctor</a></li><li><a href="global.html#createDoctor">createDoctor</a></li><li><a href="global.html#createDrug">createDrug</a></li><li><a href="global.html#createHospital">createHospital</a></li><li><a href="global.html#createLender">createLender</a></li><li><a href="global.html#createManufacturer">createManufacturer</a></li><li><a href="global.html#createPermission">createPermission</a></li><li><a href="global.html#createProgram">createProgram</a></li><li><a href="global.html#createResource">createResource</a></li><li><a href="global.html#createRole">createRole</a></li><li><a href="global.html#createRoute">createRoute</a></li><li><a href="global.html#createUser">createUser</a></li><li><a href="global.html#CustomReactSelect">CustomReactSelect</a></li><li><a href="global.html#dateValidator">dateValidator</a></li><li><a href="global.html#decodeToken">decodeToken</a></li><li><a href="global.html#deleteApplicant">deleteApplicant</a></li><li><a href="global.html#deleteBank">deleteBank</a></li><li><a href="global.html#deleteCancerType">deleteCancerType</a></li><li><a href="global.html#deleteCity">deleteCity</a></li><li><a href="global.html#deleteClinicalDropout">deleteClinicalDropout</a></li><li><a href="global.html#deleteCompanyType">deleteCompanyType</a></li><li><a href="global.html#deleteCountry">deleteCountry</a></li><li><a href="global.html#deleteDoctor">deleteDoctor</a></li><li><a href="global.html#deleteDoctorChangeReason">deleteDoctorChangeReason</a></li><li><a href="global.html#deleteDocument">deleteDocument</a></li><li><a href="global.html#deleteDrug">deleteDrug</a></li><li><a href="global.html#deleteEducationLevel">deleteEducationLevel</a></li><li><a href="global.html#deleteEmployer">deleteEmployer</a></li><li><a href="global.html#deleteExperience">deleteExperience</a></li><li><a href="global.html#deleteGrossAnnualIncomes">deleteGrossAnnualIncomes</a></li><li><a href="global.html#deleteHospital">deleteHospital</a></li><li><a href="global.html#deleteIncomeRange">deleteIncomeRange</a></li><li><a href="global.html#deleteIndustry">deleteIndustry</a></li><li><a href="global.html#deleteInsuranceCompany">deleteInsuranceCompany</a></li><li><a href="global.html#deleteLanguage">deleteLanguage</a></li><li><a href="global.html#deleteLender">deleteLender</a></li><li><a href="global.html#deleteManufacturer">deleteManufacturer</a></li><li><a href="global.html#deleteNatureOfBusiness">deleteNatureOfBusiness</a></li><li><a href="global.html#deleteNonClinicalDropout">deleteNonClinicalDropout</a></li><li><a href="global.html#deleteOccupation">deleteOccupation</a></li><li><a href="global.html#deletePatientStatus">deletePatientStatus</a></li><li><a href="global.html#deletePermission">deletePermission</a></li><li><a href="global.html#deleteProfession">deleteProfession</a></li><li><a href="global.html#deleteProgram">deleteProgram</a></li><li><a href="global.html#deleteRelationship">deleteRelationship</a></li><li><a href="global.html#deleteResidenceType">deleteResidenceType</a></li><li><a href="global.html#deleteResource">deleteResource</a></li><li><a href="global.html#deleteRole">deleteRole</a></li><li><a href="global.html#deleteRoute">deleteRoute</a></li><li><a href="global.html#deleteState">deleteState</a></li><li><a href="global.html#deleteYearsInBusiness">deleteYearsInBusiness</a></li><li><a href="global.html#dobValidator">dobValidator</a></li><li><a href="global.html#doctorsList">doctorsList</a></li><li><a href="global.html#documentData">documentData</a></li><li><a href="global.html#downloadDocument">downloadDocument</a></li><li><a href="global.html#drugsList">drugsList</a></li><li><a href="global.html#dynamicMessageCreation">dynamicMessageCreation</a></li><li><a href="global.html#editTreatmentForPatient">editTreatmentForPatient</a></li><li><a href="global.html#educationLevelOptions">educationLevelOptions</a></li><li><a href="global.html#emailValidator">emailValidator</a></li><li><a href="global.html#enrollForVbc">enrollForVbc</a></li><li><a href="global.html#fileSizeValidator">fileSizeValidator</a></li><li><a href="global.html#fileTypeValidator">fileTypeValidator</a></li><li><a href="global.html#flushLocalStorage">flushLocalStorage</a></li><li><a href="global.html#forgotPassword">forgotPassword</a></li><li><a href="global.html#formatEndpoint">formatEndpoint</a></li><li><a href="global.html#GenericRoutes">GenericRoutes</a></li><li><a href="global.html#getApplicantOverview">getApplicantOverview</a></li><li><a href="global.html#getCitiesFromStateId">getCitiesFromStateId</a></li><li><a href="global.html#getClinicalNotesDetails">getClinicalNotesDetails</a></li><li><a href="global.html#getCookie">getCookie</a></li><li><a href="global.html#getDiscontinuationAndAdverseEvents">getDiscontinuationAndAdverseEvents</a></li><li><a href="global.html#getDoctorPatientsList">getDoctorPatientsList</a></li><li><a href="global.html#getDoctorsByHospitalId">getDoctorsByHospitalId</a></li><li><a href="global.html#getDrugLenderReqData">getDrugLenderReqData</a></li><li><a href="global.html#getEnrollForVbc">getEnrollForVbc</a></li><li><a href="global.html#getFinancialInformation">getFinancialInformation</a></li><li><a href="global.html#getHolidaysForYear">getHolidaysForYear</a></li><li><a href="global.html#getIndividualPatientData">getIndividualPatientData</a></li><li><a href="global.html#getLabsReportsDetails">getLabsReportsDetails</a></li><li><a href="global.html#getLoanAmount">getLoanAmount</a></li><li><a href="global.html#getLoanApplicationDetails">getLoanApplicationDetails</a></li><li><a href="global.html#getMangoPatientDetails">getMangoPatientDetails</a></li><li><a href="global.html#getMangoPatientList">getMangoPatientList</a></li><li><a href="global.html#getMasterData">getMasterData</a></li><li><a href="global.html#getMedicationDetails">getMedicationDetails</a></li><li><a href="global.html#getMedicationScheduleByDrugId">getMedicationScheduleByDrugId</a></li><li><a href="global.html#getNewPatientStats">getNewPatientStats</a></li><li><a href="global.html#getNotifications">getNotifications</a></li><li><a href="global.html#getOtherTests">getOtherTests</a></li><li><a href="global.html#getOtherTreatment">getOtherTreatment</a></li><li><a href="global.html#getPatientLongitudinality">getPatientLongitudinality</a></li><li><a href="global.html#getPatientRecruitmentAndConversion">getPatientRecruitmentAndConversion</a></li><li><a href="global.html#getPatientReportedOutcomes">getPatientReportedOutcomes</a></li><li><a href="global.html#getPatientTimeLineUrl">getPatientTimeLineUrl</a></li><li><a href="global.html#getPendingPatientList">getPendingPatientList</a></li><li><a href="global.html#getPerPatientRevenue">getPerPatientRevenue</a></li><li><a href="global.html#getQueryString">getQueryString</a></li><li><a href="global.html#getRadiationTherapy">getRadiationTherapy</a></li><li><a href="global.html#getRadiologyReportsDetails">getRadiologyReportsDetails</a></li><li><a href="global.html#getSalesAndFreePacks">getSalesAndFreePacks</a></li><li><a href="global.html#getSummaryNotesDetails">getSummaryNotesDetails</a></li><li><a href="global.html#getSundaysForYear">getSundaysForYear</a></li><li><a href="global.html#getSurgicalDetails">getSurgicalDetails</a></li><li><a href="global.html#getSurvivalAndResponse">getSurvivalAndResponse</a></li><li><a href="global.html#getUserDetails">getUserDetails</a></li><li><a href="global.html#getUserPermissions">getUserPermissions</a></li><li><a href="global.html#getUsersWithDeviceToken">getUsersWithDeviceToken</a></li><li><a href="global.html#getVbcDrugSchedule">getVbcDrugSchedule</a></li><li><a href="global.html#getVbcSchedule">getVbcSchedule</a></li><li><a href="global.html#hospitalsGroupList">hospitalsGroupList</a></li><li><a href="global.html#hospitalsList">hospitalsList</a></li><li><a href="global.html#i18nLanguages">i18nLanguages</a></li><li><a href="global.html#insertDashInAadharNumber">insertDashInAadharNumber</a></li><li><a href="global.html#isApplicantDocumentsUploaded">isApplicantDocumentsUploaded</a></li><li><a href="global.html#isArrayLengthEqual">isArrayLengthEqual</a></li><li><a href="global.html#jumpProgramStep">jumpProgramStep</a></li><li><a href="global.html#LenderDrugMapping">LenderDrugMapping</a></li><li><a href="global.html#mangoExecutiveAddPatient">mangoExecutiveAddPatient</a></li><li><a href="global.html#markGrantPaid">markGrantPaid</a></li><li><a href="global.html#markRebatePaid">markRebatePaid</a></li><li><a href="global.html#mobileValidator">mobileValidator</a></li><li><a href="global.html#modulesList">modulesList</a></li><li><a href="global.html#MONTH">MONTH</a></li><li><a href="global.html#myProfile">myProfile</a></li><li><a href="global.html#onSideBarRouteClicked">onSideBarRouteClicked</a></li><li><a href="global.html#panValidator">panValidator</a></li><li><a href="global.html#PAYMENT_FRAMEWORK">PAYMENT_FRAMEWORK</a></li><li><a href="global.html#permissionsList">permissionsList</a></li><li><a href="global.html#readApplicantsList">readApplicantsList</a></li><li><a href="global.html#readBanks">readBanks</a></li><li><a href="global.html#readCancerTypeList">readCancerTypeList</a></li><li><a href="global.html#readClinicalDropoutReasons">readClinicalDropoutReasons</a></li><li><a href="global.html#readCompanyTypes">readCompanyTypes</a></li><li><a href="global.html#readCountries">readCountries</a></li><li><a href="global.html#readDoctorChangeReasons">readDoctorChangeReasons</a></li><li><a href="global.html#readDoctors">readDoctors</a></li><li><a href="global.html#readDocuments">readDocuments</a></li><li><a href="global.html#readDrugs">readDrugs</a></li><li><a href="global.html#readEducationLevelList">readEducationLevelList</a></li><li><a href="global.html#readEmployerList">readEmployerList</a></li><li><a href="global.html#readExperienceList">readExperienceList</a></li><li><a href="global.html#readGrossAnnualIncomes">readGrossAnnualIncomes</a></li><li><a href="global.html#readHospitals">readHospitals</a></li><li><a href="global.html#readIncomeRangeList">readIncomeRangeList</a></li><li><a href="global.html#readIndustryTypes">readIndustryTypes</a></li><li><a href="global.html#readInsuranceCompanies">readInsuranceCompanies</a></li><li><a href="global.html#readLanguageList">readLanguageList</a></li><li><a href="global.html#readLenders">readLenders</a></li><li><a href="global.html#readManufacturers">readManufacturers</a></li><li><a href="global.html#readNatureOfBusiness">readNatureOfBusiness</a></li><li><a href="global.html#readNonClinicalDropoutReasons">readNonClinicalDropoutReasons</a></li><li><a href="global.html#readNotification">readNotification</a></li><li><a href="global.html#readOccupationList">readOccupationList</a></li><li><a href="global.html#readPatientStatuses">readPatientStatuses</a></li><li><a href="global.html#readPermissionList">readPermissionList</a></li><li><a href="global.html#readProfessionList">readProfessionList</a></li><li><a href="global.html#readProgram">readProgram</a></li><li><a href="global.html#readRelationshipList">readRelationshipList</a></li><li><a href="global.html#readResidenceTypeList">readResidenceTypeList</a></li><li><a href="global.html#readResourceList">readResourceList</a></li><li><a href="global.html#readResourcePermissionList">readResourcePermissionList</a></li><li><a href="global.html#readRoleList">readRoleList</a></li><li><a href="global.html#readRouteList">readRouteList</a></li><li><a href="global.html#readStates">readStates</a></li><li><a href="global.html#readUsers">readUsers</a></li><li><a href="global.html#readYearsInBusiness">readYearsInBusiness</a></li><li><a href="global.html#reapplyApplication">reapplyApplication</a></li><li><a href="global.html#registerPatient">registerPatient</a></li><li><a href="global.html#rejectLoanForPatient">rejectLoanForPatient</a></li><li><a href="global.html#removeDashInAadharNumber">removeDashInAadharNumber</a></li><li><a href="global.html#requiredDocuments">requiredDocuments</a></li><li><a href="global.html#resetPassword">resetPassword</a></li><li><a href="global.html#resetPatientDetails">resetPatientDetails</a></li><li><a href="global.html#returnMasterDataSelectValues">returnMasterDataSelectValues</a></li><li><a href="global.html#rolesList">rolesList</a></li><li><a href="global.html#Routes">Routes</a></li><li><a href="global.html#routesList">routesList</a></li><li><a href="global.html#saveNotificationInStore">saveNotificationInStore</a></li><li><a href="global.html#secureLocalStorage">secureLocalStorage</a></li><li><a href="global.html#sendPushNotification">sendPushNotification</a></li><li><a href="global.html#sendVerificationOtp">sendVerificationOtp</a></li><li><a href="global.html#sentryTransformedAction">sentryTransformedAction</a></li><li><a href="global.html#sentryTransformedState">sentryTransformedState</a></li><li><a href="global.html#setClientPaginationData">setClientPaginationData</a></li><li><a href="global.html#setCookie">setCookie</a></li><li><a href="global.html#setForceLogout">setForceLogout</a></li><li><a href="global.html#setKeycloakData">setKeycloakData</a></li><li><a href="global.html#setLoader">setLoader</a></li><li><a href="global.html#setPatientId">setPatientId</a></li><li><a href="global.html#setToast">setToast</a></li><li><a href="global.html#setUserData">setUserData</a></li><li><a href="global.html#shorternUrl">shorternUrl</a></li><li><a href="global.html#showDoctor">showDoctor</a></li><li><a href="global.html#showDrug">showDrug</a></li><li><a href="global.html#showHospital">showHospital</a></li><li><a href="global.html#showLender">showLender</a></li><li><a href="global.html#showManufacturer">showManufacturer</a></li><li><a href="global.html#showPermission">showPermission</a></li><li><a href="global.html#showProgram">showProgram</a></li><li><a href="global.html#showResource">showResource</a></li><li><a href="global.html#showRole">showRole</a></li><li><a href="global.html#showRoute">showRoute</a></li><li><a href="global.html#showUser">showUser</a></li><li><a href="global.html#SidebarDrugIcon">SidebarDrugIcon</a></li><li><a href="global.html#startLoanApplicationSteps">startLoanApplicationSteps</a></li><li><a href="global.html#submitLoanApplication">submitLoanApplication</a></li><li><a href="global.html#submitToMangoExecutive">submitToMangoExecutive</a></li><li><a href="global.html#THEME_MODULE">THEME_MODULE</a></li><li><a href="global.html#toggelDrugVisibility">toggelDrugVisibility</a></li><li><a href="global.html#TOKEN">TOKEN</a></li><li><a href="global.html#trimmer">trimmer</a></li><li><a href="global.html#uniqueKeys">uniqueKeys</a></li><li><a href="global.html#updateApplicant">updateApplicant</a></li><li><a href="global.html#updateAppointmentDateToPatient">updateAppointmentDateToPatient</a></li><li><a href="global.html#updateChangePasswordStatus">updateChangePasswordStatus</a></li><li><a href="global.html#updateDataConsentDate">updateDataConsentDate</a></li><li><a href="global.html#updateDoctor">updateDoctor</a></li><li><a href="global.html#updateDrug">updateDrug</a></li><li><a href="global.html#updateFinancialInformation">updateFinancialInformation</a></li><li><a href="global.html#updateHospital">updateHospital</a></li><li><a href="global.html#updateLender">updateLender</a></li><li><a href="global.html#updateManufacturer">updateManufacturer</a></li><li><a href="global.html#updateMedicationScheduleByCycleNo">updateMedicationScheduleByCycleNo</a></li><li><a href="global.html#updateMultipleResourcePermission">updateMultipleResourcePermission</a></li><li><a href="global.html#updateMyProfile">updateMyProfile</a></li><li><a href="global.html#updateObject">updateObject</a></li><li><a href="global.html#updatePatientInteractionNotes">updatePatientInteractionNotes</a></li><li><a href="global.html#updatePatientStatusToAware">updatePatientStatusToAware</a></li><li><a href="global.html#updatePermssion">updatePermssion</a></li><li><a href="global.html#updateProgram">updateProgram</a></li><li><a href="global.html#updateResource">updateResource</a></li><li><a href="global.html#updateResourcePermissions">updateResourcePermissions</a></li><li><a href="global.html#updateRole">updateRole</a></li><li><a href="global.html#updateRoleAccess">updateRoleAccess</a></li><li><a href="global.html#updateRoute">updateRoute</a></li><li><a href="global.html#updateSubRoutes">updateSubRoutes</a></li><li><a href="global.html#updateUser">updateUser</a></li><li><a href="global.html#uploadDocument">uploadDocument</a></li><li><a href="global.html#uploadDocumentForPatient">uploadDocumentForPatient</a></li><li><a href="global.html#usePrevious">usePrevious</a></li><li><a href="global.html#validateCommaSeperatedIP">validateCommaSeperatedIP</a></li><li><a href="global.html#validateURL">validateURL</a></li><li><a href="global.html#validateVerhoeffAlgo">validateVerhoeffAlgo</a></li><li><a href="global.html#validDateString">validDateString</a></li><li><a href="global.html#vbcProgramSteps">vbcProgramSteps</a></li><li><a href="global.html#verifyPatient">verifyPatient</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Fri Nov 04 2022 12:59:13 GMT+0530 (India Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

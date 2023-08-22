@@ -1,0 +1,22 @@
+{
+  "home": "Home",
+  "users": "Users",
+  "list": "List",
+  "userList": "User List",
+  "addNewUser": "Add New User",
+  "show": "Show",
+  "bulkAction": "Bulk Action",
+  "active": "ACTIVE",
+  "inactive": "INACTIVE",
+  "apply": "Apply",
+  "previous": "Previous",
+  "next": "Next",
+  "showing": "Showing",
+  "outOf": "out of",
+  "entries": "entries",
+  "first": "First",
+  "last": "Last",
+  "showTenEntries": "Show 10 Entries",
+  "showTwentyEntries": "Show 20 Entries",
+  "showThirtyEntries": "Show 30 Entries"
+}

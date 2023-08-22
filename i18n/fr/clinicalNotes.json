@@ -1,0 +1,11 @@
+{
+  "home": "Home",
+  "clinicalDetails": "Clinical Details",
+  "doctorNotes": "Doctor Notes",
+  "clinicalNotes": "Clinical Notes",
+  "date": "Date",
+  "noteType": "Note Type",
+  "noYearNote": "You are not able to see any reports since there is no data or synchronization of data is not complete.",
+  "noClinicalNotesReports": "No records of clinical notes found",
+  "noClinicalNoteFound": "No clinical note found"
+}

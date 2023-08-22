@@ -1,0 +1,16 @@
+{
+  "register": "Register",
+  "name": "Name",
+  "emailOrmobile": "Email/Mobile",
+  "validEmailOrmobile": "Please enter a valid email address or mobile number",
+  "haveAnAccount": "Have an Account?",
+  "loginhere": "Login Here",
+  "next": "Next",
+  "mobile": "Mobile",
+  "email": "Email",
+  "haveAnAccountLoginHere": "Have an Account? Login here",
+  "loginHere": "Login Here",
+  "continue": "Continue",
+  "forgot-password": "Forgot Your Password?",
+  "backToLogin": "Back to login"
+}

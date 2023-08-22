@@ -1,0 +1,17 @@
+{
+  "Caregiver": "Caregiver",
+  "addCaregiver": "Add Caregiver",
+  "name": "Name",
+  "gender": "Gender",
+  "age": "Age",
+  "email": "Email",
+  "mobile": "Mobile",
+  "relationshipWithPatient": "Relationship with Patient",
+  "clearAll": "Clear All",
+  "save": "Save",
+  "male": "Male",
+  "female": "Female",
+  "others": "Other",
+  "delete": "Delete",
+  "edit": "Edit"
+}

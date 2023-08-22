@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="180" height="60" viewBox="0 0 180 60">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.099" y1="0.862" x2="0.9" y2="0.139" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#00a7c2"/>
+      <stop offset="0.313" stop-color="#009bcf"/>
+      <stop offset="0.598" stop-color="#0095d7"/>
+      <stop offset="0.902" stop-color="#f67816"/>
+    </linearGradient>
+  </defs>
+  <g id="Group_3319" data-name="Group 3319" transform="translate(-4378 -7648)">
+    <rect id="Rectangle_2549" data-name="Rectangle 2549" width="180" height="60" transform="translate(4378 7648)" fill="none"/>
+    <g id="Group_3318" data-name="Group 3318" transform="translate(4369.816 7622.844)">
+      <g id="Group_1" data-name="Group 1" transform="translate(30.184 30.156)">
+        <path id="Path_1" data-name="Path 1" d="M61.693,30.382l-.451-.226-3.16,6.515a22.223,22.223,0,0,0-5.312-.632A22.6,22.6,0,0,0,42.9,78.968l.451.211,3.16-6.515a22.223,22.223,0,0,0,5.312.632,22.594,22.594,0,0,0,9.871-42.914Zm-3.07,7.463a20.027,20.027,0,0,1,3.13,1.144L45.968,71.505a21.759,21.759,0,0,1-3.13-1.158ZM42.884,77.84A21.595,21.595,0,0,1,52.77,37.048a21.786,21.786,0,0,1,4.86.542L41.5,70.813l.451.226a20.979,20.979,0,0,0,3.566,1.369ZM51.822,72.3a20.938,20.938,0,0,1-4.86-.557L63.092,38.522l-.451-.211a23.935,23.935,0,0,0-3.566-1.384L61.708,31.5A21.6,21.6,0,0,1,51.822,72.3Z" transform="translate(-30.184 -30.156)" fill="url(#linear-gradient)"/>
+      </g>
+      <g id="Group_3" data-name="Group 3" transform="translate(80.306 32.725)">
+        <g id="Group_2" data-name="Group 2" transform="translate(0 0)">
+          <text id="MANGO" transform="translate(0 20)" fill="#040505" font-size="21" font-family="Montserrat-SemiBold, Montserrat" font-weight="600"><tspan x="0" y="0">MANGO</tspan></text>
+          <text id="S_C_I_E_N_C_E_S" data-name="S C I E N C E S" transform="translate(1.074 37.75)" fill="#040505" font-size="12" font-family="Montserrat-SemiBold, Montserrat" font-weight="600"><tspan x="0" y="0">S C I E N C E S</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
