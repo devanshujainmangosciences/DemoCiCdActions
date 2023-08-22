@@ -15,7 +15,7 @@ defaults:
 jobs:
   ios-build-dev:
     name: iOS Build Dev
-    environment: 'dev'
+    # environment: 'dev'
     runs-on: macOS-latest
     if: github.ref == 'refs/heads/develop'
     defaults:
@@ -67,9 +67,9 @@ jobs:
       - name: Install Pods
         run: cd ios && pod install && cd ..
 
-      - name: 'Create env file'
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+      # - name: 'Create env file'
+      #   run: |
+      #     echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: 'Run Bundler'
         run: yarn start-cd-dev
@@ -101,10 +101,9 @@ jobs:
     env:
       commitmsg: ${{ github.event.head_commit.message }}
     name: ipa deploy dev
-    environment: 'dev'
+    # environment: 'dev'
     needs: ios-build-dev
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
     defaults:
       run:
         working-directory: vbc-mobile
@@ -127,7 +126,6 @@ jobs:
     name: iOS Build Test
     environment: 'test'
     runs-on: macOS-latest
-    if: github.ref == 'refs/heads/pre-prod'
     defaults:
       run:
         working-directory: vbc-mobile
@@ -177,9 +175,9 @@ jobs:
       - name: Install Pods
         run: cd ios && pod install --repo-update && cd ..
 
-      - name: 'Create env file'
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+      # - name: 'Create env file'
+      #   run: |
+      #     echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: 'Run Bundler'
         run: yarn start-cd-test

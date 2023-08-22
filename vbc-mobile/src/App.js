@@ -1,7 +1,7 @@
 /**
  * Starting point of the application
  * Helps in managing navigation based upon
- * user permission and authentication state.
+ * user permission and authentication
  */
 import 'react-native-gesture-handler';
 import '../../i18n';

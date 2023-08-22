@@ -17,9 +17,8 @@ jobs:
     env:
       commitmsg: ${{ github.event.head_commit.message }}
     name: Android Build Dev
-    environment: 'dev'
+    # environment: 'dev'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
     defaults:
       run:
         working-directory: vbc-mobile
@@ -106,9 +105,8 @@ jobs:
     env:
       commitmsg: ${{ github.event.head_commit.message }}
     name: Android Build Test
-    environment: 'test'
+    # environment: 'test'
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/pre-prod'
     defaults:
       run:
         working-directory: vbc-mobile
